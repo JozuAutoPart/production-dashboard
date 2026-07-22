@@ -5,183 +5,207 @@ HTML
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Production Mobile Sync Dashboard</title>
   
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js"></script>
   
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f3f4f6; padding: 15px; color: #1f2937; }
+    .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    
+    /* Header */
+    .header { background: #ffffff; padding: 16px 20px; border-radius: 12px; border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .header-title { font-size: 20px; font-weight: 800; color: #111827; }
+    .header-sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
+    .badge { background: #dcfce7; color: #15803d; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 9999px; display: inline-block; }
+    
+    .btn { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+    .btn-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .btn-blue:hover { background: #dbeafe; }
+    .btn-red { background: #ef4444; color: #ffffff; }
+    .btn-red:hover { background: #dc2626; }
+    .btn-submit { background: #2563eb; color: #ffffff; width: 100%; padding: 10px; font-size: 14px; margin-top: 10px; }
+    .btn-yellow { background: #facc15; color: #000000; width: 100%; padding: 12px; font-size: 15px; font-weight: 800; border-radius: 10px; margin-top: 10px; }
+
+    /* KPI Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .kpi-card { background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #e5e7eb; border-left-width: 5px; }
+    .kpi-title { font-size: 11px; font-weight: bold; color: #9ca3af; text-transform: uppercase; }
+    .kpi-value { font-size: 22px; font-weight: 800; margin-top: 4px; }
+    
+    /* Mobile Panel */
+    .mobile-panel { background: linear-gradient(135deg, #059669, #064e3b); color: #ffffff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .mobile-panel select, .mobile-panel input { width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 4px; font-weight: bold; }
+    .quick-btn-group { display: flex; gap: 8px; margin-top: 8px; }
+    .quick-btn { flex: 1; background: rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; }
+    .quick-btn:hover { background: rgba(255,255,255,0.3); }
+
+    /* Forms & Tables */
+    .section-card { background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e5e7eb; }
+    .section-title { font-size: 15px; font-weight: bold; color: #1d4ed8; margin-bottom: 12px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; font-weight: bold; color: #4b5563; }
+    .form-group input { padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 13px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; color: #374151; font-size: 11px; text-transform: uppercase; }
+
+    /* Overlay Loader */
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
+    .hidden { display: none !important; }
+    
     .gantt .bar-progress { fill: #2563eb !important; }
     .gantt .bar { fill: #93c5fd !important; }
-    .touch-active:active { transform: scale(0.97); }
   </style>
 </head>
-<body class="bg-gray-100 p-3 md:p-6 font-sans select-none">
+<body>
 
-  <!-- Status Overlay / Loader -->
-  <div id="loadingOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-    <div class="bg-white p-5 rounded-2xl shadow-xl text-center space-y-3">
-      <div class="animate-spin text-3xl">🔄</div>
-      <p class="text-sm font-bold text-gray-700">กำลังซิงค์ข้อมูลกับ Google Sheets...</p>
+  <div id="loadingOverlay" class="hidden">
+    <div style="background: #fff; color: #000; padding: 20px 30px; border-radius: 12px; text-align: center;">
+      <p style="font-weight: bold; font-size: 14px;">🔄 กำลังซิงค์ข้อมูลกับ Google Sheets...</p>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto space-y-6">
+  <div class="container">
     
     <!-- Header -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 gap-3">
+    <div class="header">
       <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-xl md:text-2xl font-extrabold text-gray-800">🏭 Production Cloud Dashboard</h1>
-          <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Cloud Live
-          </span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h1 class="header-title">🏭 Production Cloud Dashboard</h1>
+          <span class="badge">Cloud Live</span>
         </div>
-        <p class="text-xs md:text-sm text-gray-500">ข้อมูลซิงค์ตรงกันผ่าน Google Sheets Real-time</p>
+        <p class="header-sub">ข้อมูลซิงค์ตรงกันผ่าน Google Sheets Real-time</p>
       </div>
-      
-      <div class="flex flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
-        <button onclick="fetchTasksFromCloud()" class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 shadow-sm">
-          🔄 ดึงข้อมูลล่าสุด
-        </button>
-        <button onclick="clearMonthlyData()" class="px-3 py-1.5 text-xs font-bold bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-sm">
-          🗑️ ล้างข้อมูลเดือนนี้
-        </button>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="fetchTasksFromCloud()" class="btn btn-blue">🔄 ดึงข้อมูลล่าสุด</button>
+        <button onclick="clearMonthlyData()" class="btn btn-red">🗑️ ล้างข้อมูลเดือนนี้</button>
       </div>
     </div>
 
     <!-- KPI Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-blue-500">
-        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">แผนผลิตรวม</p>
-        <h3 id="kpiPlan" class="text-lg md:text-2xl font-extrabold text-gray-800">0</h3>
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-left-color: #3b82f6;">
+        <div class="kpi-title">แผนผลิตรวม</div>
+        <div id="kpiPlan" class="kpi-value">0</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-green-500">
-        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">ผลิตสะสมจริง</p>
-        <h3 id="kpiActual" class="text-lg md:text-2xl font-extrabold text-green-600">0</h3>
+      <div class="kpi-card" style="border-left-color: #22c55e;">
+        <div class="kpi-title">ผลิตสะสมจริง</div>
+        <div id="kpiActual" class="kpi-value" style="color: #16a34a;">0</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-indigo-500">
-        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">% ความคืบหน้า</p>
-        <h3 id="kpiProgress" class="text-lg md:text-2xl font-extrabold text-indigo-600">0%</h3>
+      <div class="kpi-card" style="border-left-color: #6366f1;">
+        <div class="kpi-title">% ความคืบหน้า</div>
+        <div id="kpiProgress" class="kpi-value" style="color: #4f46e5;">0%</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-amber-500">
-        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">กำลังผลิต / เสร็จ</p>
-        <h3 id="kpiStatus" class="text-lg md:text-2xl font-extrabold text-amber-600">0 / 0</h3>
-      </div>
-    </div>
-
-    <!-- 📱 Mobile Output Panel -->
-    <div class="bg-gradient-to-br from-green-600 to-emerald-800 p-4 md:p-6 rounded-2xl shadow-lg text-white">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-bold flex items-center gap-2">📱 ลงยอดผลิตประจำวัน (Mobile Entry)</h2>
-        <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full font-semibold">ซิงค์ขึ้น Cloud</span>
-      </div>
-
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-medium text-green-100 mb-1">เลือก Order ที่กำลังผลิต</label>
-          <select id="mobileTaskSelect" onchange="loadMobileTaskData()" class="w-full p-3 text-base font-semibold text-gray-800 bg-white rounded-xl focus:outline-none">
-            <option value="">-- กำลังโหลดข้อมูล... --</option>
-          </select>
-        </div>
-
-        <div id="mobileEntryPanel" class="hidden bg-white/10 p-4 rounded-xl border border-white/20 space-y-4">
-          <div class="flex justify-between items-end border-b border-white/20 pb-2">
-            <div>
-              <p id="mMachine" class="text-xs text-green-200">MC-01</p>
-              <h3 id="mPartName" class="text-lg font-bold text-white">ชื่อชิ้นส่วน</h3>
-            </div>
-            <div class="text-right">
-              <p class="text-xs text-green-200">ยอดผลิตสะสม</p>
-              <p id="mProgressText" class="text-base font-bold text-yellow-300">0 / 0 ชิ้น</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-green-100 mb-1">วันที่ทำจริง</label>
-              <input type="date" id="mobileLogDate" class="w-full p-2.5 text-sm text-gray-800 bg-white rounded-lg font-bold">
-            </div>
-            <div>
-              <label class="block text-xs text-green-100 mb-1">จำนวนวันนี้ (ชิ้น)</label>
-              <input type="number" id="mobileQtyInput" placeholder="0" class="w-full p-2.5 text-lg font-extrabold text-center text-green-800 bg-white rounded-lg">
-            </div>
-          </div>
-
-          <div class="flex gap-2">
-            <button type="button" onclick="adjustQuickQty(10)" class="flex-1 bg-white/20 hover:bg-white/30 text-xs font-bold py-2 rounded-lg touch-active">+10</button>
-            <button type="button" onclick="adjustQuickQty(50)" class="flex-1 bg-white/20 hover:bg-white/30 text-xs font-bold py-2 rounded-lg touch-active">+50</button>
-            <button type="button" onclick="adjustQuickQty(100)" class="flex-1 bg-white/20 hover:bg-white/30 text-xs font-bold py-2 rounded-lg touch-active">+100</button>
-          </div>
-
-          <button type="button" onclick="submitMobileOutput()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-extrabold py-3 rounded-xl shadow-md text-base touch-active">
-            ⚡ บันทึกและส่งยอดขึ้น Cloud
-          </button>
-        </div>
+      <div class="kpi-card" style="border-left-color: #f59e0b;">
+        <div class="kpi-title">กำลังผลิต / เสร็จ</div>
+        <div id="kpiStatus" class="kpi-value" style="color: #d97706;">0 / 0</div>
       </div>
     </div>
 
-    <!-- 💻 Plan Form -->
-    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-200">
-      <h2 class="text-base font-bold text-blue-700 flex items-center gap-2 mb-3">📅 เปิด Order วางแผนล่วงหน้า</h2>
-      <form id="planForm" onsubmit="addPlan(event)" class="space-y-3">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <!-- Mobile Panel -->
+    <div class="mobile-panel">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">📱 ลงยอดผลิตประจำวัน (Mobile Entry)</h2>
+      <div class="form-group">
+        <label style="color: #e0e7ff; font-size: 12px;">เลือก Order ที่กำลังผลิต</label>
+        <select id="mobileTaskSelect" onchange="loadMobileTaskData()">
+          <option value="">-- กำลังโหลดข้อมูล... --</option>
+        </select>
+      </div>
+
+      <div id="mobileEntryPanel" class="hidden" style="margin-top: 12px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 8px; margin-bottom: 8px;">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">ไลน์ / เครื่องจักร</label>
-            <input type="text" id="machine" required placeholder="เช่น MC-01" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
+            <p id="mMachine" style="font-size: 11px; opacity: 0.8;">MC-01</p>
+            <h3 id="mPartName" style="font-size: 16px; font-weight: bold;">ชื่อชิ้นส่วน</h3>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">ชื่อชิ้นส่วน</label>
-            <input type="text" id="partName" required placeholder="เช่น สินค้า A" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
+          <div style="text-align: right;">
+            <p style="font-size: 11px; opacity: 0.8;">ยอดผลิตสะสม</p>
+            <p id="mProgressText" style="font-size: 14px; font-weight: bold; color: #fde047;">0 / 0 ชิ้น</p>
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">วันที่เริ่ม - สิ้นสุด</label>
-            <div class="flex gap-1">
-              <input type="date" id="startDate" required class="w-1/2 px-2 py-2 text-xs border rounded-lg">
-              <input type="date" id="endDate" required class="w-1/2 px-2 py-2 text-xs border rounded-lg">
+            <label style="font-size: 11px;">วันที่ทำจริง</label>
+            <input type="date" id="mobileLogDate" style="color: #000;">
+          </div>
+          <div>
+            <label style="font-size: 11px;">จำนวนวันนี้ (ชิ้น)</label>
+            <input type="number" id="mobileQtyInput" placeholder="0" style="color: #000; text-align: center; font-size: 16px;">
+          </div>
+        </div>
+
+        <div class="quick-btn-group">
+          <button type="button" onclick="adjustQuickQty(10)" class="quick-btn">+10</button>
+          <button type="button" onclick="adjustQuickQty(50)" class="quick-btn">+50</button>
+          <button type="button" onclick="adjustQuickQty(100)" class="quick-btn">+100</button>
+        </div>
+
+        <button type="button" onclick="submitMobileOutput()" class="btn btn-yellow">⚡ บันทึกและส่งยอดขึ้น Cloud</button>
+      </div>
+    </div>
+
+    <!-- Plan Form -->
+    <div class="section-card">
+      <h2 class="section-title">📅 เปิด Order วางแผนล่วงหน้า</h2>
+      <form id="planForm" onsubmit="addPlan(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>ไลน์ / เครื่องจักร</label>
+            <input type="text" id="machine" required placeholder="เช่น MC-01">
+          </div>
+          <div class="form-group">
+            <label>ชื่อชิ้นส่วน</label>
+            <input type="text" id="partName" required placeholder="เช่น สินค้า A">
+          </div>
+          <div class="form-group">
+            <label>วันที่เริ่ม - สิ้นสุด</label>
+            <div style="display: flex; gap: 4px;">
+              <input type="date" id="startDate" required>
+              <input type="date" id="endDate" required>
             </div>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">จำนวนเป้าหมาย</label>
-            <input type="number" id="planQty" min="1" placeholder="เช่น 1000" required class="w-full px-3 py-2 text-sm border rounded-lg">
+          <div class="form-group">
+            <label>จำนวนเป้าหมาย</label>
+            <input type="number" id="planQty" min="1" placeholder="เช่น 1000" required>
           </div>
         </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-sm touch-active">
-          + บันทึกแผนขึ้น Cloud
-        </button>
+        <button type="submit" class="btn btn-submit">+ บันทึกแผนขึ้น Cloud</button>
       </form>
     </div>
 
     <!-- Gantt Chart -->
-    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-200">
-      <h2 class="text-base font-bold text-gray-800 mb-3">📈 Gantt Chart View</h2>
-      <div class="overflow-x-auto border rounded-lg p-2 min-h-[150px] flex items-center justify-center">
+    <div class="section-card">
+      <h2 class="section-title" style="color: #111827;">📈 Gantt Chart View</h2>
+      <div style="overflow-x: auto; min-height: 120px; display: flex; align-items: center; justify-content: center; border: 1px solid #f3f4f6; border-radius: 8px; padding: 10px;">
         <svg id="gantt"></svg>
-        <p id="emptyGanttText" class="text-gray-400 text-sm">ยังไม่มีข้อมูลการวางแผนการผลิต</p>
+        <p id="emptyGanttText" style="color: #9ca3af; font-size: 13px;">ยังไม่มีข้อมูลการวางแผนการผลิต</p>
       </div>
     </div>
 
-    <!-- Summary Table -->
-    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-200">
-      <h2 class="text-base font-bold text-gray-800 mb-3">📋 ตารางสรุปสถานะการผลิต</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-gray-600">
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+    <!-- Table -->
+    <div class="section-card">
+      <h2 class="section-title" style="color: #111827;">📋 ตารางสรุปสถานะการผลิต</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
             <tr>
-              <th class="px-3 py-2">เครื่องจักร</th>
-              <th class="px-3 py-2">ชิ้นส่วน</th>
-              <th class="px-3 py-2 text-right">เป้าหมาย</th>
-              <th class="px-3 py-2 text-right">สะสมจริง</th>
-              <th class="px-3 py-2 text-center">ความคืบหน้า</th>
-              <th class="px-3 py-2 text-center">สถานะ</th>
+              <th>เครื่องจักร</th>
+              <th>ชิ้นส่วน</th>
+              <th style="text-align: right;">เป้าหมาย</th>
+              <th style="text-align: right;">สะสมจริง</th>
+              <th style="text-align: center;">ความคืบหน้า</th>
+              <th style="text-align: center;">สถานะ</th>
             </tr>
           </thead>
           <tbody id="summaryTableBody">
-            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">ยังไม่มีข้อมูลรายการผลิต</td></tr>
+            <tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>
           </tbody>
         </table>
       </div>
@@ -190,7 +214,6 @@ HTML
   </div>
 
   <script>
-    // 🔗 URL Google Apps Script ตัวใหม่ถูกใส่เรียบร้อยแล้วครับ
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
 
     const today = new Date().toISOString().split('T')[0];
@@ -208,7 +231,7 @@ HTML
     async function fetchTasksFromCloud() {
       showLoading(true);
       try {
-        const res = await fetch(GOOGLE_SCRIPT_URL);
+        const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'GET', redirect: 'follow' });
         const data = await res.json();
         tasks = data.map(t => ({
           ...t,
@@ -241,15 +264,16 @@ HTML
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: "addPlan", task: newTask })
         });
         document.getElementById('planForm').reset();
         document.getElementById('startDate').value = today;
         document.getElementById('endDate').value = today;
-        await fetchTasksFromCloud();
+        setTimeout(fetchTasksFromCloud, 1500);
       } catch (err) {
         alert("❌ ไม่สามารถบันทึกแผนลง Cloud ได้");
-      } finally {
         showLoading(false);
       }
     }
@@ -269,14 +293,15 @@ HTML
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: "addOutput", taskId: taskId, date: logDate, qty: qty })
         });
         document.getElementById('mobileQtyInput').value = '';
-        await fetchTasksFromCloud();
+        setTimeout(fetchTasksFromCloud, 1500);
         alert("✅ บันทึกยอดลง Google Sheets เรียบร้อยแล้ว!");
       } catch (err) {
         alert("❌ บันทึกยอดไม่สำเร็จ");
-      } finally {
         showLoading(false);
       }
     }
@@ -287,13 +312,14 @@ HTML
         try {
           await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: "clearData" })
           });
-          await fetchTasksFromCloud();
+          setTimeout(fetchTasksFromCloud, 1500);
           alert("✅ ล้างข้อมูลบน Cloud เรียบร้อยแล้ว");
         } catch (err) {
           alert("❌ ไม่สามารถล้างข้อมูลได้");
-        } finally {
           showLoading(false);
         }
       }
@@ -397,24 +423,23 @@ HTML
       tbody.innerHTML = '';
 
       if (tasks.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">ยังไม่มีข้อมูลรายการผลิต</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>`;
         return;
       }
 
       tasks.forEach(t => {
         let statusBadge = t.progress >= 100 
-          ? `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">Done</span>`
-          : `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">Run</span>`;
+          ? `<span style="background: #dcfce7; color: #166534; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">Done</span>`
+          : `<span style="background: #dbeafe; color: #1e40af; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">Run</span>`;
 
         const tr = document.createElement('tr');
-        tr.className = 'border-b hover:bg-gray-50';
         tr.innerHTML = `
-          <td class="px-3 py-2 font-semibold text-gray-800">${t.machine}</td>
-          <td class="px-3 py-2">${t.partName}</td>
-          <td class="px-3 py-2 text-right font-medium">${t.planQty.toLocaleString()}</td>
-          <td class="px-3 py-2 text-right font-bold text-green-600">${t.actualQty.toLocaleString()}</td>
-          <td class="px-3 py-2 text-center font-bold">${t.progress.toFixed(0)}%</td>
-          <td class="px-3 py-2 text-center">${statusBadge}</td>
+          <td style="font-weight: bold;">${t.machine}</td>
+          <td>${t.partName}</td>
+          <td style="text-align: right;">${t.planQty.toLocaleString()}</td>
+          <td style="text-align: right; font-weight: bold; color: #16a34a;">${t.actualQty.toLocaleString()}</td>
+          <td style="text-align: center; font-weight: bold;">${t.progress.toFixed(0)}%</td>
+          <td style="text-align: center;">${statusBadge}</td>
         `;
         tbody.appendChild(tr);
       });
