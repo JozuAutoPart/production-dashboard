@@ -190,8 +190,8 @@ HTML
   </div>
 
   <script>
-    // ⚠️ นำ URL จาก Google Apps Script มาวางตรงนี้
-    const GOOGLE_SCRIPT_URL = "วาง_URL_GOOGLE_APPS_SCRIPT_ที่นี่";
+    // 🔗 URL Google Apps Script ตัวใหม่ถูกใส่เรียบร้อยแล้วครับ
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
 
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('startDate').value = today;
@@ -205,12 +205,7 @@ HTML
       document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
     }
 
-    // ดึงข้อมูลจาก Google Sheets
     async function fetchTasksFromCloud() {
-      if (GOOGLE_SCRIPT_URL.includes("วาง_URL")) {
-        alert("⚠️ กรุณานำ URL จาก Google Apps Script มาวางในโค้ดก่อนครับ");
-        return;
-      }
       showLoading(true);
       try {
         const res = await fetch(GOOGLE_SCRIPT_URL);
@@ -230,7 +225,6 @@ HTML
       }
     }
 
-    // เพิ่มแผนใหม่ลง Google Sheets
     async function addPlan(e) {
       e.preventDefault();
       showLoading(true);
@@ -260,7 +254,6 @@ HTML
       }
     }
 
-    // ส่งยอดผลิตประจำวันลง Google Sheets
     async function submitMobileOutput() {
       const taskId = document.getElementById('mobileTaskSelect').value;
       const logDate = document.getElementById('mobileLogDate').value;
@@ -280,7 +273,7 @@ HTML
         });
         document.getElementById('mobileQtyInput').value = '';
         await fetchTasksFromCloud();
-        alert("✅ บันทึกยอดเรียบร้อยแล้ว!");
+        alert("✅ บันทึกยอดลง Google Sheets เรียบร้อยแล้ว!");
       } catch (err) {
         alert("❌ บันทึกยอดไม่สำเร็จ");
       } finally {
@@ -288,7 +281,6 @@ HTML
       }
     }
 
-    // ล้างข้อมูลประจำเดือนบน Google Sheets
     async function clearMonthlyData() {
       if (confirm("⚠️ คุณต้องการล้างข้อมูลทั้งหมดบน Cloud ในเดือนนี้ใช่หรือไม่?")) {
         showLoading(true);
