@@ -1,6 +1,3 @@
-HTML
-
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -16,7 +13,6 @@ HTML
     body { background-color: #f3f4f6; padding: 15px; color: #1f2937; }
     .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
     
-    /* Header */
     .header { background: #ffffff; padding: 16px 20px; border-radius: 12px; border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .header-title { font-size: 20px; font-weight: 800; color: #111827; }
     .header-sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
@@ -30,23 +26,20 @@ HTML
     .btn-submit { background: #2563eb; color: #ffffff; width: 100%; padding: 10px; font-size: 14px; margin-top: 10px; }
     .btn-yellow { background: #facc15; color: #000000; width: 100%; padding: 12px; font-size: 15px; font-weight: 800; border-radius: 10px; margin-top: 10px; }
 
-    /* KPI Grid */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
     .kpi-card { background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #e5e7eb; border-left-width: 5px; }
     .kpi-title { font-size: 11px; font-weight: bold; color: #9ca3af; text-transform: uppercase; }
     .kpi-value { font-size: 22px; font-weight: 800; margin-top: 4px; }
     
-    /* Mobile Panel */
     .mobile-panel { background: linear-gradient(135deg, #059669, #064e3b); color: #ffffff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .mobile-panel select, .mobile-panel input { width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 4px; font-weight: bold; }
     .quick-btn-group { display: flex; gap: 8px; margin-top: 8px; }
     .quick-btn { flex: 1; background: rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; }
     .quick-btn:hover { background: rgba(255,255,255,0.3); }
 
-    /* Forms & Tables */
     .section-card { background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e5e7eb; }
     .section-title { font-size: 15px; font-weight: bold; color: #1d4ed8; margin-bottom: 12px; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
     .form-group { display: flex; flex-direction: column; gap: 4px; }
     .form-group label { font-size: 12px; font-weight: bold; color: #4b5563; }
     .form-group input { padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 13px; }
@@ -55,7 +48,6 @@ HTML
     th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
     th { background: #f9fafb; color: #374151; font-size: 11px; text-transform: uppercase; }
 
-    /* Overlay Loader */
     #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
     .hidden { display: none !important; }
     
@@ -95,16 +87,16 @@ HTML
         <div id="kpiPlan" class="kpi-value">0</div>
       </div>
       <div class="kpi-card" style="border-left-color: #22c55e;">
-        <div class="kpi-title">ผลิตสะสมจริง</div>
+        <div class="kpi-title">ผลิตดีรวม</div>
         <div id="kpiActual" class="kpi-value" style="color: #16a34a;">0</div>
+      </div>
+      <div class="kpi-card" style="border-left-color: #ef4444;">
+        <div class="kpi-title">ของเสียสะสม (NG)</div>
+        <div id="kpiDefect" class="kpi-value" style="color: #dc2626;">0</div>
       </div>
       <div class="kpi-card" style="border-left-color: #6366f1;">
         <div class="kpi-title">% ความคืบหน้า</div>
         <div id="kpiProgress" class="kpi-value" style="color: #4f46e5;">0%</div>
-      </div>
-      <div class="kpi-card" style="border-left-color: #f59e0b;">
-        <div class="kpi-title">กำลังผลิต / เสร็จ</div>
-        <div id="kpiStatus" class="kpi-value" style="color: #d97706;">0 / 0</div>
       </div>
     </div>
 
@@ -123,6 +115,7 @@ HTML
           <div>
             <p id="mMachine" style="font-size: 11px; opacity: 0.8;">MC-01</p>
             <h3 id="mPartName" style="font-size: 16px; font-weight: bold;">ชื่อชิ้นส่วน</h3>
+            <p id="mPartNoLot" style="font-size: 11px; color: #fef08a;">Part No: - | Lot: -</p>
           </div>
           <div style="text-align: right;">
             <p style="font-size: 11px; opacity: 0.8;">ยอดผลิตสะสม</p>
@@ -130,14 +123,25 @@ HTML
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
           <div>
             <label style="font-size: 11px;">วันที่ทำจริง</label>
             <input type="date" id="mobileLogDate" style="color: #000;">
           </div>
           <div>
-            <label style="font-size: 11px;">จำนวนวันนี้ (ชิ้น)</label>
+            <label style="font-size: 11px;">Operator (ผู้รับผิดชอบ)</label>
+            <input type="text" id="mobileOperatorInput" placeholder="เช่น ชื่อช่าง" style="color: #000;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label style="font-size: 11px;">ยอดดีวันนี้ (ชิ้น)</label>
             <input type="number" id="mobileQtyInput" placeholder="0" style="color: #000; text-align: center; font-size: 16px;">
+          </div>
+          <div>
+            <label style="font-size: 11px;">ของเสีย (NG)</label>
+            <input type="number" id="mobileDefectInput" placeholder="0" style="color: #991b1b; text-align: center; font-size: 16px; background: #fee2e2;">
           </div>
         </div>
 
@@ -161,8 +165,16 @@ HTML
             <input type="text" id="machine" required placeholder="เช่น MC-01">
           </div>
           <div class="form-group">
-            <label>ชื่อชิ้นส่วน</label>
+            <label>Part Name (ชื่อชิ้นส่วน)</label>
             <input type="text" id="partName" required placeholder="เช่น สินค้า A">
+          </div>
+          <div class="form-group">
+            <label>Part No.</label>
+            <input type="text" id="partNo" placeholder="เช่น P-1001">
+          </div>
+          <div class="form-group">
+            <label>Lot No.</label>
+            <input type="text" id="lotNo" placeholder="เช่น LOT-2026-01">
           </div>
           <div class="form-group">
             <label>วันที่เริ่ม - สิ้นสุด</label>
@@ -197,15 +209,17 @@ HTML
           <thead>
             <tr>
               <th>เครื่องจักร</th>
-              <th>ชิ้นส่วน</th>
+              <th>Part Name / Part No.</th>
+              <th>Lot No.</th>
               <th style="text-align: right;">เป้าหมาย</th>
-              <th style="text-align: right;">สะสมจริง</th>
+              <th style="text-align: right;">ผลิตดี</th>
+              <th style="text-align: right; color: #dc2626;">ของเสีย (NG)</th>
               <th style="text-align: center;">ความคืบหน้า</th>
               <th style="text-align: center;">สถานะ</th>
             </tr>
           </thead>
           <tbody id="summaryTableBody">
-            <tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>
+            <tr><td colspan="8" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>
           </tbody>
         </table>
       </div>
@@ -237,6 +251,7 @@ HTML
           ...t,
           planQty: Number(t.planQty),
           actualQty: Number(t.actualQty),
+          defectQty: Number(t.defectQty || 0),
           progress: Number(t.progress)
         }));
         renderGantt();
@@ -256,6 +271,8 @@ HTML
         id: 'TASK-' + Date.now(),
         machine: document.getElementById('machine').value,
         partName: document.getElementById('partName').value,
+        partNo: document.getElementById('partNo').value || '-',
+        lotNo: document.getElementById('lotNo').value || '-',
         start: document.getElementById('startDate').value,
         end: document.getElementById('endDate').value,
         planQty: parseInt(document.getElementById('planQty').value)
@@ -281,10 +298,12 @@ HTML
     async function submitMobileOutput() {
       const taskId = document.getElementById('mobileTaskSelect').value;
       const logDate = document.getElementById('mobileLogDate').value;
-      const qty = parseInt(document.getElementById('mobileQtyInput').value);
+      const qty = parseInt(document.getElementById('mobileQtyInput').value) || 0;
+      const defectQty = parseInt(document.getElementById('mobileDefectInput').value) || 0;
+      const operator = document.getElementById('mobileOperatorInput').value || '-';
 
-      if (!taskId || !qty || qty <= 0) {
-        alert("⚠️ กรุณาระบุจำนวนยอดผลิตที่ถูกต้อง");
+      if (!taskId || (qty <= 0 && defectQty <= 0)) {
+        alert("⚠️ กรุณาระบุจำนวนยอดผลิต หรือของเสียให้ถูกต้อง");
         return;
       }
 
@@ -295,9 +314,17 @@ HTML
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: "addOutput", taskId: taskId, date: logDate, qty: qty })
+          body: JSON.stringify({ 
+            action: "addOutput", 
+            taskId: taskId, 
+            date: logDate, 
+            qty: qty, 
+            defectQty: defectQty, 
+            operator: operator 
+          })
         });
         document.getElementById('mobileQtyInput').value = '';
+        document.getElementById('mobileDefectInput').value = '';
         setTimeout(fetchTasksFromCloud, 1500);
         alert("✅ บันทึกยอดลง Google Sheets เรียบร้อยแล้ว!");
       } catch (err) {
@@ -328,15 +355,13 @@ HTML
     function updateKPIs() {
       const totalPlan = tasks.reduce((sum, t) => sum + t.planQty, 0);
       const totalActual = tasks.reduce((sum, t) => sum + t.actualQty, 0);
+      const totalDefect = tasks.reduce((sum, t) => sum + t.defectQty, 0);
       const overallProgress = totalPlan > 0 ? ((totalActual / totalPlan) * 100).toFixed(1) : 0;
-      
-      const activeOrders = tasks.filter(t => t.progress < 100).length;
-      const completedOrders = tasks.filter(t => t.progress >= 100).length;
 
       document.getElementById('kpiPlan').textContent = totalPlan.toLocaleString();
       document.getElementById('kpiActual').textContent = totalActual.toLocaleString();
+      document.getElementById('kpiDefect').textContent = totalDefect.toLocaleString();
       document.getElementById('kpiProgress').textContent = `${overallProgress}%`;
-      document.getElementById('kpiStatus').textContent = `${activeOrders} / ${completedOrders}`;
     }
 
     function updateMobileDropdown() {
@@ -355,7 +380,7 @@ HTML
       activeTasks.forEach(t => {
         const option = document.createElement('option');
         option.value = t.id;
-        option.textContent = `[${t.machine}] ${t.partName} (ผลิตแล้ว ${t.actualQty}/${t.planQty})`;
+        option.textContent = `[${t.machine}] ${t.partName} (Lot: ${t.lotNo})`;
         select.appendChild(option);
       });
     }
@@ -373,8 +398,10 @@ HTML
       if (task) {
         document.getElementById('mMachine').textContent = task.machine;
         document.getElementById('mPartName').textContent = task.partName;
+        document.getElementById('mPartNoLot').textContent = `Part No: ${task.partNo || '-'} | Lot: ${task.lotNo || '-'}`;
         document.getElementById('mProgressText').textContent = `${task.actualQty.toLocaleString()} / ${task.planQty.toLocaleString()} ชิ้น (${task.progress.toFixed(1)}%)`;
         document.getElementById('mobileQtyInput').value = '';
+        document.getElementById('mobileDefectInput').value = '';
         panel.classList.remove('hidden');
       }
     }
@@ -423,7 +450,7 @@ HTML
       tbody.innerHTML = '';
 
       if (tasks.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>`;
         return;
       }
 
@@ -435,9 +462,11 @@ HTML
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td style="font-weight: bold;">${t.machine}</td>
-          <td>${t.partName}</td>
+          <td><b>${t.partName}</b><br><small style="color: #6b7280;">${t.partNo || '-'}</small></td>
+          <td><span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12px;">${t.lotNo || '-'}</span></td>
           <td style="text-align: right;">${t.planQty.toLocaleString()}</td>
           <td style="text-align: right; font-weight: bold; color: #16a34a;">${t.actualQty.toLocaleString()}</td>
+          <td style="text-align: right; font-weight: bold; color: #dc2626;">${t.defectQty.toLocaleString()}</td>
           <td style="text-align: center; font-weight: bold;">${t.progress.toFixed(0)}%</td>
           <td style="text-align: center;">${statusBadge}</td>
         `;
