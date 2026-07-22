@@ -1,172 +1,426 @@
-Production Mobile Sync Dashboard
-  
-  
-  
-  
-  
-  
+HTML
 
 
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Production Mobile Sync Dashboard</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js"></script>
+  
+  <style>
+    .gantt .bar-progress { fill: #2563eb !important; }
+    .gantt .bar { fill: #93c5fd !important; }
+    .touch-active:active { transform: scale(0.97); }
+  </style>
+</head>
+<body class="bg-gray-100 p-3 md:p-6 font-sans select-none">
 
-  
-  
-    
-      🔄
-      กำลังซิงค์ข้อมูลกับ Google Sheets...
-    
-  
+  <!-- Status Overlay / Loader -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-white p-5 rounded-2xl shadow-xl text-center space-y-3">
+      <div class="animate-spin text-3xl">🔄</div>
+      <p class="text-sm font-bold text-gray-700">กำลังซิงค์ข้อมูลกับ Google Sheets...</p>
+    </div>
+  </div>
 
-  
+  <div class="max-w-7xl mx-auto space-y-6">
     
-    
-    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 gap-3">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl md:text-2xl font-extrabold text-gray-800">🏭 Production Cloud Dashboard</h1>
+          <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Cloud Live
+          </span>
+        </div>
+        <p class="text-xs md:text-sm text-gray-500">ข้อมูลซิงค์ตรงกันผ่าน Google Sheets Real-time</p>
+      </div>
       
-        
-          🏭 Production Cloud Dashboard
-          
-             Cloud Live
-          
-        
-        ข้อมูลซิงค์ตรงกันผ่าน Google Sheets Real-time
-      
-      
-      
-        
+      <div class="flex flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
+        <button onclick="fetchTasksFromCloud()" class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 shadow-sm">
           🔄 ดึงข้อมูลล่าสุด
-        
-        
+        </button>
+        <button onclick="clearMonthlyData()" class="px-3 py-1.5 text-xs font-bold bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-sm">
           🗑️ ล้างข้อมูลเดือนนี้
-        
-      
-    
+        </button>
+      </div>
+    </div>
 
-    
-    
-      
-        แผนผลิตรวม
-        0
-      
-      
-        ผลิตสะสมจริง
-        0
-      
-      
-        % ความคืบหน้า
-        0%
-      
-      
-        กำลังผลิต / เสร็จ
-        0 / 0
-      
-    
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-blue-500">
+        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">แผนผลิตรวม</p>
+        <h3 id="kpiPlan" class="text-lg md:text-2xl font-extrabold text-gray-800">0</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-green-500">
+        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">ผลิตสะสมจริง</p>
+        <h3 id="kpiActual" class="text-lg md:text-2xl font-extrabold text-green-600">0</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-indigo-500">
+        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">% ความคืบหน้า</p>
+        <h3 id="kpiProgress" class="text-lg md:text-2xl font-extrabold text-indigo-600">0%</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-amber-500">
+        <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">กำลังผลิต / เสร็จ</p>
+        <h3 id="kpiStatus" class="text-lg md:text-2xl font-extrabold text-amber-600">0 / 0</h3>
+      </div>
+    </div>
 
-    
-    
-      
-        📱 ลงยอดผลิตประจำวัน (Mobile Entry)
-        ซิงค์ขึ้น Cloud
-      
+    <!-- 📱 Mobile Output Panel -->
+    <div class="bg-gradient-to-br from-green-600 to-emerald-800 p-4 md:p-6 rounded-2xl shadow-lg text-white">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold flex items-center gap-2">📱 ลงยอดผลิตประจำวัน (Mobile Entry)</h2>
+        <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full font-semibold">ซิงค์ขึ้น Cloud</span>
+      </div>
 
-      
-        
-          เลือก Order ที่กำลังผลิต
-          
-            -- กำลังโหลดข้อมูล... --
-          
-        
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-green-100 mb-1">เลือก Order ที่กำลังผลิต</label>
+          <select id="mobileTaskSelect" onchange="loadMobileTaskData()" class="w-full p-3 text-base font-semibold text-gray-800 bg-white rounded-xl focus:outline-none">
+            <option value="">-- กำลังโหลดข้อมูล... --</option>
+          </select>
+        </div>
 
-        
-          
-            
-              MC-01
-              ชื่อชิ้นส่วน
-            
-            
-              ยอดผลิตสะสม
-              0 / 0 ชิ้น
-            
-          
+        <div id="mobileEntryPanel" class="hidden bg-white/10 p-4 rounded-xl border border-white/20 space-y-4">
+          <div class="flex justify-between items-end border-b border-white/20 pb-2">
+            <div>
+              <p id="mMachine" class="text-xs text-green-200">MC-01</p>
+              <h3 id="mPartName" class="text-lg font-bold text-white">ชื่อชิ้นส่วน</h3>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-green-200">ยอดผลิตสะสม</p>
+              <p id="mProgressText" class="text-base font-bold text-yellow-300">0 / 0 ชิ้น</p>
+            </div>
+          </div>
 
-          
-            
-              วันที่ทำจริง
-              
-            
-            
-              จำนวนวันนี้ (ชิ้น)
-              
-            
-          
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-green-100 mb-1">วันที่ทำจริง</label>
+              <input type="date" id="mobileLogDate" class="w-full p-2.5 text-sm text-gray-800 bg-white rounded-lg font-bold">
+            </div>
+            <div>
+              <label class="block text-xs text-green-100 mb-1">จำนวนวันนี้ (ชิ้น)</label>
+              <input type="number" id="mobileQtyInput" placeholder="0" class="w-full p-2.5 text-lg font-extrabold text-center text-green-800 bg-white rounded-lg">
+            </div>
+          </div>
 
-          
-            +10
-            +50
-            +100
-          
+          <div class="flex gap-2">
+            <button type="button" onclick="adjustQuickQty(10)" class="flex-1 bg-white/20 hover:bg-white/30 text-xs font-bold py-2 rounded-lg touch-active">+10</button>
+            <button type="button" onclick="adjustQuickQty(50)" class="flex-1 bg-white/20 hover:bg-white/30 text-xs font-bold py-2 rounded-lg touch-active">+50</button>
+            <button type="button" onclick="adjustQuickQty(100)" class="flex-1 bg-white/20 hover:bg-white/30 text-xs font-bold py-2 rounded-lg touch-active">+100</button>
+          </div>
 
-          
+          <button type="button" onclick="submitMobileOutput()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-extrabold py-3 rounded-xl shadow-md text-base touch-active">
             ⚡ บันทึกและส่งยอดขึ้น Cloud
-          
-        
-      
-    
+          </button>
+        </div>
+      </div>
+    </div>
 
-    
-    
-      📅 เปิด Order วางแผนล่วงหน้า
-      
-        
-          
-            ไลน์ / เครื่องจักร
-            
-          
-          
-            ชื่อชิ้นส่วน
-            
-          
-        
-        
-          
-            วันที่เริ่ม - สิ้นสุด
-            
-              
-              
-            
-          
-          
-            จำนวนเป้าหมาย
-            
-          
-        
-        
+    <!-- 💻 Plan Form -->
+    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-200">
+      <h2 class="text-base font-bold text-blue-700 flex items-center gap-2 mb-3">📅 เปิด Order วางแผนล่วงหน้า</h2>
+      <form id="planForm" onsubmit="addPlan(event)" class="space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">ไลน์ / เครื่องจักร</label>
+            <input type="text" id="machine" required placeholder="เช่น MC-01" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">ชื่อชิ้นส่วน</label>
+            <input type="text" id="partName" required placeholder="เช่น สินค้า A" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">วันที่เริ่ม - สิ้นสุด</label>
+            <div class="flex gap-1">
+              <input type="date" id="startDate" required class="w-1/2 px-2 py-2 text-xs border rounded-lg">
+              <input type="date" id="endDate" required class="w-1/2 px-2 py-2 text-xs border rounded-lg">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">จำนวนเป้าหมาย</label>
+            <input type="number" id="planQty" min="1" placeholder="เช่น 1000" required class="w-full px-3 py-2 text-sm border rounded-lg">
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-sm touch-active">
           + บันทึกแผนขึ้น Cloud
-        
-      
-    
+        </button>
+      </form>
+    </div>
 
-    
-    
-      📈 Gantt Chart View
-      
-        
-        ยังไม่มีข้อมูลการวางแผนการผลิต
-      
-    
+    <!-- Gantt Chart -->
+    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-200">
+      <h2 class="text-base font-bold text-gray-800 mb-3">📈 Gantt Chart View</h2>
+      <div class="overflow-x-auto border rounded-lg p-2 min-h-[150px] flex items-center justify-center">
+        <svg id="gantt"></svg>
+        <p id="emptyGanttText" class="text-gray-400 text-sm">ยังไม่มีข้อมูลการวางแผนการผลิต</p>
+      </div>
+    </div>
 
-    
-    
-      📋 ตารางสรุปสถานะการผลิต
+    <!-- Summary Table -->
+    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-200">
+      <h2 class="text-base font-bold text-gray-800 mb-3">📋 ตารางสรุปสถานะการผลิต</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-600">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+            <tr>
+              <th class="px-3 py-2">เครื่องจักร</th>
+              <th class="px-3 py-2">ชิ้นส่วน</th>
+              <th class="px-3 py-2 text-right">เป้าหมาย</th>
+              <th class="px-3 py-2 text-right">สะสมจริง</th>
+              <th class="px-3 py-2 text-center">ความคืบหน้า</th>
+              <th class="px-3 py-2 text-center">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody">
+            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">ยังไม่มีข้อมูลรายการผลิต</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 🔗 URL Google Apps Script ตัวใหม่ถูกใส่เรียบร้อยแล้วครับ
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').value = today;
+    document.getElementById('endDate').value = today;
+    document.getElementById('mobileLogDate').value = today;
+
+    let tasks = [];
+    let ganttChart;
+
+    function showLoading(show) {
+      document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+    }
+
+    async function fetchTasksFromCloud() {
+      showLoading(true);
+      try {
+        const res = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await res.json();
+        tasks = data.map(t => ({
+          ...t,
+          planQty: Number(t.planQty),
+          actualQty: Number(t.actualQty),
+          progress: Number(t.progress)
+        }));
+        renderGantt();
+      } catch (err) {
+        alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud");
+        console.error(err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function addPlan(e) {
+      e.preventDefault();
+      showLoading(true);
+
+      const newTask = {
+        id: 'TASK-' + Date.now(),
+        machine: document.getElementById('machine').value,
+        partName: document.getElementById('partName').value,
+        start: document.getElementById('startDate').value,
+        end: document.getElementById('endDate').value,
+        planQty: parseInt(document.getElementById('planQty').value)
+      };
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: "addPlan", task: newTask })
+        });
+        document.getElementById('planForm').reset();
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+        await fetchTasksFromCloud();
+      } catch (err) {
+        alert("❌ ไม่สามารถบันทึกแผนลง Cloud ได้");
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function submitMobileOutput() {
+      const taskId = document.getElementById('mobileTaskSelect').value;
+      const logDate = document.getElementById('mobileLogDate').value;
+      const qty = parseInt(document.getElementById('mobileQtyInput').value);
+
+      if (!taskId || !qty || qty <= 0) {
+        alert("⚠️ กรุณาระบุจำนวนยอดผลิตที่ถูกต้อง");
+        return;
+      }
+
+      showLoading(true);
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: "addOutput", taskId: taskId, date: logDate, qty: qty })
+        });
+        document.getElementById('mobileQtyInput').value = '';
+        await fetchTasksFromCloud();
+        alert("✅ บันทึกยอดลง Google Sheets เรียบร้อยแล้ว!");
+      } catch (err) {
+        alert("❌ บันทึกยอดไม่สำเร็จ");
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function clearMonthlyData() {
+      if (confirm("⚠️ คุณต้องการล้างข้อมูลทั้งหมดบน Cloud ในเดือนนี้ใช่หรือไม่?")) {
+        showLoading(true);
+        try {
+          await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "clearData" })
+          });
+          await fetchTasksFromCloud();
+          alert("✅ ล้างข้อมูลบน Cloud เรียบร้อยแล้ว");
+        } catch (err) {
+          alert("❌ ไม่สามารถล้างข้อมูลได้");
+        } finally {
+          showLoading(false);
+        }
+      }
+    }
+
+    function updateKPIs() {
+      const totalPlan = tasks.reduce((sum, t) => sum + t.planQty, 0);
+      const totalActual = tasks.reduce((sum, t) => sum + t.actualQty, 0);
+      const overallProgress = totalPlan > 0 ? ((totalActual / totalPlan) * 100).toFixed(1) : 0;
       
-        
-          
-            
-              เครื่องจักร
-              ชิ้นส่วน
-              เป้าหมาย
-              สะสมจริง
-              ความคืบหน้า
-              สถานะ
-            
-          
-          
-            ยังไม่มีข้อมูลรายการผลิต
+      const activeOrders = tasks.filter(t => t.progress < 100).length;
+      const completedOrders = tasks.filter(t => t.progress >= 100).length;
+
+      document.getElementById('kpiPlan').textContent = totalPlan.toLocaleString();
+      document.getElementById('kpiActual').textContent = totalActual.toLocaleString();
+      document.getElementById('kpiProgress').textContent = `${overallProgress}%`;
+      document.getElementById('kpiStatus').textContent = `${activeOrders} / ${completedOrders}`;
+    }
+
+    function updateMobileDropdown() {
+      const select = document.getElementById('mobileTaskSelect');
+      select.innerHTML = '';
+
+      const activeTasks = tasks.filter(t => t.progress < 100);
+
+      if (activeTasks.length === 0) {
+        select.innerHTML = '<option value="">-- ไม่พบ Order ที่กำลังผลิต --</option>';
+        document.getElementById('mobileEntryPanel').classList.add('hidden');
+        return;
+      }
+
+      select.innerHTML = '<option value="">-- แตะเพื่อเลือกไลน์การผลิต / ชิ้นส่วน --</option>';
+      activeTasks.forEach(t => {
+        const option = document.createElement('option');
+        option.value = t.id;
+        option.textContent = `[${t.machine}] ${t.partName} (ผลิตแล้ว ${t.actualQty}/${t.planQty})`;
+        select.appendChild(option);
+      });
+    }
+
+    function loadMobileTaskData() {
+      const taskId = document.getElementById('mobileTaskSelect').value;
+      const panel = document.getElementById('mobileEntryPanel');
+
+      if (!taskId) {
+        panel.classList.add('hidden');
+        return;
+      }
+
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        document.getElementById('mMachine').textContent = task.machine;
+        document.getElementById('mPartName').textContent = task.partName;
+        document.getElementById('mProgressText').textContent = `${task.actualQty.toLocaleString()} / ${task.planQty.toLocaleString()} ชิ้น (${task.progress.toFixed(1)}%)`;
+        document.getElementById('mobileQtyInput').value = '';
+        panel.classList.remove('hidden');
+      }
+    }
+
+    function adjustQuickQty(amount) {
+      const input = document.getElementById('mobileQtyInput');
+      const current = parseInt(input.value) || 0;
+      input.value = current + amount;
+    }
+
+    function renderGantt() {
+      document.getElementById('gantt').innerHTML = '';
+      const emptyText = document.getElementById('emptyGanttText');
+
+      if (tasks.length === 0) {
+        if (emptyText) emptyText.style.display = 'block';
+        updateKPIs();
+        updateTable();
+        updateMobileDropdown();
+        return;
+      }
+
+      if (emptyText) emptyText.style.display = 'none';
+
+      const formattedTasks = tasks.map(t => ({
+        ...t,
+        name: `${t.machine} | ${t.partName} [${t.actualQty.toLocaleString()}/${t.planQty.toLocaleString()}]`
+      }));
+
+      ganttChart = new Gantt("#gantt", formattedTasks, {
+        header_height: 50,
+        column_width: 30,
+        step: 24,
+        view_modes: ['Day', 'Week', 'Month'],
+        view_mode: 'Day',
+        language: 'en'
+      });
+
+      updateKPIs();
+      updateTable();
+      updateMobileDropdown();
+    }
+
+    function updateTable() {
+      const tbody = document.getElementById('summaryTableBody');
+      tbody.innerHTML = '';
+
+      if (tasks.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">ยังไม่มีข้อมูลรายการผลิต</td></tr>`;
+        return;
+      }
+
+      tasks.forEach(t => {
+        let statusBadge = t.progress >= 100 
+          ? `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">Done</span>`
+          : `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">Run</span>`;
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50';
+        tr.innerHTML = `
+          <td class="px-3 py-2 font-semibold text-gray-800">${t.machine}</td>
+          <td class="px-3 py-2">${t.partName}</td>
+          <td class="px-3 py-2 text-right font-medium">${t.planQty.toLocaleString()}</td>
+          <td class="px-3 py-2 text-right font-bold text-green-600">${t.actualQty.toLocaleString()}</td>
+          <td class="px-3 py-2 text-center font-bold">${t.progress.toFixed(0)}%</td>
+          <td class="px-3 py-2 text-center">${statusBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.onload = fetchTasksFromCloud;
+  </script>
+</body>
+</html>
