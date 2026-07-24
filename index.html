@@ -126,7 +126,6 @@
           <div class="form-group">
             <label>สายการผลิต (Line)</label>
             <select id="lineSelect" required>
-              <option value="Line L5KOT">Line L5KOT</option>
               <option value="Line A">Line A</option>
               <option value="Line Q">Line Q</option>
               <option value="Line C1">Line C1</option>
@@ -186,7 +185,8 @@
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
 
-    const ALL_LINES = ["Line L5KOT", "Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
+    // อัปเดตรายชื่อ Line เอา Line L5KOT ออกแล้วครับ
+    const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
     let rawLogs = [];
 
     function showLoading(show) {
@@ -231,20 +231,20 @@
 
       rawLogs.forEach(item => {
         const lName = item.line;
-        if (!lineMap[lName]) {
-          lineMap[lName] = { plan: 0, actual: 0, defect: 0 };
+        // จะคำนวณและแสดงผลเฉพาะ Line ที่อยู่ในรายชื่อ ALL_LINES เท่านั้น
+        if (lineMap[lName]) {
+          const p = Number(item.planQty) || 0;
+          const a = Number(item.actualQty) || 0;
+          const d = Number(item.defectQty) || 0;
+
+          lineMap[lName].plan += p;
+          lineMap[lName].actual += a;
+          lineMap[lName].defect += d;
+
+          gPlan += p;
+          gActual += a;
+          gDefect += d;
         }
-        const p = Number(item.planQty) || 0;
-        const a = Number(item.actualQty) || 0;
-        const d = Number(item.defectQty) || 0;
-
-        lineMap[lName].plan += p;
-        lineMap[lName].actual += a;
-        lineMap[lName].defect += d;
-
-        gPlan += p;
-        gActual += a;
-        gDefect += d;
       });
 
       // Render Grand Totals
