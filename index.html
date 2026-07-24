@@ -2,64 +2,64 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Production Mobile Sync Dashboard</title>
-  
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js"></script>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Production Monitoring Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f3f4f6; padding: 15px; color: #1f2937; }
-    .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-    
-    .header { background: #ffffff; padding: 16px 20px; border-radius: 12px; border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .header-title { font-size: 20px; font-weight: 800; color: #111827; }
-    .header-sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
-    .badge { background: #dcfce7; color: #15803d; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 9999px; display: inline-block; }
-    
-    .btn { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
-    .btn-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-    .btn-blue:hover { background: #dbeafe; }
-    .btn-red { background: #ef4444; color: #ffffff; }
-    .btn-red:hover { background: #dc2626; }
-    .btn-submit { background: #2563eb; color: #ffffff; width: 100%; padding: 10px; font-size: 14px; margin-top: 10px; }
-    .btn-yellow { background: #facc15; color: #000000; width: 100%; padding: 12px; font-size: 15px; font-weight: 800; border-radius: 10px; margin-top: 10px; }
+    body { background-color: #0f172a; color: #f8fafc; padding: 12px; }
+    .container { max-width: 650px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-    .kpi-card { background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #e5e7eb; border-left-width: 5px; }
-    .kpi-title { font-size: 11px; font-weight: bold; color: #9ca3af; text-transform: uppercase; }
-    .kpi-value { font-size: 22px; font-weight: 800; margin-top: 4px; }
-    
-    .mobile-panel { background: linear-gradient(135deg, #059669, #064e3b); color: #ffffff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .mobile-panel select, .mobile-panel input { width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 4px; font-weight: bold; }
-    .quick-btn-group { display: flex; gap: 8px; margin-top: 8px; }
-    .quick-btn { flex: 1; background: rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; }
-    .quick-btn:hover { background: rgba(255,255,255,0.3); }
+    /* Header */
+    .header { background: #1e293b; padding: 16px; border-radius: 14px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 18px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .btn-refresh { background: #334155; color: #f8fafc; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
-    .section-card { background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e5e7eb; }
-    .section-title { font-size: 15px; font-weight: bold; color: #1d4ed8; margin-bottom: 12px; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    .form-group label { font-size: 12px; font-weight: bold; color: #4b5563; }
-    .form-group input { padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 13px; }
+    /* Total Summary Metrics */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .metric-card { background: #1e293b; padding: 12px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
+    .metric-title { font-size: 11px; color: #94a3b8; font-weight: bold; }
+    .metric-val { font-size: 18px; font-weight: 800; margin-top: 4px; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-    th { background: #f9fafb; color: #374151; font-size: 11px; text-transform: uppercase; }
+    /* Line Cards (5 Lines) */
+    .dashboard-title { font-size: 14px; font-weight: bold; color: #94a3b8; margin-bottom: 2px; }
+    .lines-grid { display: flex; flex-direction: column; gap: 10px; }
+    .line-card { background: #1e293b; padding: 14px; border-radius: 12px; border: 1px solid #334155; }
+    .line-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .line-title { font-size: 15px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .status-badge { font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 6px; }
+    .status-good { background: #065f46; color: #34d399; }
+    .status-warning { background: #881337; color: #fda4af; }
 
-    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
+    /* Progress Bar */
+    .progress-bg { background: #0f172a; height: 10px; border-radius: 5px; overflow: hidden; margin: 8px 0; border: 1px solid #334155; }
+    .progress-fill { height: 100%; background: #10b981; transition: width 0.4s ease; }
+    .progress-fill.low { background: #f43f5e; }
+
+    .line-details { display: grid; grid-template-columns: repeat(4, 1fr); font-size: 11px; text-align: center; color: #cbd5e1; margin-top: 6px; }
+
+    /* Entry Form */
+    .mobile-form { background: #1e293b; padding: 16px; border-radius: 16px; border: 1px solid #334155; }
+    .form-title { font-size: 15px; font-weight: bold; color: #f8fafc; margin-bottom: 12px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 4px; }
+    .form-group select, .form-group input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 13px; font-weight: bold; outline: none; }
+
+    .btn-submit { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 10px; background: #0284c7; color: #fff; }
+
+    /* History Log */
+    .history-card { background: #1e293b; padding: 16px; border-radius: 14px; border: 1px solid #334155; }
+    .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; font-size: 12px; }
+
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
     .hidden { display: none !important; }
-    
-    .gantt .bar-progress { fill: #2563eb !important; }
-    .gantt .bar { fill: #93c5fd !important; }
   </style>
 </head>
 <body>
 
   <div id="loadingOverlay" class="hidden">
-    <div style="background: #fff; color: #000; padding: 20px 30px; border-radius: 12px; text-align: center;">
-      <p style="font-weight: bold; font-size: 14px;">🔄 กำลังซิงค์ข้อมูลกับ Google Sheets...</p>
+    <div style="background: #1e293b; color: #fff; padding: 20px 30px; border-radius: 12px; text-align: center; border: 1px solid #334155;">
+      <p style="font-weight: bold; font-size: 14px;">🔄 กำลังซิงค์ข้อมูลกับ Cloud...</p>
     </div>
   </div>
 
@@ -68,160 +68,168 @@
     <!-- Header -->
     <div class="header">
       <div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <h1 class="header-title">🏭 Production Cloud Dashboard</h1>
-          <span class="badge">Cloud Live</span>
-        </div>
-        <p class="header-sub">ข้อมูลซิงค์ตรงกันผ่าน Google Sheets Real-time</p>
+        <h1>🏭 Production Dashboard</h1>
+        <p style="font-size: 11px; color: #94a3b8; margin-top: 2px;">ติดตามสถานะการผลิต 5 ไลน์ผลิต</p>
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button onclick="fetchTasksFromCloud()" class="btn btn-blue">🔄 ดึงข้อมูลล่าสุด</button>
-        <button onclick="clearMonthlyData()" class="btn btn-red">🗑️ ล้างข้อมูลเดือนนี้</button>
+      <button onclick="loadProdData()" class="btn-refresh">🔄 ดึงข้อมูล</button>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="summary-grid">
+      <div class="metric-card">
+        <div class="metric-title">🎯 Plan Total</div>
+        <div id="totalPlan" class="metric-val" style="color: #38bdf8;">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">⚙️ Actual Total</div>
+        <div id="totalActual" class="metric-val" style="color: #34d399;">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">❌ Defect Total</div>
+        <div id="totalDefect" class="metric-val" style="color: #f43f5e;">0</div>
       </div>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="kpi-grid">
-      <div class="kpi-card" style="border-left-color: #3b82f6;">
-        <div class="kpi-title">แผนผลิตรวม</div>
-        <div id="kpiPlan" class="kpi-value">0</div>
-      </div>
-      <div class="kpi-card" style="border-left-color: #22c55e;">
-        <div class="kpi-title">ผลิตดีรวม</div>
-        <div id="kpiActual" class="kpi-value" style="color: #16a34a;">0</div>
-      </div>
-      <div class="kpi-card" style="border-left-color: #ef4444;">
-        <div class="kpi-title">ของเสียสะสม (NG)</div>
-        <div id="kpiDefect" class="kpi-value" style="color: #dc2626;">0</div>
-      </div>
-      <div class="kpi-card" style="border-left-color: #6366f1;">
-        <div class="kpi-title">% ความคืบหน้า</div>
-        <div id="kpiProgress" class="kpi-value" style="color: #4f46e5;">0%</div>
+    <!-- 5 Production Lines Cards -->
+    <div>
+      <div class="dashboard-title">📊 สถานะแต่ละไลน์ผลิต (Line Progress)</div>
+      <div class="lines-grid">
+        
+        <!-- Line A -->
+        <div id="cardLineA" class="line-card">
+          <div class="line-header">
+            <div class="line-title">🔵 Line A</div>
+            <span id="badgeLineA" class="status-badge status-good">Normal</span>
+          </div>
+          <div class="progress-bg"><div id="progressLineA" class="progress-fill" style="width: 0%;"></div></div>
+          <div class="line-details">
+            <div>Plan: <b id="planLineA">0</b></div>
+            <div>Actual: <b id="actualLineA">0</b></div>
+            <div>Defect: <b id="defectLineA" style="color:#f43f5e;">0</b></div>
+            <div>Achieve: <b id="pctLineA">0%</b></div>
+          </div>
+        </div>
+
+        <!-- Line Q -->
+        <div id="cardLineQ" class="line-card">
+          <div class="line-header">
+            <div class="line-title">🟣 Line Q</div>
+            <span id="badgeLineQ" class="status-badge status-good">Normal</span>
+          </div>
+          <div class="progress-bg"><div id="progressLineQ" class="progress-fill" style="width: 0%;"></div></div>
+          <div class="line-details">
+            <div>Plan: <b id="planLineQ">0</b></div>
+            <div>Actual: <b id="actualLineQ">0</b></div>
+            <div>Defect: <b id="defectLineQ" style="color:#f43f5e;">0</b></div>
+            <div>Achieve: <b id="pctLineQ">0%</b></div>
+          </div>
+        </div>
+
+        <!-- Line C1 -->
+        <div id="cardLineC1" class="line-card">
+          <div class="line-header">
+            <div class="line-title">🟢 Line C1</div>
+            <span id="badgeLineC1" class="status-badge status-good">Normal</span>
+          </div>
+          <div class="progress-bg"><div id="progressLineC1" class="progress-fill" style="width: 0%;"></div></div>
+          <div class="line-details">
+            <div>Plan: <b id="planLineC1">0</b></div>
+            <div>Actual: <b id="actualLineC1">0</b></div>
+            <div>Defect: <b id="defectLineC1" style="color:#f43f5e;">0</b></div>
+            <div>Achieve: <b id="pctLineC1">0%</b></div>
+          </div>
+        </div>
+
+        <!-- Line C2 -->
+        <div id="cardLineC2" class="line-card">
+          <div class="line-header">
+            <div class="line-title">🟡 Line C2</div>
+            <span id="badgeLineC2" class="status-badge status-good">Normal</span>
+          </div>
+          <div class="progress-bg"><div id="progressLineC2" class="progress-fill" style="width: 0%;"></div></div>
+          <div class="line-details">
+            <div>Plan: <b id="planLineC2">0</b></div>
+            <div>Actual: <b id="actualLineC2">0</b></div>
+            <div>Defect: <b id="defectLineC2" style="color:#f43f5e;">0</b></div>
+            <div>Achieve: <b id="pctLineC2">0%</b></div>
+          </div>
+        </div>
+
+        <!-- Line C3 -->
+        <div id="cardLineC3" class="line-card">
+          <div class="line-header">
+            <div class="line-title">🟠 Line C3</div>
+            <span id="badgeLineC3" class="status-badge status-good">Normal</span>
+          </div>
+          <div class="progress-bg"><div id="progressLineC3" class="progress-fill" style="width: 0%;"></div></div>
+          <div class="line-details">
+            <div>Plan: <b id="planLineC3">0</b></div>
+            <div>Actual: <b id="actualLineC3">0</b></div>
+            <div>Defect: <b id="defectLineC3" style="color:#f43f5e;">0</b></div>
+            <div>Achieve: <b id="pctLineC3">0%</b></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- Mobile Panel -->
-    <div class="mobile-panel">
-      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">📱 ลงยอดผลิตประจำวัน (Mobile Entry)</h2>
-      <div class="form-group">
-        <label style="color: #e0e7ff; font-size: 12px;">เลือก Order ที่กำลังผลิต</label>
-        <select id="mobileTaskSelect" onchange="loadMobileTaskData()">
-          <option value="">-- กำลังโหลดข้อมูล... --</option>
-        </select>
-      </div>
-
-      <div id="mobileEntryPanel" class="hidden" style="margin-top: 12px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px;">
-        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 8px; margin-bottom: 8px;">
-          <div>
-            <p id="mMachine" style="font-size: 11px; opacity: 0.8;">MC-01</p>
-            <h3 id="mPartName" style="font-size: 16px; font-weight: bold;">ชื่อชิ้นส่วน</h3>
-            <p id="mPartNoLot" style="font-size: 11px; color: #fef08a;">Part No: - | Lot: -</p>
-          </div>
-          <div style="text-align: right;">
-            <p style="font-size: 11px; opacity: 0.8;">ยอดผลิตสะสม</p>
-            <p id="mProgressText" style="font-size: 14px; font-weight: bold; color: #fde047;">0 / 0 ชิ้น</p>
-          </div>
+    <!-- Mobile Entry Form -->
+    <div class="mobile-form">
+      <div class="form-title">📝 คีย์รายงานผลการผลิต</div>
+      <form id="prodForm" onsubmit="submitProductionLog(event)">
+        <div class="form-group">
+          <label>เลือกไลน์ผลิต (Production Line)</label>
+          <select id="lineSelect" required>
+            <option value="Line A">1. Line A</option>
+            <option value="Line Q">2. Line Q</option>
+            <option value="Line C1">3. Line C1</option>
+            <option value="Line C2">4. Line C2</option>
+            <option value="Line C3">5. Line C3</option>
+          </select>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-          <div>
-            <label style="font-size: 11px;">วันที่ทำจริง</label>
-            <input type="date" id="mobileLogDate" style="color: #000;">
-          </div>
-          <div>
-            <label style="font-size: 11px;">Operator (ผู้รับผิดชอบ)</label>
-            <input type="text" id="mobileOperatorInput" placeholder="เช่น ชื่อช่าง" style="color: #000;">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <div>
-            <label style="font-size: 11px;">ยอดดีวันนี้ (ชิ้น)</label>
-            <input type="number" id="mobileQtyInput" placeholder="0" style="color: #000; text-align: center; font-size: 16px;">
-          </div>
-          <div>
-            <label style="font-size: 11px;">ของเสีย (NG)</label>
-            <input type="number" id="mobileDefectInput" placeholder="0" style="color: #991b1b; text-align: center; font-size: 16px; background: #fee2e2;">
-          </div>
-        </div>
-
-        <div class="quick-btn-group">
-          <button type="button" onclick="adjustQuickQty(10)" class="quick-btn">+10</button>
-          <button type="button" onclick="adjustQuickQty(50)" class="quick-btn">+50</button>
-          <button type="button" onclick="adjustQuickQty(100)" class="quick-btn">+100</button>
-        </div>
-
-        <button type="button" onclick="submitMobileOutput()" class="btn btn-yellow">⚡ บันทึกและส่งยอดขึ้น Cloud</button>
-      </div>
-    </div>
-
-    <!-- Plan Form -->
-    <div class="section-card">
-      <h2 class="section-title">📅 เปิด Order วางแผนล่วงหน้า</h2>
-      <form id="planForm" onsubmit="addPlan(event)">
-        <div class="form-grid">
+        <div class="form-row">
           <div class="form-group">
-            <label>ไลน์ / เครื่องจักร</label>
-            <input type="text" id="machine" required placeholder="เช่น MC-01">
-          </div>
-          <div class="form-group">
-            <label>Part Name (ชื่อชิ้นส่วน)</label>
-            <input type="text" id="partName" required placeholder="เช่น สินค้า A">
-          </div>
-          <div class="form-group">
-            <label>Part No.</label>
-            <input type="text" id="partNo" placeholder="เช่น P-1001">
+            <label>ชื่อชิ้นงาน (Part Name)</label>
+            <input type="text" id="partName" placeholder="เช่น Bracket A" required>
           </div>
           <div class="form-group">
             <label>Lot No.</label>
-            <input type="text" id="lotNo" placeholder="เช่น LOT-2026-01">
-          </div>
-          <div class="form-group">
-            <label>วันที่เริ่ม - สิ้นสุด</label>
-            <div style="display: flex; gap: 4px;">
-              <input type="date" id="startDate" required>
-              <input type="date" id="endDate" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>จำนวนเป้าหมาย</label>
-            <input type="number" id="planQty" min="1" placeholder="เช่น 1000" required>
+            <input type="text" id="lotNo" placeholder="เช่น L6907-01" required>
           </div>
         </div>
-        <button type="submit" class="btn btn-submit">+ บันทึกแผนขึ้น Cloud</button>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>แผนผลิต (Plan Pcs)</label>
+            <input type="number" id="planQty" required placeholder="0" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>ผลิตได้ (Actual Pcs)</label>
+            <input type="number" id="actualQty" required placeholder="0" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>ของเสีย (Defect Pcs)</label>
+            <input type="number" id="defectQty" value="0" placeholder="0" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>ผู้บันทึก (Operator)</label>
+            <input type="text" id="operator" placeholder="ชื่อผู้รายงาน" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">💾 บันทึกผลการผลิต</button>
       </form>
     </div>
 
-    <!-- Gantt Chart -->
-    <div class="section-card">
-      <h2 class="section-title" style="color: #111827;">📈 Gantt Chart View</h2>
-      <div style="overflow-x: auto; min-height: 120px; display: flex; align-items: center; justify-content: center; border: 1px solid #f3f4f6; border-radius: 8px; padding: 10px;">
-        <svg id="gantt"></svg>
-        <p id="emptyGanttText" style="color: #9ca3af; font-size: 13px;">ยังไม่มีข้อมูลการวางแผนการผลิต</p>
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="section-card">
-      <h2 class="section-title" style="color: #111827;">📋 ตารางสรุปสถานะการผลิต</h2>
-      <div style="overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>เครื่องจักร</th>
-              <th>Part Name / Part No.</th>
-              <th>Lot No.</th>
-              <th style="text-align: right;">เป้าหมาย</th>
-              <th style="text-align: right;">ผลิตดี</th>
-              <th style="text-align: right; color: #dc2626;">ของเสีย (NG)</th>
-              <th style="text-align: center;">ความคืบหน้า</th>
-              <th style="text-align: center;">สถานะ</th>
-            </tr>
-          </thead>
-          <tbody id="summaryTableBody">
-            <tr><td colspan="8" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>
-          </tbody>
-        </table>
+    <!-- History Log -->
+    <div class="history-card">
+      <div class="dashboard-title" style="margin-bottom: 8px;">📋 ประวัติการคีย์ล่าสุด</div>
+      <div id="logList">
+        <p style="text-align: center; color: #64748b; padding: 10px; font-size: 12px;">กำลังโหลดประวัติ...</p>
       </div>
     </div>
 
@@ -229,53 +237,118 @@
 
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
-
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').value = today;
-    document.getElementById('endDate').value = today;
-    document.getElementById('mobileLogDate').value = today;
-
-    let tasks = [];
-    let ganttChart;
+    let prodLogs = [];
 
     function showLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
     }
 
-    async function fetchTasksFromCloud() {
+    async function loadProdData() {
       showLoading(true);
       try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'GET', redirect: 'follow' });
-        const data = await res.json();
-        tasks = data.map(t => ({
-          ...t,
-          planQty: Number(t.planQty),
-          actualQty: Number(t.actualQty),
-          defectQty: Number(t.defectQty || 0),
-          progress: Number(t.progress)
-        }));
-        renderGantt();
+        const res = await fetch(`${GOOGLE_SCRIPT_URL}?module=production`, { method: 'GET', redirect: 'follow' });
+        prodLogs = await res.json();
+        calculateDashboard();
+        renderLogs();
       } catch (err) {
-        alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud");
-        console.error(err);
+        alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูล");
       } finally {
         showLoading(false);
       }
     }
 
-    async function addPlan(e) {
+    function calculateDashboard() {
+      const lineData = {
+        'Line A': { plan: 0, actual: 0, defect: 0, id: 'LineA' },
+        'Line Q': { plan: 0, actual: 0, defect: 0, id: 'LineQ' },
+        'Line C1': { plan: 0, actual: 0, defect: 0, id: 'LineC1' },
+        'Line C2': { plan: 0, actual: 0, defect: 0, id: 'LineC2' },
+        'Line C3': { plan: 0, actual: 0, defect: 0, id: 'LineC3' }
+      };
+
+      let totPlan = 0, totActual = 0, totDefect = 0;
+
+      prodLogs.forEach(item => {
+        const l = item.line;
+        if (lineData[l]) {
+          lineData[l].plan += Number(item.planQty) || 0;
+          lineData[l].actual += Number(item.actualQty) || 0;
+          lineData[l].defect += Number(item.defectQty) || 0;
+        }
+        totPlan += Number(item.planQty) || 0;
+        totActual += Number(item.actualQty) || 0;
+        totDefect += Number(item.defectQty) || 0;
+      });
+
+      // Update Summary Cards
+      document.getElementById('totalPlan').innerText = totPlan.toLocaleString();
+      document.getElementById('totalActual').innerText = totActual.toLocaleString();
+      document.getElementById('totalDefect').innerText = totDefect.toLocaleString();
+
+      // Update Individual Lines
+      for (let key in lineData) {
+        const d = lineData[key];
+        const pct = d.plan > 0 ? Math.round((d.actual / d.plan) * 100) : 0;
+        
+        document.getElementById(`plan${d.id}`).innerText = d.plan.toLocaleString();
+        document.getElementById(`actual${d.id}`).innerText = d.actual.toLocaleString();
+        document.getElementById(`defect${d.id}`).innerText = d.defect.toLocaleString();
+        document.getElementById(`pct${d.id}`).innerText = `${pct}%`;
+
+        const fill = document.getElementById(`progress${d.id}`);
+        fill.style.width = `${Math.min(pct, 100)}%`;
+
+        const badge = document.getElementById(`badge${d.id}`);
+        if (pct < 80 && d.plan > 0) {
+          fill.classList.add('low');
+          badge.className = 'status-badge status-warning';
+          badge.innerText = 'Delay';
+        } else {
+          fill.classList.remove('low');
+          badge.className = 'status-badge status-good';
+          badge.innerText = 'Normal';
+        }
+      }
+    }
+
+    function renderLogs() {
+      const container = document.getElementById('logList');
+      container.innerHTML = '';
+
+      if (!prodLogs || prodLogs.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: #64748b; padding: 10px; font-size: 12px;">ยังไม่มีประวัติการบันทึก</p>`;
+        return;
+      }
+
+      [...prodLogs].reverse().slice(0, 10).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'log-item';
+        div.innerHTML = `
+          <div>
+            <strong style="color:#38bdf8;">[${item.line}] ${item.partName}</strong> (Lot: ${item.lotNo})
+            <div style="color:#94a3b8; font-size:10px;">${item.operator} | ${item.timestamp || '-'}</div>
+          </div>
+          <div style="text-align:right;">
+            <span style="color:#34d399; font-weight:bold;">${item.actualQty}/${item.planQty}</span> Pcs
+            <div style="color:#f43f5e; font-size:10px;">NG: ${item.defectQty}</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function submitProductionLog(e) {
       e.preventDefault();
       showLoading(true);
 
-      const newTask = {
-        id: 'TASK-' + Date.now(),
-        machine: document.getElementById('machine').value,
+      const data = {
+        line: document.getElementById('lineSelect').value,
         partName: document.getElementById('partName').value,
-        partNo: document.getElementById('partNo').value || '-',
-        lotNo: document.getElementById('lotNo').value || '-',
-        start: document.getElementById('startDate').value,
-        end: document.getElementById('endDate').value,
-        planQty: parseInt(document.getElementById('planQty').value)
+        lotNo: document.getElementById('lotNo').value,
+        planQty: document.getElementById('planQty').value,
+        actualQty: document.getElementById('actualQty').value,
+        defectQty: document.getElementById('defectQty').value,
+        operator: document.getElementById('operator').value
       };
 
       try {
@@ -283,198 +356,19 @@
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: "addPlan", task: newTask })
+          body: JSON.stringify({ action: "addProductionLog", data: data })
         });
-        document.getElementById('planForm').reset();
-        document.getElementById('startDate').value = today;
-        document.getElementById('endDate').value = today;
-        setTimeout(fetchTasksFromCloud, 1500);
+
+        document.getElementById('prodForm').reset();
+        setTimeout(loadProdData, 1500);
+        alert("✅ บันทึกผลการผลิตลง Cloud เรียบร้อย!");
       } catch (err) {
-        alert("❌ ไม่สามารถบันทึกแผนลง Cloud ได้");
+        alert("❌ ไม่สามารถบันทึกข้อมูลได้");
         showLoading(false);
       }
     }
 
-    async function submitMobileOutput() {
-      const taskId = document.getElementById('mobileTaskSelect').value;
-      const logDate = document.getElementById('mobileLogDate').value;
-      const qty = parseInt(document.getElementById('mobileQtyInput').value) || 0;
-      const defectQty = parseInt(document.getElementById('mobileDefectInput').value) || 0;
-      const operator = document.getElementById('mobileOperatorInput').value || '-';
-
-      if (!taskId || (qty <= 0 && defectQty <= 0)) {
-        alert("⚠️ กรุณาระบุจำนวนยอดผลิต หรือของเสียให้ถูกต้อง");
-        return;
-      }
-
-      showLoading(true);
-
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: "addOutput", 
-            taskId: taskId, 
-            date: logDate, 
-            qty: qty, 
-            defectQty: defectQty, 
-            operator: operator 
-          })
-        });
-        document.getElementById('mobileQtyInput').value = '';
-        document.getElementById('mobileDefectInput').value = '';
-        setTimeout(fetchTasksFromCloud, 1500);
-        alert("✅ บันทึกยอดลง Google Sheets เรียบร้อยแล้ว!");
-      } catch (err) {
-        alert("❌ บันทึกยอดไม่สำเร็จ");
-        showLoading(false);
-      }
-    }
-
-    async function clearMonthlyData() {
-      if (confirm("⚠️ คุณต้องการล้างข้อมูลทั้งหมดบน Cloud ในเดือนนี้ใช่หรือไม่?")) {
-        showLoading(true);
-        try {
-          await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: "clearData" })
-          });
-          setTimeout(fetchTasksFromCloud, 1500);
-          alert("✅ ล้างข้อมูลบน Cloud เรียบร้อยแล้ว");
-        } catch (err) {
-          alert("❌ ไม่สามารถล้างข้อมูลได้");
-          showLoading(false);
-        }
-      }
-    }
-
-    function updateKPIs() {
-      const totalPlan = tasks.reduce((sum, t) => sum + t.planQty, 0);
-      const totalActual = tasks.reduce((sum, t) => sum + t.actualQty, 0);
-      const totalDefect = tasks.reduce((sum, t) => sum + t.defectQty, 0);
-      const overallProgress = totalPlan > 0 ? ((totalActual / totalPlan) * 100).toFixed(1) : 0;
-
-      document.getElementById('kpiPlan').textContent = totalPlan.toLocaleString();
-      document.getElementById('kpiActual').textContent = totalActual.toLocaleString();
-      document.getElementById('kpiDefect').textContent = totalDefect.toLocaleString();
-      document.getElementById('kpiProgress').textContent = `${overallProgress}%`;
-    }
-
-    function updateMobileDropdown() {
-      const select = document.getElementById('mobileTaskSelect');
-      select.innerHTML = '';
-
-      const activeTasks = tasks.filter(t => t.progress < 100);
-
-      if (activeTasks.length === 0) {
-        select.innerHTML = '<option value="">-- ไม่พบ Order ที่กำลังผลิต --</option>';
-        document.getElementById('mobileEntryPanel').classList.add('hidden');
-        return;
-      }
-
-      select.innerHTML = '<option value="">-- แตะเพื่อเลือกไลน์การผลิต / ชิ้นส่วน --</option>';
-      activeTasks.forEach(t => {
-        const option = document.createElement('option');
-        option.value = t.id;
-        option.textContent = `[${t.machine}] ${t.partName} (Lot: ${t.lotNo})`;
-        select.appendChild(option);
-      });
-    }
-
-    function loadMobileTaskData() {
-      const taskId = document.getElementById('mobileTaskSelect').value;
-      const panel = document.getElementById('mobileEntryPanel');
-
-      if (!taskId) {
-        panel.classList.add('hidden');
-        return;
-      }
-
-      const task = tasks.find(t => t.id === taskId);
-      if (task) {
-        document.getElementById('mMachine').textContent = task.machine;
-        document.getElementById('mPartName').textContent = task.partName;
-        document.getElementById('mPartNoLot').textContent = `Part No: ${task.partNo || '-'} | Lot: ${task.lotNo || '-'}`;
-        document.getElementById('mProgressText').textContent = `${task.actualQty.toLocaleString()} / ${task.planQty.toLocaleString()} ชิ้น (${task.progress.toFixed(1)}%)`;
-        document.getElementById('mobileQtyInput').value = '';
-        document.getElementById('mobileDefectInput').value = '';
-        panel.classList.remove('hidden');
-      }
-    }
-
-    function adjustQuickQty(amount) {
-      const input = document.getElementById('mobileQtyInput');
-      const current = parseInt(input.value) || 0;
-      input.value = current + amount;
-    }
-
-    function renderGantt() {
-      document.getElementById('gantt').innerHTML = '';
-      const emptyText = document.getElementById('emptyGanttText');
-
-      if (tasks.length === 0) {
-        if (emptyText) emptyText.style.display = 'block';
-        updateKPIs();
-        updateTable();
-        updateMobileDropdown();
-        return;
-      }
-
-      if (emptyText) emptyText.style.display = 'none';
-
-      const formattedTasks = tasks.map(t => ({
-        ...t,
-        name: `${t.machine} | ${t.partName} [${t.actualQty.toLocaleString()}/${t.planQty.toLocaleString()}]`
-      }));
-
-      ganttChart = new Gantt("#gantt", formattedTasks, {
-        header_height: 50,
-        column_width: 30,
-        step: 24,
-        view_modes: ['Day', 'Week', 'Month'],
-        view_mode: 'Day',
-        language: 'en'
-      });
-
-      updateKPIs();
-      updateTable();
-      updateMobileDropdown();
-    }
-
-    function updateTable() {
-      const tbody = document.getElementById('summaryTableBody');
-      tbody.innerHTML = '';
-
-      if (tasks.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #9ca3af; padding: 20px;">ยังไม่มีข้อมูลรายการผลิต</td></tr>`;
-        return;
-      }
-
-      tasks.forEach(t => {
-        let statusBadge = t.progress >= 100 
-          ? `<span style="background: #dcfce7; color: #166534; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">Done</span>`
-          : `<span style="background: #dbeafe; color: #1e40af; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">Run</span>`;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-weight: bold;">${t.machine}</td>
-          <td><b>${t.partName}</b><br><small style="color: #6b7280;">${t.partNo || '-'}</small></td>
-          <td><span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12px;">${t.lotNo || '-'}</span></td>
-          <td style="text-align: right;">${t.planQty.toLocaleString()}</td>
-          <td style="text-align: right; font-weight: bold; color: #16a34a;">${t.actualQty.toLocaleString()}</td>
-          <td style="text-align: right; font-weight: bold; color: #dc2626;">${t.defectQty.toLocaleString()}</td>
-          <td style="text-align: center; font-weight: bold;">${t.progress.toFixed(0)}%</td>
-          <td style="text-align: center;">${statusBadge}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    window.onload = fetchTasksFromCloud;
+    window.onload = loadProdData;
   </script>
 </body>
 </html>
