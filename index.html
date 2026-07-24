@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Production Monitoring Dashboard</title>
+  <title>Production Monitoring & Calendar Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; padding: 12px; }
-    .container { max-width: 650px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .container { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 
     /* Header */
     .header { background: #1e293b; padding: 16px; border-radius: 14px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
@@ -41,6 +41,27 @@
     .progress-fill.low { background: #f43f5e; }
 
     .line-details { display: grid; grid-template-columns: repeat(5, 1fr); font-size: 10px; text-align: center; color: #cbd5e1; margin-top: 6px; }
+
+    /* Calendar Section */
+    .calendar-card { background: #1e293b; padding: 16px; border-radius: 16px; border: 1px solid #334155; }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .calendar-header h2 { font-size: 15px; font-weight: bold; color: #38bdf8; }
+    .calendar-nav { display: flex; gap: 8px; align-items: center; }
+    .btn-cal-nav { background: #334155; color: #fff; border: none; padding: 4px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .cal-day-header { font-size: 11px; font-weight: bold; color: #94a3b8; padding: 6px 0; background: #0f172a; border-radius: 6px; }
+    .cal-day-cell { background: #0f172a; min-height: 70px; border-radius: 8px; padding: 4px; border: 1px solid #1e293b; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+    .cal-day-cell.other-month { opacity: 0.3; }
+    .cal-day-num { font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 2px; text-align: right; }
+    .cal-day-cell.today .cal-day-num { color: #38bdf8; font-size: 11px; text-decoration: underline; }
+
+    .cal-event { font-size: 9px; padding: 2px 4px; border-radius: 4px; font-weight: bold; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .event-line-a { background: #0284c720; color: #38bdf8; border-left: 2px solid #0284c7; }
+    .event-line-q { background: #a855f720; color: #c084fc; border-left: 2px solid #a855f7; }
+    .event-line-c1 { background: #10b98120; color: #34d399; border-left: 2px solid #10b981; }
+    .event-line-c2 { background: #eab30820; color: #facc15; border-left: 2px solid #eab308; }
+    .event-line-c3 { background: #f9731620; color: #fb923c; border-left: 2px solid #f97316; }
 
     /* Forms */
     .mobile-form { background: #1e293b; padding: 16px; border-radius: 16px; border: 1px solid #334155; }
@@ -206,24 +227,54 @@
       </div>
     </div>
 
+    <!-- 📅 Calendar Production Plan -->
+    <div class="calendar-card">
+      <div class="calendar-header">
+        <h2>📅 ตารางแผนการผลิตประจำเดือน (Plan Calendar)</h2>
+        <div class="calendar-nav">
+          <button class="btn-cal-nav" onclick="changeMonth(-1)">◀</button>
+          <span id="calMonthTitle" style="font-size: 13px; font-weight: bold;">-</span>
+          <button class="btn-cal-nav" onclick="changeMonth(1)">▶</button>
+        </div>
+      </div>
+      <div class="calendar-grid">
+        <div class="cal-day-header">อา</div>
+        <div class="cal-day-header">จ</div>
+        <div class="cal-day-header">อ</div>
+        <div class="cal-day-header">พ</div>
+        <div class="cal-day-header">พฤ</div>
+        <div class="cal-day-header">ศ</div>
+        <div class="cal-day-header">ส</div>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" style="margin-top: 4px;">
+        <!-- Days rendered via JavaScript -->
+      </div>
+    </div>
+
     <!-- 1. ช่องวางแผน (Planning Form) -->
     <div class="mobile-form" style="border-left: 4px solid #38bdf8;">
       <div class="form-title plan-title">📋 1. ช่องวางแผนการผลิต (Planning)</div>
       <form id="planForm" onsubmit="submitPlan(event)">
-        <div class="form-group">
-          <label>เลือกไลน์ผลิต (Production Line)</label>
-          <select id="planLineSelect" required>
-            <option value="Line A">1. Line A</option>
-            <option value="Line Q">2. Line Q</option>
-            <option value="Line C1">3. Line C1</option>
-            <option value="Line C2">4. Line C2</option>
-            <option value="Line C3">5. Line C3</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label>เลือกไลน์ผลิต</label>
+            <select id="planLineSelect" required>
+              <option value="Line A">1. Line A</option>
+              <option value="Line Q">2. Line Q</option>
+              <option value="Line C1">3. Line C1</option>
+              <option value="Line C2">4. Line C2</option>
+              <option value="Line C3">5. Line C3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>วันที่วางแผน (Plan Date)</label>
+            <input type="date" id="planDateInput" required>
+          </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Plan Part No. (รหัสชิ้นงาน)</label>
+            <label>Plan Part No.</label>
             <input type="text" id="planPartNo" placeholder="เช่น Part-A1" required>
           </div>
           <div class="form-group">
@@ -243,7 +294,7 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-plan">📌 บันทึกแผนการผลิต (Set Plan)</button>
+        <button type="submit" class="btn-plan">📌 บันทึกแผนลงปฏิทิน (Set Plan)</button>
       </form>
     </div>
 
@@ -305,11 +356,10 @@
 
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
-    
-    // 🔒 รหัสผ่านสำหรับการล้างข้อมูล (เปลี่ยนรหัสตรงนี้ได้ครับพี่มิว)
     const ADMIN_PIN = "1234";
 
     let prodLogs = [];
+    let currentCalDate = new Date();
 
     function showLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
@@ -321,6 +371,7 @@
         const res = await fetch(`${GOOGLE_SCRIPT_URL}?module=production`, { method: 'GET', redirect: 'follow' });
         prodLogs = await res.json();
         calculateDashboard();
+        renderCalendar();
         renderLogs();
       } catch (err) {
         alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูล");
@@ -354,13 +405,11 @@
 
       const totBalance = totPlan - totActual;
 
-      // Update Summary Cards
       document.getElementById('totalPlan').innerText = totPlan.toLocaleString();
       document.getElementById('totalActual').innerText = totActual.toLocaleString();
       document.getElementById('totalDefect').innerText = totDefect.toLocaleString();
       document.getElementById('totalBalance').innerText = totBalance.toLocaleString();
 
-      // Update Individual Lines
       for (let key in lineData) {
         const d = lineData[key];
         const pct = d.plan > 0 ? Math.round((d.actual / d.plan) * 100) : 0;
@@ -388,6 +437,75 @@
       }
     }
 
+    /* 📅 Calendar Rendering Logic */
+    function renderCalendar() {
+      const year = currentCalDate.getFullYear();
+      const month = currentCalDate.getMonth();
+
+      const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตาราง", "พฤศจิกายน", "ธันวาคม"];
+      document.getElementById('calMonthTitle').innerText = `${monthNames[month]} ${year + 543}`;
+
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+      const prevMonthLastDate = new Date(year, month, 0).getDate();
+
+      const today = new Date();
+
+      // Days from previous month
+      for (let i = firstDay; i > 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.innerHTML = `<div class="cal-day-num">${prevMonthLastDate - i + 1}</div>`;
+        grid.appendChild(cell);
+      }
+
+      // Current month days
+      for (let date = 1; date <= lastDate; date++) {
+        const cell = document.createElement('div');
+        const isToday = date === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+        cell.className = `cal-day-cell ${isToday ? 'today' : ''}`;
+        
+        let cellContent = `<div class="cal-day-num">${date}</div>`;
+
+        // Format Date YYYY-MM-DD
+        const monthStr = String(month + 1).padStart(2, '0');
+        const dateStr = String(date).padStart(2, '0');
+        const currentDateKey = `${year}-${monthStr}-${dateStr}`;
+
+        // Find plans matching date (or created timestamp date)
+        const dayPlans = prodLogs.filter(item => {
+          if (Number(item.planQty) <= 0) return false;
+          if (item.planDate) return item.planDate === currentDateKey;
+          if (item.timestamp) {
+            const itemDate = new Date(item.timestamp);
+            return itemDate.getFullYear() === year && itemDate.getMonth() === month && itemDate.getDate() === date;
+          }
+          return false;
+        });
+
+        dayPlans.forEach(plan => {
+          let lineClass = 'event-line-a';
+          if (plan.line === 'Line Q') lineClass = 'event-line-q';
+          if (plan.line === 'Line C1') lineClass = 'event-line-c1';
+          if (plan.line === 'Line C2') lineClass = 'event-line-c2';
+          if (plan.line === 'Line C3') lineClass = 'event-line-c3';
+
+          cellContent += `<div class="cal-event ${lineClass}" title="${plan.line}: ${plan.planPartNo} (${plan.planQty} Pcs)">${plan.line.replace('Line ','')}: ${plan.planPartNo} (${plan.planQty})</div>`;
+        });
+
+        cell.innerHTML = cellContent;
+        grid.appendChild(cell);
+      }
+    }
+
+    function changeMonth(delta) {
+      currentCalDate.setMonth(currentCalDate.getMonth() + delta);
+      renderCalendar();
+    }
+
     function renderLogs() {
       const container = document.getElementById('logList');
       container.innerHTML = '';
@@ -405,7 +523,7 @@
         div.innerHTML = `
           <div>
             <strong style="color:${isPlan ? '#38bdf8' : '#34d399'};">[${item.line}] ${isPlan ? item.planPartNo : item.actualPartNo}</strong>
-            <div style="color:#94a3b8; font-size:10px;">${isPlan ? item.planner : item.operator} | ${item.timestamp || '-'}</div>
+            <div style="color:#94a3b8; font-size:10px;">${isPlan ? item.planner : item.operator} | ${item.planDate || item.timestamp || '-'}</div>
           </div>
           <div style="text-align:right;">
             ${isPlan ? 
@@ -418,32 +536,30 @@
       });
     }
 
-    // 🔒 ฟังก์ชันสำหรับล้างข้อมูลประจำ Line (ต้องใส่รหัส PIN)
     function resetLineData(lineName) {
       const inputPin = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการล้างข้อมูล [${lineName}]:`);
-      
-      if (inputPin === null) return; // กดยกเลิก
+      if (inputPin === null) return;
       
       if (inputPin === ADMIN_PIN) {
         if (confirm(`⚠️ ยืนยันการรีเซ็ตข้อมูลของ ${lineName} ใช่หรือไม่?`)) {
-          // เคลียร์ข้อมูลในระดับ local ให้เห็นผลทันที
           prodLogs = prodLogs.filter(item => item.line !== lineName);
           calculateDashboard();
+          renderCalendar();
           renderLogs();
           alert(`✅ ล้างข้อมูลของ ${lineName} เรียบร้อยแล้ว!`);
         }
       } else {
-        alert("❌ รหัสผ่านไม่ถูกต้อง! เฉพาะผู้ได้รับอนุญาตเท่านั้นที่สามารถล้างข้อมูลได้");
+        alert("❌ รหัสผ่านไม่ถูกต้อง!");
       }
     }
 
-    // บันทึกฝั่ง Plan
     async function submitPlan(e) {
       e.preventDefault();
       showLoading(true);
 
       const data = {
         line: document.getElementById('planLineSelect').value,
+        planDate: document.getElementById('planDateInput').value,
         planPartNo: document.getElementById('planPartNo').value,
         planLotNo: document.getElementById('planLotNo').value,
         planQty: document.getElementById('planQtyInput').value,
@@ -453,7 +569,6 @@
       await sendToGoogleSheet(data, 'planForm');
     }
 
-    // บันทึกฝั่ง Actual
     async function submitActual(e) {
       e.preventDefault();
       showLoading(true);
@@ -480,6 +595,7 @@
         });
 
         document.getElementById(formId).reset();
+        document.getElementById('planDateInput').valueAsDate = new Date();
         setTimeout(loadProdData, 1500);
         alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว!");
       } catch (err) {
@@ -488,7 +604,10 @@
       }
     }
 
-    window.onload = loadProdData;
+    window.onload = () => {
+      document.getElementById('planDateInput').valueAsDate = new Date();
+      loadProdData();
+    };
   </script>
 </body>
 </html>
