@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Production Monitoring & Calendar Dashboard</title>
+  <title>Production Monitoring Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; padding: 12px; }
@@ -255,7 +255,7 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-plan">📌 บันทึกแผนลงปฏิทิน (Set Plan)</button>
+        <button type="submit" class="btn-plan">📌 บันทึกแผน (Set Plan)</button>
       </form>
     </div>
 
@@ -335,7 +335,6 @@
 
     let prodLogs = [];
     let lineSummaryData = {};
-    let currentCalDate = new Date();
 
     function showLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
@@ -347,7 +346,6 @@
         const res = await fetch(`${GOOGLE_SCRIPT_URL}?module=production`, { method: 'GET', redirect: 'follow' });
         prodLogs = await res.json();
         calculateDashboard();
-        renderCalendar();
         renderLogs();
       } catch (err) {
         alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูล");
@@ -417,78 +415,6 @@
       }
     }
 
-    /* 📅 Calendar Rendering Logic (รองรับช่วง Start Date - End Date) */
-    function renderCalendar() {
-      const year = currentCalDate.getFullYear();
-      const month = currentCalDate.getMonth();
-
-      const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-      document.getElementById('calMonthTitle').innerText = `${monthNames[month]} ${year + 543}`;
-
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
-
-      const firstDay = new Date(year, month, 1).getDay();
-      const lastDate = new Date(year, month + 1, 0).getDate();
-      const prevMonthLastDate = new Date(year, month, 0).getDate();
-
-      const today = new Date();
-
-      for (let i = firstDay; i > 0; i--) {
-        const cell = document.createElement('div');
-        cell.className = 'cal-day-cell other-month';
-        cell.innerHTML = `<div class="cal-day-num">${prevMonthLastDate - i + 1}</div>`;
-        grid.appendChild(cell);
-      }
-
-      for (let date = 1; date <= lastDate; date++) {
-        const cell = document.createElement('div');
-        const isToday = date === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-        cell.className = `cal-day-cell ${isToday ? 'today' : ''}`;
-        
-        let cellContent = `<div class="cal-day-num">${date}</div>`;
-
-        const currentCellDate = new Date(year, month, date);
-
-        const dayPlans = prodLogs.filter(item => {
-          if (Number(item.planQty) <= 0) return false;
-          
-          let startDate = item.planStartDate ? new Date(item.planStartDate) : null;
-          let endDate = item.planEndDate ? new Date(item.planEndDate) : startDate;
-
-          if (!startDate && item.planDate) {
-            startDate = new Date(item.planDate);
-            endDate = startDate;
-          }
-
-          if (startDate) {
-            startDate.setHours(0,0,0,0);
-            if (endDate) endDate.setHours(23,59,59,999);
-            return currentCellDate >= startDate && currentCellDate <= (endDate || startDate);
-          }
-          return false;
-        });
-
-        dayPlans.forEach(plan => {
-          let lineClass = 'event-line-a';
-          if (plan.line === 'Line Q') lineClass = 'event-line-q';
-          if (plan.line === 'Line C1') lineClass = 'event-line-c1';
-          if (plan.line === 'Line C2') lineClass = 'event-line-c2';
-          if (plan.line === 'Line C3') lineClass = 'event-line-c3';
-
-          cellContent += `<div class="cal-event ${lineClass}" title="${plan.line}: ${plan.planPartNo} (${plan.planQty} Pcs)">${plan.line.replace('Line ','')}: ${plan.planPartNo} (${plan.planQty})</div>`;
-        });
-
-        cell.innerHTML = cellContent;
-        grid.appendChild(cell);
-      }
-    }
-
-    function changeMonth(delta) {
-      currentCalDate.setMonth(currentCalDate.getMonth() + delta);
-      renderCalendar();
-    }
-
     function renderLogs() {
       const container = document.getElementById('logList');
       container.innerHTML = '';
@@ -531,7 +457,6 @@
         if (confirm(`⚠️ ยืนยันการรีเซ็ตข้อมูลของ ${lineName} ใช่หรือไม่?`)) {
           prodLogs = prodLogs.filter(item => item.line !== lineName);
           calculateDashboard();
-          renderCalendar();
           renderLogs();
           alert(`✅ ล้างข้อมูลของ ${lineName} เรียบร้อยแล้ว!`);
         }
@@ -548,7 +473,6 @@
         if (confirm(`⚠️ คำเตือน! ยืนยันการล้างประวัติการบันทึก "ทั้งหมดทุกไลน์" ใช่หรือไม่?`)) {
           prodLogs = [];
           calculateDashboard();
-          renderCalendar();
           renderLogs();
           alert(`✅ ล้างประวัติการบันทึกทั้งหมดเรียบร้อยแล้ว!`);
         }
