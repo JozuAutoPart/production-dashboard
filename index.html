@@ -66,6 +66,14 @@
 
     .btn-submit-plan { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; background: #0284c7; color: #fff; margin-top: 8px; }
     .btn-submit-actual { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; background: #059669; color: #fff; margin-top: 8px; }
+    .btn-submit-disabled { background: #475569 !important; cursor: not-allowed !important; opacity: 0.6; }
+
+    .btn-clear-all { background: #881337; color: #fecdd3; border: 1px solid #f43f5e; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+    .btn-clear-all:hover { background: #9f1239; }
+
+    .alert-box { padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-bottom: 12px; }
+    .alert-danger { background: #881337; color: #fda4af; border: 1px solid #f43f5e; }
+    .alert-success { background: #065f46; color: #a7f3d0; border: 1px solid #34d399; }
 
     #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
     .hidden { display: none !important; }
@@ -123,6 +131,9 @@
 
       <div class="section-title">🏭 สถานะรายไลน์ (Line Breakdown)</div>
       <div class="line-grid" id="lineCardsContainer"></div>
+
+      <!-- ปุ่มล้างข้อมูลทั้งหมด -->
+      <button onclick="clearAllDataWithPass()" class="btn-clear-all">🗑️ ล้างข้อมูลระบบทั้งหมด (Clear System Data)</button>
     </div>
 
     <!-- TAB 2: PLANNING FORM -->
@@ -178,11 +189,15 @@
     <div id="actualTab" class="tab-content">
       <div class="form-card">
         <div class="form-header-actual">⚙️ ฟอร์มบันทึกผลการผลิตจริง (Production Log Entry)</div>
+        
+        <!-- ข้อความแจ้งเตือนกรณีไม่มี Plan -->
+        <div id="actualPlanAlert" class="alert-box hidden"></div>
+
         <form id="actualForm" onsubmit="submitActual(event)">
           
           <div class="form-group">
             <label>สายการผลิต (Line)</label>
-            <select id="actualLineSelect" required>
+            <select id="actualLineSelect" onchange="checkLinePlanStatus()" required>
               <option value="Line A">Line A</option>
               <option value="Line Q">Line Q</option>
               <option value="Line C1">Line C1</option>
@@ -224,7 +239,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-submit-actual">💾 บันทึกผลผลิตจริง (Save Actual)</button>
+          <button type="submit" id="actualSubmitBtn" class="btn-submit-actual">💾 บันทึกผลผลิตจริง (Save Actual)</button>
         </form>
       </div>
     </div>
@@ -234,19 +249,44 @@
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
 
+    // กำหนดรหัสผ่าน
+    const PASS_PLANNING = "1234";
+    const PASS_ACTUAL   = "5678";
+    const PASS_CLEAR    = "9999";
+
     const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
     let rawLogs = [];
+    let linePlanTotals = {};
 
     function showLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
     }
 
     function switchTab(tabId, btnElement) {
+      // ตรวจสอบรหัสผ่านเมื่อจะเข้าใช้งานแต่ละส่วน
+      if (tabId === 'planTab') {
+        const pass = prompt("🔒 กรุณาใส่รหัสผ่านสำหรับวางแผน (Planning):");
+        if (pass !== PASS_PLANNING) {
+          alert("❌ รหัสผ่านไม่ถูกต้อง!");
+          return;
+        }
+      } else if (tabId === 'actualTab') {
+        const pass = prompt("🔒 กรุณาใส่รหัสผ่านสำหรับบันทึกการผลิต (Actual):");
+        if (pass !== PASS_ACTUAL) {
+          alert("❌ รหัสผ่านไม่ถูกต้อง!");
+          return;
+        }
+      }
+
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       
       document.getElementById(tabId).classList.add('active');
       btnElement.classList.add('active');
+
+      if (tabId === 'actualTab') {
+        checkLinePlanStatus();
+      }
     }
 
     async function loadData() {
@@ -255,6 +295,7 @@
         const res = await fetch(`${GOOGLE_SCRIPT_URL}?module=production`, { method: 'GET', redirect: 'follow' });
         rawLogs = await res.json();
         renderDashboard();
+        checkLinePlanStatus();
       } catch (err) {
         alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูล");
       } finally {
@@ -285,6 +326,11 @@
           gActual += a;
           gDefect += d;
         }
+      });
+
+      linePlanTotals = {};
+      ALL_LINES.forEach(line => {
+        linePlanTotals[line] = lineMap[line].plan;
       });
 
       document.getElementById('grandPlan').innerText = gPlan.toLocaleString();
@@ -350,6 +396,28 @@
       });
     }
 
+    // เช็กว่า Line มี Plan หรือไม่ ถ้าไม่มีล็อกปุ่มคีย์
+    function checkLinePlanStatus() {
+      const selectedLine = document.getElementById('actualLineSelect').value;
+      const planQty = linePlanTotals[selectedLine] || 0;
+      const alertBox = document.getElementById('actualPlanAlert');
+      const submitBtn = document.getElementById('actualSubmitBtn');
+
+      if (planQty <= 0) {
+        alertBox.className = "alert-box alert-danger";
+        alertBox.innerText = `❌ Line ${selectedLine} ยังไม่มีแผนการผลิต (Plan Qty = 0) จึงไม่สามารถบันทึกการผลิตได้!`;
+        alertBox.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.classList.add('btn-submit-disabled');
+      } else {
+        alertBox.className = "alert-box alert-success";
+        alertBox.innerText = `✅ Line ${selectedLine} มีแผนการผลิตพร้อมรับบันทึกผลผลิตแล้ว (Plan Qty: ${planQty.toLocaleString()})`;
+        alertBox.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-submit-disabled');
+      }
+    }
+
     // บันทึกเฉพาะแผน (Planning)
     async function submitPlanning(e) {
       e.preventDefault();
@@ -413,6 +481,35 @@
         alert("⚙️ บันทึกผลผลิตจริงเรียบร้อยแล้ว!");
       } catch (err) {
         alert("❌ เกิดข้อผิดพลาดในการบันทึกผลผลิต");
+        showLoading(false);
+      }
+    }
+
+    // ล้างข้อมูลทั้งหมดด้วยรหัสผ่าน
+    async function clearAllDataWithPass() {
+      const pass = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อล้างข้อมูลระบบทั้งหมด:");
+      if (pass !== PASS_CLEAR) {
+        alert("❌ รหัสผ่านไม่ถูกต้อง!");
+        return;
+      }
+
+      if (!confirm("⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลการผลิตและแผนงานทั้งหมดออกจากระบบ? (ไม่สามารถกู้คืนได้)")) {
+        return;
+      }
+
+      showLoading(true);
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: "clearProductionLogs" })
+        });
+
+        setTimeout(loadData, 1500);
+        alert("🗑️ ล้างข้อมูลระบบเรียบร้อยแล้ว!");
+      } catch (err) {
+        alert("❌ เกิดข้อผิดพลาดในการล้างข้อมูล");
         showLoading(false);
       }
     }
