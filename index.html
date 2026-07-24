@@ -26,9 +26,14 @@
     .line-card { background: #1e293b; padding: 14px; border-radius: 12px; border: 1px solid #334155; }
     .line-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .line-title { font-size: 15px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    
     .status-badge { font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 6px; }
     .status-good { background: #065f46; color: #34d399; }
     .status-warning { background: #881337; color: #fda4af; }
+
+    /* Reset Button per Line */
+    .btn-reset-line { background: #ef444420; color: #f87171; border: 1px solid #f8717140; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .btn-reset-line:hover { background: #ef4444; color: #fff; }
 
     /* Progress Bar */
     .progress-bg { background: #0f172a; height: 10px; border-radius: 5px; overflow: hidden; margin: 8px 0; border: 1px solid #334155; }
@@ -107,7 +112,10 @@
         <div id="cardLineA" class="line-card">
           <div class="line-header">
             <div class="line-title">🔵 Line A</div>
-            <span id="badgeLineA" class="status-badge status-good">Normal</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span id="badgeLineA" class="status-badge status-good">Normal</span>
+              <button onclick="resetLineData('Line A')" class="btn-reset-line">🗑️ ล้างข้อมูล</button>
+            </div>
           </div>
           <div class="progress-bg"><div id="progressLineA" class="progress-fill" style="width: 0%;"></div></div>
           <div class="line-details">
@@ -123,7 +131,10 @@
         <div id="cardLineQ" class="line-card">
           <div class="line-header">
             <div class="line-title">🟣 Line Q</div>
-            <span id="badgeLineQ" class="status-badge status-good">Normal</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span id="badgeLineQ" class="status-badge status-good">Normal</span>
+              <button onclick="resetLineData('Line Q')" class="btn-reset-line">🗑️ ล้างข้อมูล</button>
+            </div>
           </div>
           <div class="progress-bg"><div id="progressLineQ" class="progress-fill" style="width: 0%;"></div></div>
           <div class="line-details">
@@ -139,7 +150,10 @@
         <div id="cardLineC1" class="line-card">
           <div class="line-header">
             <div class="line-title">🟢 Line C1</div>
-            <span id="badgeLineC1" class="status-badge status-good">Normal</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span id="badgeLineC1" class="status-badge status-good">Normal</span>
+              <button onclick="resetLineData('Line C1')" class="btn-reset-line">🗑️ ล้างข้อมูล</button>
+            </div>
           </div>
           <div class="progress-bg"><div id="progressLineC1" class="progress-fill" style="width: 0%;"></div></div>
           <div class="line-details">
@@ -155,7 +169,10 @@
         <div id="cardLineC2" class="line-card">
           <div class="line-header">
             <div class="line-title">🟡 Line C2</div>
-            <span id="badgeLineC2" class="status-badge status-good">Normal</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span id="badgeLineC2" class="status-badge status-good">Normal</span>
+              <button onclick="resetLineData('Line C2')" class="btn-reset-line">🗑️ ล้างข้อมูล</button>
+            </div>
           </div>
           <div class="progress-bg"><div id="progressLineC2" class="progress-fill" style="width: 0%;"></div></div>
           <div class="line-details">
@@ -171,7 +188,10 @@
         <div id="cardLineC3" class="line-card">
           <div class="line-header">
             <div class="line-title">🟠 Line C3</div>
-            <span id="badgeLineC3" class="status-badge status-good">Normal</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span id="badgeLineC3" class="status-badge status-good">Normal</span>
+              <button onclick="resetLineData('Line C3')" class="btn-reset-line">🗑️ ล้างข้อมูล</button>
+            </div>
           </div>
           <div class="progress-bg"><div id="progressLineC3" class="progress-fill" style="width: 0%;"></div></div>
           <div class="line-details">
@@ -285,6 +305,10 @@
 
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
+    
+    // 🔒 รหัสผ่านสำหรับการล้างข้อมูล (เปลี่ยนรหัสตรงนี้ได้ครับพี่มิว)
+    const ADMIN_PIN = "1234";
+
     let prodLogs = [];
 
     function showLoading(show) {
@@ -392,6 +416,25 @@
         `;
         container.appendChild(div);
       });
+    }
+
+    // 🔒 ฟังก์ชันสำหรับล้างข้อมูลประจำ Line (ต้องใส่รหัส PIN)
+    function resetLineData(lineName) {
+      const inputPin = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการล้างข้อมูล [${lineName}]:`);
+      
+      if (inputPin === null) return; // กดยกเลิก
+      
+      if (inputPin === ADMIN_PIN) {
+        if (confirm(`⚠️ ยืนยันการรีเซ็ตข้อมูลของ ${lineName} ใช่หรือไม่?`)) {
+          // เคลียร์ข้อมูลในระดับ local ให้เห็นผลทันที
+          prodLogs = prodLogs.filter(item => item.line !== lineName);
+          calculateDashboard();
+          renderLogs();
+          alert(`✅ ล้างข้อมูลของ ${lineName} เรียบร้อยแล้ว!`);
+        }
+      } else {
+        alert("❌ รหัสผ่านไม่ถูกต้อง! เฉพาะผู้ได้รับอนุญาตเท่านั้นที่สามารถล้างข้อมูลได้");
+      }
     }
 
     // บันทึกฝั่ง Plan
