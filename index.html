@@ -14,13 +14,13 @@
     .header h1 { font-size: 18px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
     .btn-refresh { background: #334155; color: #f8fafc; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
-    /* Total Summary Metrics */
+    /* Summary Metrics */
     .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .metric-card { background: #1e293b; padding: 10px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
     .metric-title { font-size: 10px; color: #94a3b8; font-weight: bold; }
     .metric-val { font-size: 16px; font-weight: 800; margin-top: 4px; }
 
-    /* Line Cards (5 Lines) */
+    /* Line Cards */
     .dashboard-title { font-size: 14px; font-weight: bold; color: #94a3b8; margin-bottom: 2px; }
     .lines-grid { display: flex; flex-direction: column; gap: 10px; }
     .line-card { background: #1e293b; padding: 14px; border-radius: 12px; border: 1px solid #334155; }
@@ -31,11 +31,9 @@
     .status-good { background: #065f46; color: #34d399; }
     .status-warning { background: #881337; color: #fda4af; }
 
-    /* Reset Buttons */
     .btn-reset-line { background: #ef444420; color: #f87171; border: 1px solid #f8717140; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
     .btn-reset-line:hover { background: #ef4444; color: #fff; }
 
-    /* Progress Bar */
     .progress-bg { background: #0f172a; height: 10px; border-radius: 5px; overflow: hidden; margin: 8px 0; border: 1px solid #334155; }
     .progress-fill { height: 100%; background: #10b981; transition: width 0.4s ease; }
     .progress-fill.low { background: #f43f5e; }
@@ -76,6 +74,12 @@
 
     .btn-plan { width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 6px; background: #0284c7; color: #fff; }
     .btn-actual { width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 6px; background: #059669; color: #fff; }
+    .btn-actual:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+
+    /* Warning Message Style */
+    .validation-msg { font-size: 11px; font-weight: bold; margin-top: 4px; display: none; }
+    .validation-msg.error { color: #f87171; display: block; }
+    .validation-msg.success { color: #34d399; display: block; }
 
     /* History Log */
     .history-card { background: #1e293b; padding: 16px; border-radius: 14px; border: 1px solid #334155; }
@@ -129,7 +133,6 @@
     <div>
       <div class="dashboard-title">📊 สถานะแต่ละไลน์ผลิต (Line Progress)</div>
       <div class="lines-grid">
-        
         <!-- Line A -->
         <div id="cardLineA" class="line-card">
           <div class="line-header">
@@ -224,7 +227,6 @@
             <div>Progress: <b id="pctLineC3">0%</b></div>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -247,9 +249,7 @@
         <div class="cal-day-header">ศ</div>
         <div class="cal-day-header">ส</div>
       </div>
-      <div id="calendarGrid" class="calendar-grid" style="margin-top: 4px;">
-        <!-- Days rendered via JavaScript -->
-      </div>
+      <div id="calendarGrid" class="calendar-grid" style="margin-top: 4px;"></div>
     </div>
 
     <!-- 1. ช่องวางแผน (Planning Form) -->
@@ -299,13 +299,13 @@
       </form>
     </div>
 
-    <!-- 2. ช่องบันทึกผลการผลิต (Production Reporting Form) -->
+    <!-- 2. ช่องบันทึกผลการผลิต (Production Reporting Form - เพิ่มระบบตรวจสอบแผน) -->
     <div class="mobile-form" style="border-left: 4px solid #34d399;">
       <div class="form-title prod-title">⚙️ 2. ช่องบันทึกผลการผลิต (Production Log)</div>
       <form id="actualForm" onsubmit="submitActual(event)">
         <div class="form-group">
           <label>เลือกไลน์ผลิต (Production Line)</label>
-          <select id="actualLineSelect" required>
+          <select id="actualLineSelect" onchange="validatePlanOrder()" required>
             <option value="Line A">1. Line A</option>
             <option value="Line Q">2. Line Q</option>
             <option value="Line C1">3. Line C1</option>
@@ -317,7 +317,8 @@
         <div class="form-row">
           <div class="form-group">
             <label>Actual Part No. (รหัสชิ้นงาน)</label>
-            <input type="text" id="actualPartNo" placeholder="เช่น Part-A1" required>
+            <input type="text" id="actualPartNo" oninput="validatePlanOrder()" placeholder="เช่น Part-A1" required>
+            <div id="planStatusMsg" class="validation-msg"></div>
           </div>
           <div class="form-group">
             <label>Actual Lot No.</label>
@@ -341,7 +342,7 @@
           <input type="text" id="operatorName" placeholder="ชื่อผู้รายงาน" required>
         </div>
 
-        <button type="submit" class="btn-actual">💾 บันทึกผลการผลิต (Add Actual)</button>
+        <button type="submit" id="btnSubmitActual" class="btn-actual">💾 บันทึกผลการผลิต (Add Actual)</button>
       </form>
     </div>
 
@@ -377,10 +378,44 @@
         calculateDashboard();
         renderCalendar();
         renderLogs();
+        validatePlanOrder(); // ตรวจสอบความถูกต้องอีกครั้งหลังโหลดข้อมูล
       } catch (err) {
         alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูล");
       } finally {
         showLoading(false);
+      }
+    }
+
+    // 🔍 ระบบตรวจสอบว่าไลน์นี้มีคำสั่งสั่งผลิต (Plan) หรือยัง
+    function validatePlanOrder() {
+      const selectedLine = document.getElementById('actualLineSelect').value;
+      const inputPartNo = document.getElementById('actualPartNo').value.trim();
+      const msgBox = document.getElementById('planStatusMsg');
+      const submitBtn = document.getElementById('btnSubmitActual');
+
+      if (!inputPartNo) {
+        msgBox.className = "validation-msg";
+        msgBox.innerText = "";
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // ค้นหาใน Logs ว่าไลน์นี้ มีแผน (Plan) สำหรับ Part No. นี้หรือยัง
+      const hasPlan = prodLogs.some(item => {
+        return item.line === selectedLine && 
+               item.planPartNo && 
+               item.planPartNo.toString().trim().toLowerCase() === inputPartNo.toLowerCase() &&
+               Number(item.planQty) > 0;
+      });
+
+      if (!hasPlan) {
+        msgBox.className = "validation-msg error";
+        msgBox.innerText = `❌ ไม่มีคำสั่งผลิต (${inputPartNo}) ใน ${selectedLine}`;
+        submitBtn.disabled = true; // ล็อกปุ่มบันทึก
+      } else {
+        msgBox.className = "validation-msg success";
+        msgBox.innerText = `✓ พบคำสั่งผลิตในระบบพร้อมบันทึก`;
+        submitBtn.disabled = false; // ปลดล็อกปุ่ม
       }
     }
 
@@ -441,7 +476,6 @@
       }
     }
 
-    /* 📅 Calendar Rendering Logic */
     function renderCalendar() {
       const year = currentCalDate.getFullYear();
       const month = currentCalDate.getMonth();
@@ -536,7 +570,6 @@
       });
     }
 
-    // 🔒 ล้างข้อมูลแยกตาม Line
     function resetLineData(lineName) {
       const inputPin = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการล้างข้อมูล [${lineName}]:`);
       if (inputPin === null) return;
@@ -547,6 +580,7 @@
           calculateDashboard();
           renderCalendar();
           renderLogs();
+          validatePlanOrder();
           alert(`✅ ล้างข้อมูลของ ${lineName} เรียบร้อยแล้ว!`);
         }
       } else {
@@ -554,7 +588,6 @@
       }
     }
 
-    // 🔒 ล้างประวัติการบันทึกทั้งหมด
     function clearAllHistory() {
       const inputPin = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการล้างประวัติทั้งหมด:`);
       if (inputPin === null) return;
@@ -565,10 +598,11 @@
           calculateDashboard();
           renderCalendar();
           renderLogs();
+          validatePlanOrder();
           alert(`✅ ล้างประวัติการบันทึกทั้งหมดเรียบร้อยแล้ว!`);
         }
       } else {
-        alert("❌ รหัสผ่านไม่ถูกต้อง! เฉพาะผู้ได้รับอนุญาตเท่านั้น");
+        alert("❌ รหัสผ่านไม่ถูกต้อง!");
       }
     }
 
@@ -590,11 +624,22 @@
 
     async function submitActual(e) {
       e.preventDefault();
+
+      // เช็กอีกรอบเพื่อความชัวร์ก่อนส่ง
+      const selectedLine = document.getElementById('actualLineSelect').value;
+      const inputPartNo = document.getElementById('actualPartNo').value.trim();
+      const hasPlan = prodLogs.some(item => item.line === selectedLine && item.planPartNo && item.planPartNo.toString().trim().toLowerCase() === inputPartNo.toLowerCase() && Number(item.planQty) > 0);
+
+      if (!hasPlan) {
+        alert(`❌ ไม่สามารถบันทึกได้! ไลน์ ${selectedLine} ยังไม่มีคำสั่งผลิตสำหรับ Part No. นี้`);
+        return;
+      }
+
       showLoading(true);
 
       const data = {
-        line: document.getElementById('actualLineSelect').value,
-        actualPartNo: document.getElementById('actualPartNo').value,
+        line: selectedLine,
+        actualPartNo: inputPartNo,
         actualLotNo: document.getElementById('actualLotNo').value,
         actualQty: document.getElementById('actualQtyInput').value,
         defectQty: document.getElementById('defectQtyInput').value,
@@ -615,6 +660,8 @@
 
         document.getElementById(formId).reset();
         document.getElementById('planDateInput').valueAsDate = new Date();
+        document.getElementById('planStatusMsg').className = "validation-msg";
+        
         setTimeout(loadProdData, 1500);
         alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว!");
       } catch (err) {
