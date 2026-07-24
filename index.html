@@ -83,8 +83,8 @@
     .btn-submit-actual { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; background: #059669; color: #fff; margin-top: 8px; }
     .btn-submit-disabled { background: #475569 !important; cursor: not-allowed !important; opacity: 0.6; }
 
-    .btn-clear-all { background: #881337; color: #fecdd3; border: 1px solid #f43f5e; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
-    .btn-clear-all:hover { background: #9f1239; }
+    .btn-clear-line { background: #881337; color: #fecdd3; border: 1px solid #f43f5e; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+    .btn-clear-line:hover { background: #9f1239; }
 
     .alert-box { padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-bottom: 12px; }
     .alert-danger { background: #881337; color: #fda4af; border: 1px solid #f43f5e; }
@@ -147,8 +147,8 @@
       <div class="section-title">🏭 สถานะรายไลน์ (Line Breakdown)</div>
       <div class="line-grid" id="lineCardsContainer"></div>
 
-      <!-- ปุ่มล้างข้อมูลทั้งหมด -->
-      <button onclick="clearAllDataWithPass()" class="btn-clear-all">🗑️ ล้างข้อมูลระบบทั้งหมด (Clear System Data)</button>
+      <!-- ปุ่มล้างข้อมูลเฉพาะ Line -->
+      <button onclick="clearLineDataWithPass()" class="btn-clear-line">🗑️ ล้างข้อมูลเฉพาะ Line (Clear Line Data)</button>
     </div>
 
     <!-- TAB 2: PLANNING FORM -->
@@ -263,6 +263,7 @@
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
 
+    // กำหนดรหัสผ่าน
     const PASS_PLANNING = "1234";
     const PASS_ACTUAL   = "5678";
     const PASS_CLEAR    = "9999";
@@ -330,14 +331,12 @@
           const a = Number(item.actualQty) || 0;
           const d = Number(item.defectQty) || 0;
 
-          // ดึง Part No. (จาก Plan หรือ Actual)
           const pNo = item.planPartNo || item.actualPartNo || "Unknown Part";
 
           lineMap[lName].plan += p;
           lineMap[lName].actual += a;
           lineMap[lName].defect += d;
 
-          // จัดกลุ่มยอดราย Part No. ภายใน Line
           if (!lineMap[lName].parts[pNo]) {
             lineMap[lName].parts[pNo] = { plan: 0, actual: 0 };
           }
@@ -382,7 +381,6 @@
 
         const isLow = pct < 80 && data.plan > 0;
 
-        // สร้าง HTML รายการ Part No.
         let partsHtml = '';
         const partKeys = Object.keys(data.parts);
 
@@ -544,14 +542,28 @@
       }
     }
 
-    async function clearAllDataWithPass() {
-      const pass = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อล้างข้อมูลระบบทั้งหมด:");
+    // ล้างข้อมูลเฉพาะ Line ด้วยรหัสผ่าน
+    async function clearLineDataWithPass() {
+      // Step 1: ให้เลือกลายที่ต้องการล้าง
+      const lineTarget = prompt("🏭 พิมพ์ชื่อ Line ที่ต้องการล้างข้อมูล (ตัวอย่าง: Line A, Line Q, Line C1, Line C2, Line C3):");
+      
+      if (!lineTarget) return;
+
+      const matchedLine = ALL_LINES.find(l => l.toLowerCase() === lineTarget.trim().toLowerCase());
+      if (!matchedLine) {
+        alert("❌ ไม่พบชื่อ Line นี้ในระบบ! กรุณาตรวจสอบคำอักขระอีกครั้ง");
+        return;
+      }
+
+      // Step 2: ให้ใส่รหัสผ่าน
+      const pass = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อล้างข้อมูลของ ${matchedLine}:`);
       if (pass !== PASS_CLEAR) {
         alert("❌ รหัสผ่านไม่ถูกต้อง!");
         return;
       }
 
-      if (!confirm("⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลการผลิตและแผนงานทั้งหมดออกจากระบบ?")) {
+      // Step 3: ยืนยันการลบ
+      if (!confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลการผลิตทั้งหมดเฉพาะ "${matchedLine}" ?`)) {
         return;
       }
 
@@ -561,11 +573,11 @@
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: "clearProductionLogs" })
+          body: JSON.stringify({ action: "clearProductionLogsByLine", line: matchedLine })
         });
 
         setTimeout(loadData, 1500);
-        alert("🗑️ ล้างข้อมูลระบบเรียบร้อยแล้ว!");
+        alert(`🗑️ ล้างข้อมูลเฉพาะ ${matchedLine} เรียบร้อยแล้ว!`);
       } catch (err) {
         alert("❌ เกิดข้อผิดพลาดในการล้างข้อมูล");
         showLoading(false);
