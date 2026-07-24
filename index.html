@@ -254,20 +254,25 @@
     <div class="mobile-form" style="border-left: 4px solid #38bdf8;">
       <div class="form-title plan-title">📋 1. ช่องวางแผนการผลิต (Planning)</div>
       <form id="planForm" onsubmit="submitPlan(event)">
+        <div class="form-group">
+          <label>เลือกไลน์ผลิต</label>
+          <select id="planLineSelect" required>
+            <option value="Line A">1. Line A</option>
+            <option value="Line Q">2. Line Q</option>
+            <option value="Line C1">3. Line C1</option>
+            <option value="Line C2">4. Line C2</option>
+            <option value="Line C3">5. Line C3</option>
+          </select>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
-            <label>เลือกไลน์ผลิต</label>
-            <select id="planLineSelect" required>
-              <option value="Line A">1. Line A</option>
-              <option value="Line Q">2. Line Q</option>
-              <option value="Line C1">3. Line C1</option>
-              <option value="Line C2">4. Line C2</option>
-              <option value="Line C3">5. Line C3</option>
-            </select>
+            <label>วันที่เริ่มต้นแผน (Start Date)</label>
+            <input type="date" id="planStartDateInput" required>
           </div>
           <div class="form-group">
-            <label>วันที่วางแผน (Plan Date)</label>
-            <input type="date" id="planDateInput" required>
+            <label>วันที่สิ้นสุดแผน (End Date)</label>
+            <input type="date" id="planEndDateInput" required>
           </div>
         </div>
 
@@ -310,6 +315,17 @@
             <option value="Line C2">4. Line C2</option>
             <option value="Line C3">5. Line C3</option>
           </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>วันที่เริ่มผลิต (Prod Start Date)</label>
+            <input type="date" id="actualStartDateInput" required>
+          </div>
+          <div class="form-group">
+            <label>วันที่เสร็จสิ้น (Prod End Date)</label>
+            <input type="date" id="actualEndDateInput" required>
+          </div>
         </div>
 
         <div class="form-row">
@@ -444,12 +460,12 @@
       }
     }
 
-    /* 📅 Calendar Rendering Logic */
+    /* 📅 Calendar Rendering Logic (รองรับช่วง Start Date - End Date) */
     function renderCalendar() {
       const year = currentCalDate.getFullYear();
       const month = currentCalDate.getMonth();
 
-      const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตาราง", "พฤศจิกายน", "ธันวาคม"];
+      const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
       document.getElementById('calMonthTitle').innerText = `${monthNames[month]} ${year + 543}`;
 
       const grid = document.getElementById('calendarGrid');
@@ -475,16 +491,23 @@
         
         let cellContent = `<div class="cal-day-num">${date}</div>`;
 
-        const monthStr = String(month + 1).padStart(2, '0');
-        const dateStr = String(date).padStart(2, '0');
-        const currentDateKey = `${year}-${monthStr}-${dateStr}`;
+        const currentCellDate = new Date(year, month, date);
 
         const dayPlans = prodLogs.filter(item => {
           if (Number(item.planQty) <= 0) return false;
-          if (item.planDate) return item.planDate === currentDateKey;
-          if (item.timestamp) {
-            const itemDate = new Date(item.timestamp);
-            return itemDate.getFullYear() === year && itemDate.getMonth() === month && itemDate.getDate() === date;
+          
+          let startDate = item.planStartDate ? new Date(item.planStartDate) : null;
+          let endDate = item.planEndDate ? new Date(item.planEndDate) : startDate;
+
+          if (!startDate && item.planDate) {
+            startDate = new Date(item.planDate);
+            endDate = startDate;
+          }
+
+          if (startDate) {
+            startDate.setHours(0,0,0,0);
+            if (endDate) endDate.setHours(23,59,59,999);
+            return currentCellDate >= startDate && currentCellDate <= (endDate || startDate);
           }
           return false;
         });
@@ -523,10 +546,14 @@
         div.className = 'log-item';
         const isPlan = Number(item.planQty) > 0;
         
+        const dateRange = isPlan ? 
+          `${item.planStartDate || item.planDate || '-'} ถึง ${item.planEndDate || item.planStartDate || '-'}` : 
+          `${item.actualStartDate || '-'} ถึง ${item.actualEndDate || '-'}`;
+
         div.innerHTML = `
           <div>
             <strong style="color:${isPlan ? '#38bdf8' : '#34d399'};">[${item.line}] ${isPlan ? item.planPartNo : item.actualPartNo}</strong>
-            <div style="color:#94a3b8; font-size:10px;">${isPlan ? item.planner : item.operator} | ${item.planDate || item.timestamp || '-'}</div>
+            <div style="color:#94a3b8; font-size:10px;">${isPlan ? item.planner : item.operator} | ${dateRange}</div>
           </div>
           <div style="text-align:right;">
             ${isPlan ? 
@@ -575,11 +602,21 @@
 
     async function submitPlan(e) {
       e.preventDefault();
+
+      const startDate = document.getElementById('planStartDateInput').value;
+      const endDate = document.getElementById('planEndDateInput').value;
+
+      if (new Date(startDate) > new Date(endDate)) {
+        alert("❌ วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุดครับ");
+        return;
+      }
+
       showLoading(true);
 
       const data = {
         line: document.getElementById('planLineSelect').value,
-        planDate: document.getElementById('planDateInput').value,
+        planStartDate: startDate,
+        planEndDate: endDate,
         planPartNo: document.getElementById('planPartNo').value,
         planLotNo: document.getElementById('planLotNo').value,
         planQty: document.getElementById('planQtyInput').value,
@@ -596,13 +633,21 @@
       const actualPartNo = document.getElementById('actualPartNo').value.trim().toUpperCase();
       const lineData = lineSummaryData[selectedLine];
 
+      const startDate = document.getElementById('actualStartDateInput').value;
+      const endDate = document.getElementById('actualEndDateInput').value;
+
+      if (new Date(startDate) > new Date(endDate)) {
+        alert("❌ วันที่เริ่มผลิตต้องไม่มากกว่าวันที่เสร็จสิ้นครับ");
+        return;
+      }
+
       // 🛑 เงื่อนไขที่ 1: ตรวจสอบว่าไลน์ผลิตมี Plan หรือยัง
       if (!lineData || lineData.plan <= 0) {
         alert(`❌ ไม่สามารถบันทึกการผลิตได้!\n\nสาเหตุ: [${selectedLine}] ยังไม่มีการออกคำสั่งผลิต (Plan) กรุณาให้ Planner วางแผนก่อนครับ`);
         return;
       }
 
-      // 🛑 เงื่อนไขที่ 2: ตรวจสอบการข้าม Line ผลิต (Part No. ต้องตรงกับไลน์ที่สั่งทำไว้)
+      // 🛑 เงื่อนไขที่ 2: ตรวจสอบการข้าม Line ผลิต
       if (lineData.partNos.size > 0 && !lineData.partNos.has(actualPartNo)) {
         alert(`❌ ไม่สามารถบันทึกการผลิตได้!\n\nสาเหตุ: รหัสชิ้นงาน "${actualPartNo}" ไม่ตรงกับแผนการผลิตของ [${selectedLine}]\n(ห้ามบันทึกข้าม Line ผลิต)`);
         return;
@@ -612,6 +657,8 @@
 
       const data = {
         line: selectedLine,
+        actualStartDate: startDate,
+        actualEndDate: endDate,
         actualPartNo: actualPartNo,
         actualLotNo: document.getElementById('actualLotNo').value,
         actualQty: document.getElementById('actualQtyInput').value,
@@ -632,7 +679,7 @@
         });
 
         document.getElementById(formId).reset();
-        document.getElementById('planDateInput').valueAsDate = new Date();
+        setDefaultDates();
         setTimeout(loadProdData, 1500);
         alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว!");
       } catch (err) {
@@ -641,8 +688,16 @@
       }
     }
 
+    function setDefaultDates() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('planStartDateInput').value = today;
+      document.getElementById('planEndDateInput').value = today;
+      document.getElementById('actualStartDateInput').value = today;
+      document.getElementById('actualEndDateInput').value = today;
+    }
+
     window.onload = () => {
-      document.getElementById('planDateInput').valueAsDate = new Date();
+      setDefaultDates();
       loadProdData();
     };
   </script>
