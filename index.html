@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Production Management System</title>
-  <!-- ไลบรารีสำหรับสแกน Barcode / QR Code -->
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; padding: 12px; }
@@ -26,7 +23,7 @@
     .tab-content { display: none; flex-direction: column; gap: 14px; }
     .tab-content.active { display: flex; }
 
-    /* Overview Banner */
+    /* Grand Total Overview Banner */
     .overview-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 16px; border-radius: 16px; border: 1px solid #38bdf8; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1); }
     .overview-title { font-size: 14px; font-weight: 800; color: #94a3b8; margin-bottom: 10px; }
     .overview-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -50,6 +47,7 @@
     .status-delay { background: #881337; color: #fca5a5; border: 1px solid #f43f5e; }
     .status-neutral { background: #334155; color: #94a3b8; }
 
+    /* Part Status Badges */
     .badge-open { background: #0284c7; color: #e0f2fe; }
     .badge-incomplete { background: #d97706; color: #fef3c7; }
     .badge-complete { background: #16a34a; color: #dcfce7; }
@@ -64,6 +62,7 @@
     .mini-title { font-size: 9px; color: #94a3b8; font-weight: bold; }
     .mini-val { font-size: 13px; font-weight: 800; margin-top: 2px; }
 
+    /* Part List Inside Card */
     .part-section-title { font-size: 11px; font-weight: bold; color: #94a3b8; margin-top: 4px; border-top: 1px solid #334155; padding-top: 8px; }
     .part-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
     .part-item { background: #0f172a; padding: 8px; border-radius: 8px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
@@ -72,36 +71,27 @@
     .part-date-detail { color: #f59e0b; font-size: 10px; font-weight: bold; }
     .part-qty-detail { color: #64748b; font-size: 10px; }
 
-    /* Form Styles & Scan Button */
+    /* Form Styles */
     .form-card { background: #1e293b; padding: 20px; border-radius: 16px; border: 1px solid #334155; }
-    .form-header-plan { font-size: 16px; font-weight: bold; color: #38bdf8; margin-bottom: 14px; }
-    .form-header-actual { font-size: 16px; font-weight: bold; color: #34d399; margin-bottom: 14px; }
+    .form-header-plan { font-size: 16px; font-weight: bold; color: #38bdf8; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .form-header-actual { font-size: 16px; font-weight: bold; color: #34d399; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 6px; }
     .form-group select, .form-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 14px; font-weight: bold; outline: none; }
-    
-    /* Input Group for Scanning */
-    .input-scan-group { display: flex; gap: 6px; }
-    .input-scan-group input { flex: 1; }
-    .btn-scan { background: #0284c7; color: #fff; border: none; padding: 0 12px; border-radius: 10px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .btn-scan:hover { background: #0369a1; }
+    .form-group select:focus, .form-group input:focus { border-color: #38bdf8; }
 
     .btn-submit-plan { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; background: #0284c7; color: #fff; margin-top: 8px; }
     .btn-submit-actual { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; background: #059669; color: #fff; margin-top: 8px; }
     .btn-submit-disabled { background: #475569 !important; cursor: not-allowed !important; opacity: 0.6; }
 
-    .btn-clear-line { background: #881337; color: #fecdd3; border: 1px solid #f43f5e; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+    .btn-clear-line { background: #881337; color: #fecdd3; border: 1px solid #f43f5e; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+    .btn-clear-line:hover { background: #9f1239; }
 
     .alert-box { padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-bottom: 12px; }
     .alert-danger { background: #881337; color: #fda4af; border: 1px solid #f43f5e; }
     .alert-success { background: #065f46; color: #a7f3d0; border: 1px solid #34d399; }
-
-    /* Camera Modal */
-    #scannerModal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
-    #reader { width: 100%; max-width: 400px; background: #000; border-radius: 12px; overflow: hidden; }
-    .btn-close-scan { background: #f43f5e; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; margin-top: 14px; cursor: pointer; }
 
     #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
     .hidden { display: none !important; }
@@ -113,13 +103,6 @@
     <div style="background: #1e293b; color: #fff; padding: 20px 30px; border-radius: 12px; text-align: center; border: 1px solid #334155;">
       <p style="font-weight: bold; font-size: 14px;">⏳ กำลังดำเนินการ...</p>
     </div>
-  </div>
-
-  <!-- Modal สำหรับสแกน Barcode / QR Code -->
-  <div id="scannerModal" class="hidden">
-    <div style="color: #fff; font-weight: bold; margin-bottom: 10px;">📷 สแกน Barcode / QR Code</div>
-    <div id="reader"></div>
-    <button class="btn-close-scan" onclick="closeScanner()">❌ ปิดกล้อง</button>
   </div>
 
   <div class="container">
@@ -171,6 +154,7 @@
       <div class="section-title">🏭 สถานะรายไลน์ (Line Breakdown)</div>
       <div class="line-grid" id="lineCardsContainer"></div>
 
+      <!-- ปุ่มล้างข้อมูลเฉพาะ Line -->
       <button onclick="clearLineDataWithPass()" class="btn-clear-line">🗑️ ล้างข้อมูลเฉพาะ Line (Clear Line Data)</button>
     </div>
 
@@ -194,17 +178,11 @@
           <div class="form-row">
             <div class="form-group">
               <label>Part No.</label>
-              <div class="input-scan-group">
-                <input type="text" id="planPartNo" placeholder="เช่น Part-01" required>
-                <button type="button" class="btn-scan" onclick="openScanner('planPartNo')">📷</button>
-              </div>
+              <input type="text" id="planPartNo" placeholder="เช่น Part-01" required>
             </div>
             <div class="form-group">
               <label>Lot No.</label>
-              <div class="input-scan-group">
-                <input type="text" id="planLotNo" placeholder="เช่น L6907-01" required>
-                <button type="button" class="btn-scan" onclick="openScanner('planLotNo')">📷</button>
-              </div>
+              <input type="text" id="planLotNo" placeholder="เช่น L6907-01" required>
             </div>
           </div>
 
@@ -258,17 +236,11 @@
           <div class="form-row">
             <div class="form-group">
               <label>Part No.</label>
-              <div class="input-scan-group">
-                <input type="text" id="actualPartNo" placeholder="เช่น Part-01" required>
-                <button type="button" class="btn-scan" onclick="openScanner('actualPartNo')">📷</button>
-              </div>
+              <input type="text" id="actualPartNo" placeholder="เช่น Part-01" required>
             </div>
             <div class="form-group">
               <label>Lot No.</label>
-              <div class="input-scan-group">
-                <input type="text" id="actualLotNo" placeholder="เช่น L6907-01" required>
-                <button type="button" class="btn-scan" onclick="openScanner('actualLotNo')">📷</button>
-              </div>
+              <input type="text" id="actualLotNo" placeholder="เช่น L6907-01" required>
             </div>
           </div>
 
@@ -304,6 +276,7 @@
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
 
+    // กำหนดรหัสผ่าน
     const PASS_PLANNING = "1234";
     const PASS_ACTUAL   = "5678";
     const PASS_CLEAR    = "9999";
@@ -311,8 +284,6 @@
     const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
     let rawLogs = [];
     let linePlanTotals = {};
-    let html5QrcodeScanner = null;
-    let currentTargetInputId = null;
 
     function showLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
@@ -321,10 +292,16 @@
     function switchTab(tabId, btnElement) {
       if (tabId === 'planTab') {
         const pass = prompt("🔒 กรุณาใส่รหัสผ่านสำหรับวางแผน (Planning):");
-        if (pass !== PASS_PLANNING) { alert("❌ รหัสผ่านไม่ถูกต้อง!"); return; }
+        if (pass !== PASS_PLANNING) {
+          alert("❌ รหัสผ่านไม่ถูกต้อง!");
+          return;
+        }
       } else if (tabId === 'actualTab') {
         const pass = prompt("🔒 กรุณาใส่รหัสผ่านสำหรับบันทึกการผลิต (Actual):");
-        if (pass !== PASS_ACTUAL) { alert("❌ รหัสผ่านไม่ถูกต้อง!"); return; }
+        if (pass !== PASS_ACTUAL) {
+          alert("❌ รหัสผ่านไม่ถูกต้อง!");
+          return;
+        }
       }
 
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -333,41 +310,8 @@
       document.getElementById(tabId).classList.add('active');
       btnElement.classList.add('active');
 
-      if (tabId === 'actualTab') checkLinePlanStatus();
-    }
-
-    /* --- สแกนบาร์โค้ด / QR CODE --- */
-    function openScanner(targetInputId) {
-      currentTargetInputId = targetInputId;
-      document.getElementById('scannerModal').classList.remove('hidden');
-
-      if (!html5QrcodeScanner) {
-        html5QrcodeScanner = new Html5Qrcode("reader");
-      }
-
-      html5QrcodeScanner.start(
-        { facingMode: "environment" }, // ใช้กล้องหลัง
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          document.getElementById(currentTargetInputId).value = decodedText;
-          closeScanner();
-        },
-        (errorMessage) => { /* ข้าม error สแกนไม่เจอ */ }
-      ).catch(err => {
-        alert("❌ ไม่สามารถเปิดกล้องได้ กรุณายินยอมให้เข้าถึงกล้อง");
-        closeScanner();
-      });
-    }
-
-    function closeScanner() {
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().then(() => {
-          document.getElementById('scannerModal').classList.add('hidden');
-        }).catch(() => {
-          document.getElementById('scannerModal').classList.add('hidden');
-        });
-      } else {
-        document.getElementById('scannerModal').classList.add('hidden');
+      if (tabId === 'actualTab') {
+        checkLinePlanStatus();
       }
     }
 
@@ -388,7 +332,7 @@
     function renderDashboard() {
       const lineMap = {};
       ALL_LINES.forEach(line => {
-        lineMap[line] = { plan: 0, actual: 0, defect: 0, parts: {} };
+        lineMap[line] = { plan: 0, actual: 0, defect: 0, parts: {}, isDelay: false };
       });
 
       let gPlan = 0, gActual = 0, gDefect = 0, gOverdueCount = 0;
@@ -422,7 +366,9 @@
       });
 
       linePlanTotals = {};
-      ALL_LINES.forEach(line => linePlanTotals[line] = lineMap[line].plan);
+      ALL_LINES.forEach(line => {
+        linePlanTotals[line] = lineMap[line].plan;
+      });
 
       const container = document.getElementById('lineCardsContainer');
       container.innerHTML = '';
@@ -433,6 +379,7 @@
         const balance = data.plan - data.actual;
 
         let hasDelayedPart = false;
+
         let partsHtml = '';
         const partKeys = Object.keys(data.parts);
 
@@ -444,6 +391,7 @@
             let partBadgeClass = 'badge-open';
             let partBadgeText = 'Open';
 
+            // เช็กเงื่อนไข Delay: วันนี้ > วันที่ต้องการสินค้า และ งานยังผลิตไม่ครบ
             const isPartOverdue = partObj.targetDate && (todayStr > partObj.targetDate) && (partObj.actual < partObj.plan);
 
             if (isPartOverdue) {
@@ -520,7 +468,9 @@
           </div>
 
           <div class="part-section-title">📋 สถานะ Part No. ในไลน์นี้</div>
-          <div class="part-list">${partsHtml}</div>
+          <div class="part-list">
+            ${partsHtml}
+          </div>
         `;
         container.appendChild(card);
       });
@@ -563,8 +513,8 @@
         planPartNo: document.getElementById('planPartNo').value,
         planLotNo: document.getElementById('planLotNo').value,
         planQty: document.getElementById('planQty').value,
-        planStartDate: document.getElementById('planOrderDate').value,
-        planEndDate: document.getElementById('planTargetDate').value,
+        planStartDate: document.getElementById('planOrderDate').value,  // วันที่สั่งผลิต
+        planEndDate: document.getElementById('planTargetDate').value,  // วันที่ต้องการสินค้า
         planner: `[Planner] ${document.getElementById('plannerName').value}`
       };
 
@@ -620,14 +570,20 @@
     }
 
     async function clearLineDataWithPass() {
-      const lineTarget = prompt("🏭 พิมพ์ชื่อ Line ที่ต้องการล้างข้อมูล (เช่น Line A, Line Q, Line C1, Line C2, Line C3):");
+      const lineTarget = prompt("🏭 พิมพ์ชื่อ Line ที่ต้องการล้างข้อมูล (ตัวอย่าง: Line A, Line Q, Line C1, Line C2, Line C3):");
       if (!lineTarget) return;
 
       const matchedLine = ALL_LINES.find(l => l.toLowerCase() === lineTarget.trim().toLowerCase());
-      if (!matchedLine) { alert("❌ ไม่พบชื่อ Line นี้ในระบบ!"); return; }
+      if (!matchedLine) {
+        alert("❌ ไม่พบชื่อ Line นี้ในระบบ!");
+        return;
+      }
 
       const pass = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อล้างข้อมูลของ ${matchedLine}:`);
-      if (pass !== PASS_CLEAR) { alert("❌ รหัสผ่านไม่ถูกต้อง!"); return; }
+      if (pass !== PASS_CLEAR) {
+        alert("❌ รหัสผ่านไม่ถูกต้อง!");
+        return;
+      }
 
       if (!confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลการผลิตทั้งหมดเฉพาะ "${matchedLine}" ?`)) return;
 
