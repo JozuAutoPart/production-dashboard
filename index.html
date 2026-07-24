@@ -618,7 +618,7 @@
     function loadPartDropdowns() {
   if (typeof GOOGLE_SCRIPT_URL === 'undefined') return;
 
-  const scriptUrl = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 'module=masterPart';
+  const scriptUrl = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 'module=MasterPart';
 
   fetch(scriptUrl)
     .then(response => response.json())
