@@ -1,654 +1,444 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Production Management System</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; padding: 12px; }
-    .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
-
-    /* Header & Navigation Tabs */
-    .header { background: #1e293b; padding: 16px; border-radius: 14px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-    .header h1 { font-size: 18px; font-weight: 800; color: #38bdf8; }
-    .btn-refresh { background: #334155; color: #f8fafc; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
-    .btn-refresh:hover { background: #475569; }
-
-    .nav-tabs { display: flex; gap: 8px; background: #1e293b; padding: 6px; border-radius: 12px; border: 1px solid #334155; }
-    .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; background: transparent; color: #94a3b8; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; transition: all 0.2s; }
-    .tab-btn.active { background: #0284c7; color: #ffffff; }
-
-    /* Tab Content Wrappers */
-    .tab-content { display: none; flex-direction: column; gap: 14px; }
-    .tab-content.active { display: flex; }
-
-    /* Grand Total Overview Banner */
-    .overview-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 16px; border-radius: 16px; border: 1px solid #38bdf8; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1); }
-    .overview-title { font-size: 14px; font-weight: 800; color: #94a3b8; margin-bottom: 10px; }
-    .overview-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-    .total-card { background: #1e293b; padding: 10px 6px; border-radius: 10px; text-align: center; border: 1px solid #334155; }
-    .total-title { font-size: 9px; color: #94a3b8; font-weight: bold; }
-    .total-val { font-size: 15px; font-weight: 800; margin-top: 4px; }
-
-    /* Lines Comparison Grid */
-    .section-title { font-size: 15px; font-weight: 800; color: #f8fafc; margin-top: 4px; }
-    .line-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
-
-    /* Individual Line Card */
-    .line-card { background: #1e293b; padding: 14px; border-radius: 14px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 10px; }
-    .line-card.card-delay { border: 1px solid #f43f5e; background: linear-gradient(180deg, #2a1218 0%, #1e293b 100%); }
-    .line-card-header { display: flex; justify-content: space-between; align-items: center; }
-    .line-name { font-size: 16px; font-weight: 800; color: #38bdf8; }
-    
-    /* Badges */
-    .status-badge { font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 6px; }
-    .status-good { background: #065f46; color: #34d399; }
-    .status-delay { background: #881337; color: #fca5a5; border: 1px solid #f43f5e; }
-    .status-neutral { background: #334155; color: #94a3b8; }
-
-    /* Part Status Badges */
-    .badge-open { background: #0284c7; color: #e0f2fe; }
-    .badge-incomplete { background: #d97706; color: #fef3c7; }
-    .badge-complete { background: #16a34a; color: #dcfce7; }
-    .badge-delay { background: #9f1239; color: #fecdd3; font-weight: 800; }
-
-    .progress-bg { background: #0f172a; height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid #334155; }
-    .progress-fill { height: 100%; background: #10b981; transition: width 0.4s ease; }
-    .progress-fill.low { background: #f43f5e; }
-
-    .mini-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
-    .mini-box { background: #0f172a; padding: 6px 4px; border-radius: 8px; border: 1px solid #334155; }
-    .mini-title { font-size: 9px; color: #94a3b8; font-weight: bold; }
-    .mini-val { font-size: 13px; font-weight: 800; margin-top: 2px; }
-
-    /* Part List Inside Card */
-    .part-section-title { font-size: 11px; font-weight: bold; color: #94a3b8; margin-top: 4px; border-top: 1px solid #334155; padding-top: 8px; }
-    .part-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
-    .part-item { background: #0f172a; padding: 8px; border-radius: 8px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
-    .part-info { display: flex; flex-direction: column; gap: 2px; }
-    .part-no { font-weight: bold; color: #f8fafc; }
-    .part-date-detail { color: #f59e0b; font-size: 10px; font-weight: bold; }
-    .part-qty-detail { color: #64748b; font-size: 10px; }
-
-    /* Form Styles */
-    .form-card { background: #1e293b; padding: 20px; border-radius: 16px; border: 1px solid #334155; }
-    .form-header-plan { font-size: 16px; font-weight: bold; color: #38bdf8; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-    .form-header-actual { font-size: 16px; font-weight: bold; color: #34d399; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-    
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 6px; }
-    .form-group select, .form-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 14px; font-weight: bold; outline: none; }
-    .form-group select:focus, .form-group input:focus { border-color: #38bdf8; }
-
-    .btn-submit-plan { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; background: #0284c7; color: #fff; margin-top: 8px; }
-    .btn-submit-actual { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 800; cursor: pointer; background: #059669; color: #fff; margin-top: 8px; }
-    .btn-submit-disabled { background: #475569 !important; cursor: not-allowed !important; opacity: 0.6; }
-
-    .btn-clear-line { background: #881337; color: #fecdd3; border: 1px solid #f43f5e; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
-    .btn-clear-line:hover { background: #9f1239; }
-
-    .alert-box { padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-bottom: 12px; }
-    .alert-danger { background: #881337; color: #fda4af; border: 1px solid #f43f5e; }
-    .alert-success { background: #065f46; color: #a7f3d0; border: 1px solid #34d399; }
-
-    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
-    .hidden { display: none !important; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .form-control, .form-select {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            border-radius: 8px;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #0f172a;
+            border-color: #38bdf8;
+            color: #f8fafc;
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+        }
+        .nav-pills .nav-link {
+            color: #94a3b8;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0284c7;
+            color: #ffffff;
+        }
+        .btn-primary {
+            background-color: #0284c7;
+            border-color: #0284c7;
+        }
+        .btn-primary:hover {
+            background-color: #0369a1;
+            border-color: #0369a1;
+        }
+        .table-dark {
+            --bs-table-bg: #1e293b;
+            --bs-table-border-color: #334155;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+    </style>
 </head>
-<body>
+<body class="p-3 p-md-4">
 
-  <div id="loadingOverlay" class="hidden">
-    <div style="background: #1e293b; color: #fff; padding: 20px 30px; border-radius: 12px; text-align: center; border: 1px solid #334155;">
-      <p style="font-weight: bold; font-size: 14px;">⏳ กำลังดำเนินการ...</p>
-    </div>
-  </div>
-
-  <div class="container">
-    
-    <!-- Header -->
-    <div class="header">
-      <div>
-        <h1>📊 Production Management</h1>
-        <p style="font-size: 11px; color: #94a3b8; margin-top: 2px;">ระบบวางแผนและบันทึกการผลิตรายไลน์</p>
-      </div>
-      <button onclick="loadData()" class="btn-refresh">🔄 รีเฟรช</button>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('dashboardTab', this)">📊 Dashboard</button>
-      <button class="tab-btn" onclick="switchTab('planTab', this)">📌 วางแผน (Planning)</button>
-      <button class="tab-btn" onclick="switchTab('actualTab', this)">⚙️ บันทึกการผลิต (Actual)</button>
-    </div>
-
-    <!-- TAB 1: DASHBOARD -->
-    <div id="dashboardTab" class="tab-content active">
-      <div class="overview-card">
-        <div class="overview-title">🌐 สรุปรวมทุกสายการผลิต (Grand Total)</div>
-        <div class="overview-grid">
-          <div class="total-card">
-            <div class="total-title">🎯 Total Plan</div>
-            <div id="grandPlan" class="total-val" style="color: #38bdf8;">0</div>
-          </div>
-          <div class="total-card">
-            <div class="total-title">⚙️ Total Actual</div>
-            <div id="grandActual" class="total-val" style="color: #34d399;">0</div>
-          </div>
-          <div class="total-card">
-            <div class="total-title">❌ Total Defect</div>
-            <div id="grandDefect" class="total-val" style="color: #f43f5e;">0</div>
-          </div>
-          <div class="total-card">
-            <div class="total-title">🚨 Overdue</div>
-            <div id="grandOverdue" class="total-val" style="color: #fb7185;">0 Line</div>
-          </div>
-          <div class="total-card">
-            <div class="total-title">📈 Progress</div>
-            <div id="grandProgress" class="total-val" style="color: #fbbf24;">0%</div>
-          </div>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="spinner-border text-info" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
-      </div>
-
-      <div class="section-title">🏭 สถานะรายไลน์ (Line Breakdown)</div>
-      <div class="line-grid" id="lineCardsContainer"></div>
-
-      <!-- ปุ่มล้างข้อมูลเฉพาะ Line -->
-      <button onclick="clearLineDataWithPass()" class="btn-clear-line">🗑️ ล้างข้อมูลเฉพาะ Line (Clear Line Data)</button>
     </div>
 
-    <!-- TAB 2: PLANNING FORM -->
-    <div id="planTab" class="tab-content">
-      <div class="form-card">
-        <div class="form-header-plan">📌 ฟอร์มวางแผนการผลิต (Production Planning)</div>
-        <form id="planningForm" onsubmit="submitPlanning(event)">
-          
-          <div class="form-group">
-            <label>สายการผลิต (Line)</label>
-            <select id="planLineSelect" required>
-              <option value="Line A">Line A</option>
-              <option value="Line Q">Line Q</option>
-              <option value="Line C1">Line C1</option>
-              <option value="Line C2">Line C2</option>
-              <option value="Line C3">Line C3</option>
-            </select>
-          </div>
+    <div class="container-fluid max-width-lg">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1"><i class="fa-solid fa-chart-column text-info me-2"></i>Production Management</h3>
+                <p class="text-secondary small mb-0">ระบบวางแผนและบันทึกการผลิตสายไลน์</p>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
+                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+            </button>
+        </div>
 
-          <div class="form-row">
-           <div class="form-group">
-  <label>Part No.</label>
-  <select id="planPartNo" required>
-    <option value="">-- กำลังโหลดรายการ Part... --</option>
-  </select>
-</div>
-            <div class="form-group">
-              <label>Lot No.</label>
-              <input type="text" id="planLotNo" placeholder="เช่น L6907-01" required>
-            </div>
-          </div>
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills nav-fill mb-4 p-1 card flex-row" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" role="tab">
+                    <i class="fa-solid fa-chart-line me-2"></i>Dashboard
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-plan" data-bs-toggle="pill" data-bs-target="#content-plan" type="button" role="tab">
+                    <i class="fa-solid fa-pushpin me-2"></i>วางแผน (Planning)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab">
+                    <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
+                </button>
+            </li>
+        </ul>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>📅 วันที่สั่งผลิต (Order Date)</label>
-              <input type="date" id="planOrderDate" required>
-            </div>
-            <div class="form-group">
-              <label>🎯 วันที่ต้องการสินค้า (Target Date)</label>
-              <input type="date" id="planTargetDate" required>
-            </div>
-          </div>
+        <!-- Tab Contents -->
+        <div class="tab-content" id="pills-tabContent">
+            
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="content-dashboard" role="tabpanel">
+                <div class="card p-3 mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary">กรองสายการผลิต (Line)</label>
+                            <select id="filterLine" class="form-select" onchange="renderDashboard()">
+                                <option value="ALL">ทุกสายการผลิต</option>
+                                <option value="Line A">Line A</option>
+                                <option value="Line B">Line B</option>
+                                <option value="Line C">Line C</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>จำนวนแผน (Plan Qty / Pcs)</label>
-              <input type="number" id="planQty" placeholder="0" inputmode="numeric" required>
+                <div class="card p-3">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-warning"></i>รายการสถานะการผลิต</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Line</th>
+                                    <th>Part No.</th>
+                                    <th>Lot No.</th>
+                                    <th>Plan Qty</th>
+                                    <th>Actual Qty</th>
+                                    <th>Defect Qty</th>
+                                    <th>Progress</th>
+                                    <th>Operator</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center text-secondary py-4">กำลังโหลดข้อมูล...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-              <label>ชื่อนักวางแผน (Planner Name)</label>
-              <input type="text" id="plannerName" placeholder="ระบุชื่อผู้ตั้งแผน" required>
-            </div>
-          </div>
 
-          <button type="submit" class="btn-submit-plan">📌 บันทึกแผนการผลิต (Save Plan)</button>
-        </form>
-      </div>
+            <!-- Planning Tab -->
+            <div class="tab-pane fade" id="content-plan" role="tabpanel">
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-4"><i class="fa-solid fa-thumbtack text-danger me-2"></i>ฟอร์มวางแผนการผลิต (Production Planning)</h5>
+                    <form id="planForm" onsubmit="submitPlan(event)">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label small text-secondary">สายการผลิต (Line)</label>
+                                <select id="planLine" class="form-select" required>
+                                    <option value="Line A">Line A</option>
+                                    <option value="Line B">Line B</option>
+                                    <option value="Line C">Line C</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">Part No.</label>
+                                <select id="planPartNo" class="form-select" required>
+                                    <option value="">-- โปรดเลือก Part No. --</option>
+                                    <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
+                                    <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
+                                    <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
+                                    <option value="J0701-17620-Z1T-8000-25">J0701-17620-Z1T-8000-25</option>
+                                    <option value="J0802-17622-ZOT-8200">J0802-17622-ZOT-8200</option>
+                                    <option value="J0804-17625-Z4H-3000">J0804-17625-Z4H-3000</option>
+                                    <option value="J0804-17636-Z4H-0100">J0804-17636-Z4H-0100</option>
+                                    <option value="J0803-17620-899-8000-20">J0803-17620-899-8000-20</option>
+                                    <option value="J0803-17620-899-8000-21">J0803-17620-899-8000-21</option>
+                                    <option value="J0803-17620-899-8000-22">J0803-17620-899-8000-22</option>
+                                    <option value="J0803-17625-434-3000">J0803-17625-434-3000</option>
+                                    <option value="J0803-17620-899-8000-23">J0803-17620-899-8000-23</option>
+                                    <option value="J0804-17621-Z4H-3100">J0804-17621-Z4H-3100</option>
+                                    <option value="J1901-17622-Z4H-9100">J1901-17622-Z4H-9100</option>
+                                    <option value="J1701-17625-K59K-T110-Y1">J1701-17625-K59K-T110-Y1</option>
+                                    <option value="J1201-17628-K20-9010-Y1">J1201-17628-K20-9010-Y1</option>
+                                    <option value="J1201-17623-K20-A110-Y1">J1201-17623-K20-A110-Y1</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">Lot No.</label>
+                                <input type="text" id="planLotNo" class="form-control" placeholder="เช่น L6907-01" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">วันที่สั่งผลิต (Order Date)</label>
+                                <input type="date" id="planOrderDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">วันที่ต้องการสินค้า (Target Date)</label>
+                                <input type="date" id="planTargetDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">จำนวนแผน (Plan Qty / Pcs)</label>
+                                <input type="number" id="planQty" class="form-control" value="0" min="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">ชื่อผู้วางแผน (Planner Name)</label>
+                                <input type="text" id="plannerName" class="form-control" placeholder="ระบุชื่อผู้ตั้งแผน" required>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                                    <i class="fa-solid fa-pushpin me-2"></i>บันทึกแผนการผลิต (Save Plan)
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Actual Record Tab -->
+            <div class="tab-pane fade" id="content-actual" role="tabpanel">
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-4"><i class="fa-solid fa-pen-to-square text-success me-2"></i>ฟอร์มบันทึกผลการผลิต (Production Actual)</h5>
+                    <form id="actualForm" onsubmit="submitActual(event)">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">สายการผลิต (Line)</label>
+                                <select id="actualLine" class="form-select" required>
+                                    <option value="Line A">Line A</option>
+                                    <option value="Line B">Line B</option>
+                                    <option value="Line C">Line C</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">วันที่บันทึก (Actual Date)</label>
+                                <input type="date" id="actualDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">Part No.</label>
+                                <select id="actualPartNo" class="form-select" required>
+                                    <option value="">-- โปรดเลือก Part No. --</option>
+                                    <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
+                                    <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
+                                    <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
+                                    <option value="J0701-17620-Z1T-8000-25">J0701-17620-Z1T-8000-25</option>
+                                    <option value="J0802-17622-ZOT-8200">J0802-17622-ZOT-8200</option>
+                                    <option value="J0804-17625-Z4H-3000">J0804-17625-Z4H-3000</option>
+                                    <option value="J0804-17636-Z4H-0100">J0804-17636-Z4H-0100</option>
+                                    <option value="J0803-17620-899-8000-20">J0803-17620-899-8000-20</option>
+                                    <option value="J0803-17620-899-8000-21">J0803-17620-899-8000-21</option>
+                                    <option value="J0803-17620-899-8000-22">J0803-17620-899-8000-22</option>
+                                    <option value="J0803-17625-434-3000">J0803-17625-434-3000</option>
+                                    <option value="J0803-17620-899-8000-23">J0803-17620-899-8000-23</option>
+                                    <option value="J0804-17621-Z4H-3100">J0804-17621-Z4H-3100</option>
+                                    <option value="J1901-17622-Z4H-9100">J1901-17622-Z4H-9100</option>
+                                    <option value="J1701-17625-K59K-T110-Y1">J1701-17625-K59K-T110-Y1</option>
+                                    <option value="J1201-17628-K20-9010-Y1">J1201-17628-K20-9010-Y1</option>
+                                    <option value="J1201-17623-K20-A110-Y1">J1201-17623-K20-A110-Y1</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">Lot No.</label>
+                                <input type="text" id="actualLotNo" class="form-control" placeholder="เช่น L6907-01" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-secondary">จำนวนผลิตได้ (Actual Qty)</label>
+                                <input type="number" id="actualQty" class="form-control" value="0" min="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-secondary">จำนวนของเสีย (Defect Qty)</label>
+                                <input type="number" id="defectQty" class="form-control" value="0" min="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-secondary">ชื่อผู้บันทึก (Operator Name)</label>
+                                <input type="text" id="operatorName" class="form-control" placeholder="ระบุชื่อพนักงาน" required>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกผลการผลิต (Save Actual)
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <!-- TAB 3: ACTUAL PRODUCTION FORM -->
-    <div id="actualTab" class="tab-content">
-      <div class="form-card">
-        <div class="form-header-actual">⚙️ ฟอร์มบันทึกผลการผลิตจริง (Production Log Entry)</div>
-        
-        <div id="actualPlanAlert" class="alert-box hidden"></div>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // URL ของ Google Apps Script Web App
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_YOUR_SCRIPT_ID_HERE/exec"; 
 
-        <form id="actualForm" onsubmit="submitActual(event)">
-          
-          <div class="form-group">
-            <label>สายการผลิต (Line)</label>
-            <select id="actualLineSelect" onchange="checkLinePlanStatus()" required>
-              <option value="Line A">Line A</option>
-              <option value="Line Q">Line Q</option>
-              <option value="Line C1">Line C1</option>
-              <option value="Line C2">Line C2</option>
-              <option value="Line C3">Line C3</option>
-            </select>
-          </div>
+        let globalData = [];
 
-          <div class="form-row">
-            <div class="form-group">
-  <label>Part No.</label>
-  <select id="actualPartNo" required>
-    <option value="">-- กำลังโหลดรายการ Part... --</option>
-  </select>
-</div>
-            <div class="form-group">
-              <label>Lot No.</label>
-              <input type="text" id="actualLotNo" placeholder="เช่น L6907-01" required>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>ผลิตได้จริง (Actual Qty / Pcs)</label>
-              <input type="number" id="actualQty" placeholder="0" inputmode="numeric" required>
-            </div>
-            <div class="form-group">
-              <label>ของเสีย (Defect Qty / Pcs)</label>
-              <input type="number" id="defectQty" value="0" placeholder="0" inputmode="numeric" required>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>วันที่ผลิตจริง</label>
-              <input type="date" id="actualDate" required>
-            </div>
-            <div class="form-group">
-              <label>ชื่อผู้บันทึก (Operator / Sup)</label>
-              <input type="text" id="operatorName" placeholder="ระบุชื่อผู้บันทึก" required>
-            </div>
-          </div>
-
-          <button type="submit" id="actualSubmitBtn" class="btn-submit-actual">💾 บันทึกผลผลิตจริง (Save Actual)</button>
-        </form>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqV4mE6VLYdbFna04S-IkgnxDn7EGQU1TdjF0Z63cSbd51sDBHLxzHaMGw6LMpB1MU/exec";
-
-    // กำหนดรหัสผ่าน
-    const PASS_PLANNING = "1234";
-    const PASS_ACTUAL   = "5678";
-    const PASS_CLEAR    = "9999";
-
-    const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
-    let rawLogs = [];
-    let linePlanTotals = {};
-
-    function showLoading(show) {
-      document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
-    }
-
-    function switchTab(tabId, btnElement) {
-      if (tabId === 'planTab') {
-        const pass = prompt("🔒 กรุณาใส่รหัสผ่านสำหรับวางแผน (Planning):");
-        if (pass !== PASS_PLANNING) {
-          alert("❌ รหัสผ่านไม่ถูกต้อง!");
-          return;
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) overlay.classList.remove('d-none');
+            else overlay.classList.add('d-none');
         }
-      } else if (tabId === 'actualTab') {
-        const pass = prompt("🔒 กรุณาใส่รหัสผ่านสำหรับบันทึกการผลิต (Actual):");
-        if (pass !== PASS_ACTUAL) {
-          alert("❌ รหัสผ่านไม่ถูกต้อง!");
-          return;
+
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('planOrderDate').value = today;
+            document.getElementById('planTargetDate').value = today;
+            document.getElementById('actualDate').value = today;
         }
-      }
 
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById(tabId).classList.add('active');
-      btnElement.classList.add('active');
-
-      if (tabId === 'actualTab') {
-        checkLinePlanStatus();
-      }
-    }
-
-    async function loadData() {
-      showLoading(true);
-      try {
-        const res = await fetch(`${GOOGLE_SCRIPT_URL}?module=production`, { method: 'GET', redirect: 'follow' });
-        rawLogs = await res.json();
-        renderDashboard();
-        checkLinePlanStatus();
-      } catch (err) {
-        alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูล");
-      } finally {
-        showLoading(false);
-      }
-    }
-
-    function renderDashboard() {
-      const lineMap = {};
-      ALL_LINES.forEach(line => {
-        lineMap[line] = { plan: 0, actual: 0, defect: 0, parts: {}, isDelay: false };
-      });
-
-      let gPlan = 0, gActual = 0, gDefect = 0, gOverdueCount = 0;
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      rawLogs.forEach(item => {
-        const lName = item.line;
-        if (lineMap[lName]) {
-          const p = Number(item.planQty) || 0;
-          const a = Number(item.actualQty) || 0;
-          const d = Number(item.defectQty) || 0;
-
-          const pNo = item.planPartNo || item.actualPartNo || "Unknown Part";
-          const targetDate = item.planEndDate ? item.planEndDate.split('T')[0] : '';
-
-          lineMap[lName].plan += p;
-          lineMap[lName].actual += a;
-          lineMap[lName].defect += d;
-
-          if (!lineMap[lName].parts[pNo]) {
-            lineMap[lName].parts[pNo] = { plan: 0, actual: 0, targetDate: targetDate };
-          }
-          lineMap[lName].parts[pNo].plan += p;
-          lineMap[lName].parts[pNo].actual += a;
-          if (targetDate) lineMap[lName].parts[pNo].targetDate = targetDate;
-
-          gPlan += p;
-          gActual += a;
-          gDefect += d;
+        async function loadData() {
+            showLoading(true);
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                globalData = await response.json();
+                renderDashboard();
+            } catch (err) {
+                console.error("Error loading data:", err);
+            } finally {
+                showLoading(false);
+            }
         }
-      });
 
-      linePlanTotals = {};
-      ALL_LINES.forEach(line => {
-        linePlanTotals[line] = lineMap[line].plan;
-      });
+        function renderDashboard() {
+            const lineFilter = document.getElementById('filterLine').value;
+            const tbody = document.getElementById('dashboardTableBody');
+            tbody.innerHTML = '';
 
-      const container = document.getElementById('lineCardsContainer');
-      container.innerHTML = '';
-
-      Object.keys(lineMap).forEach(lineName => {
-        const data = lineMap[lineName];
-        const pct = data.plan > 0 ? Math.round((data.actual / data.plan) * 100) : 0;
-        const balance = data.plan - data.actual;
-
-        let hasDelayedPart = false;
-
-        let partsHtml = '';
-        const partKeys = Object.keys(data.parts);
-
-        if (partKeys.length === 0) {
-          partsHtml = `<div style="font-size: 10px; color: #64748b; text-align: center; padding: 4px;">ไม่มีรายการ Part</div>`;
-        } else {
-          partKeys.forEach(partNo => {
-            const partObj = data.parts[partNo];
-            let partBadgeClass = 'badge-open';
-            let partBadgeText = 'Open';
-
-            // เช็กเงื่อนไข Delay: วันนี้ > วันที่ต้องการสินค้า และ งานยังผลิตไม่ครบ
-            const isPartOverdue = partObj.targetDate && (todayStr > partObj.targetDate) && (partObj.actual < partObj.plan);
-
-            if (isPartOverdue) {
-              partBadgeClass = 'badge-delay';
-              partBadgeText = '🚨 Delay';
-              hasDelayedPart = true;
-            } else if (partObj.actual >= partObj.plan && partObj.plan > 0) {
-              partBadgeClass = 'badge-complete';
-              partBadgeText = 'Complete';
-            } else if (partObj.actual > 0) {
-              partBadgeClass = 'badge-incomplete';
-              partBadgeText = 'Incomplete';
+            let filtered = globalData;
+            if (lineFilter !== 'ALL') {
+                filtered = globalData.filter(item => item.line === lineFilter);
             }
 
-            const dateDisplay = partObj.targetDate ? `🎯 Target: ${partObj.targetDate}` : '';
+            if (!filtered || filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-4">ไม่พบข้อมูลการผลิต</td></tr>';
+                return;
+            }
 
-            partsHtml += `
-              <div class="part-item">
-                <div class="part-info">
-                  <span class="part-no">📦 ${partNo}</span>
-                  <span class="part-date-detail">${dateDisplay}</span>
-                  <span class="part-qty-detail">Plan: ${partObj.plan.toLocaleString()} | Act: ${partObj.actual.toLocaleString()}</span>
-                </div>
-                <span class="status-badge ${partBadgeClass}">${partBadgeText}</span>
-              </div>
-            `;
-          });
+            filtered.forEach(item => {
+                const plan = Number(item.planQty) || 0;
+                const actual = Number(item.actualQty) || 0;
+                const percent = plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="badge bg-secondary">${item.line || '-'}</span></td>
+                    <td class="fw-bold text-info">${item.planPartNo || item.actualPartNo || '-'}</td>
+                    <td>${item.planLotNo || item.actualLotNo || '-'}</td>
+                    <td>${plan.toLocaleString()}</td>
+                    <td class="text-success fw-bold">${actual.toLocaleString()}</td>
+                    <td class="text-danger">${(Number(item.defectQty) || 0).toLocaleString()}</td>
+                    <td style="width: 150px;">
+                        <div class="progress" style="height: 15px; background-color: #0f172a;">
+                            <div class="progress-bar ${percent >= 100 ? 'bg-success' : 'bg-info'}" 
+                                 role="progressbar" style="width: ${percent}%;">
+                                 ${percent}%
+                            </div>
+                        </div>
+                    </td>
+                    <td><small class="text-secondary">${item.operator || item.planner || '-'}</small></td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        let statusText = 'Normal';
-        let statusClass = 'status-good';
+        async function submitPlan(e) {
+            e.preventDefault();
+            showLoading(true);
 
-        if (data.plan === 0) {
-          statusText = 'No Plan';
-          statusClass = 'status-neutral';
-        } else if (hasDelayedPart) {
-          statusText = '🚨 Delay';
-          statusClass = 'status-delay';
-          gOverdueCount++;
+            const payload = {
+                action: "addProductionLog",
+                data: {
+                    line: document.getElementById('planLine').value,
+                    planPartNo: document.getElementById('planPartNo').value,
+                    planLotNo: document.getElementById('planLotNo').value,
+                    planOrderDate: document.getElementById('planOrderDate').value,
+                    planTargetDate: document.getElementById('planTargetDate').value,
+                    planQty: document.getElementById('planQty').value,
+                    planner: document.getElementById('plannerName').value
+                }
+            };
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                alert('บันทึกแผนการผลิตเรียบร้อยแล้ว!');
+                document.getElementById('planForm').reset();
+                setDefaultDates();
+                setTimeout(loadData, 1500);
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                showLoading(false);
+            }
         }
 
-        const isLow = (pct < 80 && data.plan > 0) || hasDelayedPart;
+        async function submitActual(e) {
+            e.preventDefault();
+            showLoading(true);
 
-        const card = document.createElement('div');
-        card.className = `line-card ${hasDelayedPart ? 'card-delay' : ''}`;
-        card.innerHTML = `
-          <div class="line-card-header">
-            <span class="line-name">${lineName}</span>
-            <span class="status-badge ${statusClass}">${statusText}</span>
-          </div>
+            const payload = {
+                action: "addProductionLog",
+                data: {
+                    line: document.getElementById('actualLine').value,
+                    actualDate: document.getElementById('actualDate').value,
+                    actualPartNo: document.getElementById('actualPartNo').value,
+                    actualLotNo: document.getElementById('actualLotNo').value,
+                    actualQty: document.getElementById('actualQty').value,
+                    defectQty: document.getElementById('defectQty').value,
+                    operator: document.getElementById('operatorName').value
+                }
+            };
 
-          <div class="progress-bg">
-            <div class="progress-fill ${isLow ? 'low' : ''}" style="width: ${Math.min(pct, 100)}%;"></div>
-          </div>
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                alert('บันทึกผลการผลิตเรียบร้อยแล้ว!');
+                document.getElementById('actualForm').reset();
+                setDefaultDates();
+                setTimeout(loadData, 1500);
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                showLoading(false);
+            }
+        }
 
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8;">
-            <span>ความคืบหน้าภาพรวม</span>
-            <b style="color: ${isLow ? '#f43f5e' : '#34d399'};">${pct}%</b>
-          </div>
-
-          <div class="mini-metrics">
-            <div class="mini-box">
-              <div class="mini-title">🎯 Plan</div>
-              <div class="mini-val" style="color: #38bdf8;">${data.plan.toLocaleString()}</div>
-            </div>
-            <div class="mini-box">
-              <div class="mini-title">⚙️ Actual</div>
-              <div class="mini-val" style="color: #34d399;">${data.actual.toLocaleString()}</div>
-            </div>
-            <div class="mini-box">
-              <div class="mini-title">⚖️ Balance</div>
-              <div class="mini-val" style="color: #fbbf24;">${balance.toLocaleString()}</div>
-            </div>
-          </div>
-
-          <div class="part-section-title">📋 สถานะ Part No. ในไลน์นี้</div>
-          <div class="part-list">
-            ${partsHtml}
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      document.getElementById('grandPlan').innerText = gPlan.toLocaleString();
-      document.getElementById('grandActual').innerText = gActual.toLocaleString();
-      document.getElementById('grandDefect').innerText = gDefect.toLocaleString();
-      document.getElementById('grandOverdue').innerText = `${gOverdueCount} Line`;
-      const gPct = gPlan > 0 ? Math.round((gActual / gPlan) * 100) : 0;
-      document.getElementById('grandProgress').innerText = `${gPct}%`;
-    }
-
-    function checkLinePlanStatus() {
-      const selectedLine = document.getElementById('actualLineSelect').value;
-      const planQty = linePlanTotals[selectedLine] || 0;
-      const alertBox = document.getElementById('actualPlanAlert');
-      const submitBtn = document.getElementById('actualSubmitBtn');
-
-      if (planQty <= 0) {
-        alertBox.className = "alert-box alert-danger";
-        alertBox.innerText = `❌ Line ${selectedLine} ยังไม่มีแผนการผลิต (Plan Qty = 0) จึงไม่สามารถบันทึกการผลิตได้!`;
-        alertBox.classList.remove('hidden');
-        submitBtn.disabled = true;
-        submitBtn.classList.add('btn-submit-disabled');
-      } else {
-        alertBox.className = "alert-box alert-success";
-        alertBox.innerText = `✅ Line ${selectedLine} มีแผนการผลิตพร้อมรับบันทึกผลผลิตแล้ว (Plan Qty: ${planQty.toLocaleString()})`;
-        alertBox.classList.remove('hidden');
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('btn-submit-disabled');
-      }
-    }
-
-    async function submitPlanning(e) {
-      e.preventDefault();
-      showLoading(true);
-
-      const payload = {
-        line: document.getElementById('planLineSelect').value,
-        planPartNo: document.getElementById('planPartNo').value,
-        planLotNo: document.getElementById('planLotNo').value,
-        planQty: document.getElementById('planQty').value,
-        planStartDate: document.getElementById('planOrderDate').value,  // วันที่สั่งผลิต
-        planEndDate: document.getElementById('planTargetDate').value,  // วันที่ต้องการสินค้า
-        planner: `[Planner] ${document.getElementById('plannerName').value}`
-      };
-
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: "addProductionLog", data: payload })
-        });
-
-        document.getElementById('planningForm').reset();
-        setDefaultDates();
-        setTimeout(loadData, 1500);
-        alert("📌 บันทึกแผนการผลิตเรียบร้อยแล้ว!");
-      } catch (err) {
-        alert("❌ เกิดข้อผิดพลาดในการบันทึกแผน");
-        showLoading(false);
-      }
-    }
-
-    async function submitActual(e) {
-      e.preventDefault();
-      showLoading(true);
-
-      const payload = {
-        line: document.getElementById('actualLineSelect').value,
-        actualPartNo: document.getElementById('actualPartNo').value,
-        actualLotNo: document.getElementById('actualLotNo').value,
-        actualQty: document.getElementById('actualQty').value,
-        defectQty: document.getElementById('defectQty').value,
-        actualStartDate: document.getElementById('actualDate').value,
-        actualEndDate: document.getElementById('actualDate').value,
-        operator: `[Operator] ${document.getElementById('operatorName').value}`
-      };
-
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: "addProductionLog", data: payload })
-        });
-
-        document.getElementById('actualForm').reset();
-        setDefaultDates();
-        setTimeout(loadData, 1500);
-        alert("⚙️ บันทึกผลผลิตจริงเรียบร้อยแล้ว!");
-      } catch (err) {
-        alert("❌ เกิดข้อผิดพลาดในการบันทึกผลผลิต");
-        showLoading(false);
-      }
-    }
-
-    async function clearLineDataWithPass() {
-      const lineTarget = prompt("🏭 พิมพ์ชื่อ Line ที่ต้องการล้างข้อมูล (ตัวอย่าง: Line A, Line Q, Line C1, Line C2, Line C3):");
-      if (!lineTarget) return;
-
-      const matchedLine = ALL_LINES.find(l => l.toLowerCase() === lineTarget.trim().toLowerCase());
-      if (!matchedLine) {
-        alert("❌ ไม่พบชื่อ Line นี้ในระบบ!");
-        return;
-      }
-
-      const pass = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อล้างข้อมูลของ ${matchedLine}:`);
-      if (pass !== PASS_CLEAR) {
-        alert("❌ รหัสผ่านไม่ถูกต้อง!");
-        return;
-      }
-
-      if (!confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลการผลิตทั้งหมดเฉพาะ "${matchedLine}" ?`)) return;
-
-      showLoading(true);
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: "clearProductionLogsByLine", line: matchedLine })
-        });
-
-        setTimeout(loadData, 1500);
-        alert(`🗑️ ล้างข้อมูลเฉพาะ ${matchedLine} เรียบร้อยแล้ว!`);
-      } catch (err) {
-        alert("❌ เกิดข้อผิดพลาดในการล้างข้อมูล");
-        showLoading(false);
-      }
-    }
-
-    function setDefaultDates() {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('planOrderDate').value = today;
-      document.getElementById('planTargetDate').value = today;
-      document.getElementById('actualDate').value = today;
-    }
-
-    function loadPartDropdowns() {
-  if (typeof GOOGLE_SCRIPT_URL === 'undefined') return;
-
-  const scriptUrl = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 'module=masterPart';
-
-  fetch(scriptUrl)
-    .then(response => response.json())
-    .then(partList => {
-      const planSelect = document.getElementById('planPartNo');
-      const actualSelect = document.getElementById('actualPartNo');
-      
-      let optionsHtml = '<option value="">-- โปรดเลือก Part No. --</option>';
-      
-      if (Array.isArray(partList) && partList.length > 0) {
-        partList.forEach(part => {
-          optionsHtml += `<option value="${part}">${part}</option>`;
-        });
-      } else {
-        optionsHtml = '<option value="">-- ไม่พบรายการ Part No. --</option>';
-      }
-      
-      if (planSelect) planSelect.innerHTML = optionsHtml;
-      if (actualSelect) actualSelect.innerHTML = optionsHtml;
-    })
-    .catch(err => {
-      console.error("Error loading parts:", err);
-    });
-}
-
-window.onload = () => {
-    setDefaultDates();
-    loadData();
-    loadPartDropdowns(); // สั่งโหลดรายการ Part เมื่อเปิดหน้าเว็บ
-};
-  </script>
+        window.onload = () => {
+            setDefaultDates();
+            loadData();
+        };
+    </script>
 </body>
 </html>
