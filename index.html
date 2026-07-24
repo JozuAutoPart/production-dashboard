@@ -33,16 +33,23 @@
 
     /* Lines Comparison Grid */
     .section-title { font-size: 15px; font-weight: 800; color: #f8fafc; margin-top: 4px; }
-    .line-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .line-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
 
     /* Individual Line Card */
     .line-card { background: #1e293b; padding: 14px; border-radius: 14px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 10px; }
     .line-card-header { display: flex; justify-content: space-between; align-items: center; }
     .line-name { font-size: 16px; font-weight: 800; color: #38bdf8; }
+    
+    /* Badges */
     .status-badge { font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 6px; }
     .status-good { background: #065f46; color: #34d399; }
     .status-warning { background: #881337; color: #fda4af; }
     .status-neutral { background: #334155; color: #94a3b8; }
+
+    /* Part Status Badges */
+    .badge-open { background: #0284c7; color: #e0f2fe; }
+    .badge-incomplete { background: #d97706; color: #fef3c7; }
+    .badge-complete { background: #16a34a; color: #dcfce7; }
 
     .progress-bg { background: #0f172a; height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid #334155; }
     .progress-fill { height: 100%; background: #10b981; transition: width 0.4s ease; }
@@ -52,6 +59,14 @@
     .mini-box { background: #0f172a; padding: 6px 4px; border-radius: 8px; border: 1px solid #334155; }
     .mini-title { font-size: 9px; color: #94a3b8; font-weight: bold; }
     .mini-val { font-size: 13px; font-weight: 800; margin-top: 2px; }
+
+    /* Part List Inside Card */
+    .part-section-title { font-size: 11px; font-weight: bold; color: #94a3b8; margin-top: 4px; border-top: 1px solid #334155; padding-top: 8px; }
+    .part-list { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; }
+    .part-item { background: #0f172a; padding: 8px; border-radius: 8px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+    .part-info { display: flex; flex-direction: column; gap: 2px; }
+    .part-no { font-weight: bold; color: #f8fafc; }
+    .part-qty-detail { color: #64748b; font-size: 10px; }
 
     /* Form Styles */
     .form-card { background: #1e293b; padding: 20px; border-radius: 16px; border: 1px solid #334155; }
@@ -190,7 +205,6 @@
       <div class="form-card">
         <div class="form-header-actual">⚙️ ฟอร์มบันทึกผลการผลิตจริง (Production Log Entry)</div>
         
-        <!-- ข้อความแจ้งเตือนกรณีไม่มี Plan -->
         <div id="actualPlanAlert" class="alert-box hidden"></div>
 
         <form id="actualForm" onsubmit="submitActual(event)">
@@ -249,7 +263,6 @@
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvRMB7WABmzkV461dRTFiU8t-syZ2ivrhRAu2JuDb2PxCUP9XkEjUqsOWJ7BD76xGu/exec";
 
-    // กำหนดรหัสผ่าน
     const PASS_PLANNING = "1234";
     const PASS_ACTUAL   = "5678";
     const PASS_CLEAR    = "9999";
@@ -263,7 +276,6 @@
     }
 
     function switchTab(tabId, btnElement) {
-      // ตรวจสอบรหัสผ่านเมื่อจะเข้าใช้งานแต่ละส่วน
       if (tabId === 'planTab') {
         const pass = prompt("🔒 กรุณาใส่รหัสผ่านสำหรับวางแผน (Planning):");
         if (pass !== PASS_PLANNING) {
@@ -306,7 +318,7 @@
     function renderDashboard() {
       const lineMap = {};
       ALL_LINES.forEach(line => {
-        lineMap[line] = { plan: 0, actual: 0, defect: 0 };
+        lineMap[line] = { plan: 0, actual: 0, defect: 0, parts: {} };
       });
 
       let gPlan = 0, gActual = 0, gDefect = 0;
@@ -318,9 +330,19 @@
           const a = Number(item.actualQty) || 0;
           const d = Number(item.defectQty) || 0;
 
+          // ดึง Part No. (จาก Plan หรือ Actual)
+          const pNo = item.planPartNo || item.actualPartNo || "Unknown Part";
+
           lineMap[lName].plan += p;
           lineMap[lName].actual += a;
           lineMap[lName].defect += d;
+
+          // จัดกลุ่มยอดราย Part No. ภายใน Line
+          if (!lineMap[lName].parts[pNo]) {
+            lineMap[lName].parts[pNo] = { plan: 0, actual: 0 };
+          }
+          lineMap[lName].parts[pNo].plan += p;
+          lineMap[lName].parts[pNo].actual += a;
 
           gPlan += p;
           gActual += a;
@@ -360,6 +382,41 @@
 
         const isLow = pct < 80 && data.plan > 0;
 
+        // สร้าง HTML รายการ Part No.
+        let partsHtml = '';
+        const partKeys = Object.keys(data.parts);
+
+        if (partKeys.length === 0) {
+          partsHtml = `<div style="font-size: 10px; color: #64748b; text-align: center; padding: 4px;">ไม่มีรายการ Part</div>`;
+        } else {
+          partKeys.forEach(partNo => {
+            const partObj = data.parts[partNo];
+            let partBadgeClass = 'badge-open';
+            let partBadgeText = 'Open';
+
+            if (partObj.actual >= partObj.plan && partObj.plan > 0) {
+              partBadgeClass = 'badge-complete';
+              partBadgeText = 'Complete';
+            } else if (partObj.actual > 0) {
+              partBadgeClass = 'badge-incomplete';
+              partBadgeText = 'Incomplete';
+            } else {
+              partBadgeClass = 'badge-open';
+              partBadgeText = 'Open';
+            }
+
+            partsHtml += `
+              <div class="part-item">
+                <div class="part-info">
+                  <span class="part-no">📦 ${partNo}</span>
+                  <span class="part-qty-detail">Plan: ${partObj.plan.toLocaleString()} | Act: ${partObj.actual.toLocaleString()}</span>
+                </div>
+                <span class="status-badge ${partBadgeClass}">${partBadgeText}</span>
+              </div>
+            `;
+          });
+        }
+
         const card = document.createElement('div');
         card.className = 'line-card';
         card.innerHTML = `
@@ -373,7 +430,7 @@
           </div>
 
           <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8;">
-            <span>ความคืบหน้า</span>
+            <span>ความคืบหน้าภาพรวม</span>
             <b style="color: ${isLow ? '#f43f5e' : '#34d399'};">${pct}%</b>
           </div>
 
@@ -391,12 +448,16 @@
               <div class="mini-val" style="color: #fbbf24;">${balance.toLocaleString()}</div>
             </div>
           </div>
+
+          <div class="part-section-title">📋 สถานะ Part No. ในไลน์นี้</div>
+          <div class="part-list">
+            ${partsHtml}
+          </div>
         `;
         container.appendChild(card);
       });
     }
 
-    // เช็กว่า Line มี Plan หรือไม่ ถ้าไม่มีล็อกปุ่มคีย์
     function checkLinePlanStatus() {
       const selectedLine = document.getElementById('actualLineSelect').value;
       const planQty = linePlanTotals[selectedLine] || 0;
@@ -418,7 +479,6 @@
       }
     }
 
-    // บันทึกเฉพาะแผน (Planning)
     async function submitPlanning(e) {
       e.preventDefault();
       showLoading(true);
@@ -451,7 +511,6 @@
       }
     }
 
-    // บันทึกเฉพาะผลผลิตจริง (Actual)
     async function submitActual(e) {
       e.preventDefault();
       showLoading(true);
@@ -485,7 +544,6 @@
       }
     }
 
-    // ล้างข้อมูลทั้งหมดด้วยรหัสผ่าน
     async function clearAllDataWithPass() {
       const pass = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อล้างข้อมูลระบบทั้งหมด:");
       if (pass !== PASS_CLEAR) {
@@ -493,7 +551,7 @@
         return;
       }
 
-      if (!confirm("⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลการผลิตและแผนงานทั้งหมดออกจากระบบ? (ไม่สามารถกู้คืนได้)")) {
+      if (!confirm("⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลการผลิตและแผนงานทั้งหมดออกจากระบบ?")) {
         return;
       }
 
