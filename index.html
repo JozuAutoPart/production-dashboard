@@ -615,10 +615,40 @@
       document.getElementById('actualDate').value = today;
     }
 
-    window.onload = () => {
-      setDefaultDates();
-      loadData();
-    };
+    function loadPartDropdowns() {
+  if (typeof GOOGLE_SCRIPT_URL === 'undefined') return;
+
+  const scriptUrl = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 'module=masterPart';
+
+  fetch(scriptUrl)
+    .then(response => response.json())
+    .then(partList => {
+      const planSelect = document.getElementById('planPartNo');
+      const actualSelect = document.getElementById('actualPartNo');
+      
+      let optionsHtml = '<option value="">-- โปรดเลือก Part No. --</option>';
+      
+      if (Array.isArray(partList) && partList.length > 0) {
+        partList.forEach(part => {
+          optionsHtml += `<option value="${part}">${part}</option>`;
+        });
+      } else {
+        optionsHtml = '<option value="">-- ไม่พบรายการ Part No. --</option>';
+      }
+      
+      if (planSelect) planSelect.innerHTML = optionsHtml;
+      if (actualSelect) actualSelect.innerHTML = optionsHtml;
+    })
+    .catch(err => {
+      console.error("Error loading parts:", err);
+    });
+}
+
+window.onload = () => {
+    setDefaultDates();
+    loadData();
+    loadPartDropdowns(); // สั่งโหลดรายการ Part เมื่อเปิดหน้าเว็บ
+};
   </script>
 </body>
 </html>
