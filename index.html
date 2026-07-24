@@ -31,7 +31,7 @@
     .status-good { background: #065f46; color: #34d399; }
     .status-warning { background: #881337; color: #fda4af; }
 
-    /* Reset Button per Line */
+    /* Reset Buttons */
     .btn-reset-line { background: #ef444420; color: #f87171; border: 1px solid #f8717140; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
     .btn-reset-line:hover { background: #ef4444; color: #fff; }
 
@@ -79,6 +79,7 @@
 
     /* History Log */
     .history-card { background: #1e293b; padding: 16px; border-radius: 14px; border: 1px solid #334155; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; font-size: 12px; }
 
     #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; color: #fff; }
@@ -346,7 +347,10 @@
 
     <!-- History Log -->
     <div class="history-card">
-      <div class="dashboard-title" style="margin-bottom: 8px;">📋 ประวัติการบันทึกทั้งหมด</div>
+      <div class="history-header">
+        <div class="dashboard-title">📋 ประวัติการบันทึกทั้งหมด</div>
+        <button onclick="clearAllHistory()" class="btn-reset-line">🗑️ ล้างประวัติทั้งหมด</button>
+      </div>
       <div id="logList">
         <p style="text-align: center; color: #64748b; padding: 10px; font-size: 12px;">กำลังโหลดประวัติ...</p>
       </div>
@@ -454,7 +458,6 @@
 
       const today = new Date();
 
-      // Days from previous month
       for (let i = firstDay; i > 0; i--) {
         const cell = document.createElement('div');
         cell.className = 'cal-day-cell other-month';
@@ -462,7 +465,6 @@
         grid.appendChild(cell);
       }
 
-      // Current month days
       for (let date = 1; date <= lastDate; date++) {
         const cell = document.createElement('div');
         const isToday = date === today.getDate() && month === today.getMonth() && year === today.getFullYear();
@@ -470,12 +472,10 @@
         
         let cellContent = `<div class="cal-day-num">${date}</div>`;
 
-        // Format Date YYYY-MM-DD
         const monthStr = String(month + 1).padStart(2, '0');
         const dateStr = String(date).padStart(2, '0');
         const currentDateKey = `${year}-${monthStr}-${dateStr}`;
 
-        // Find plans matching date (or created timestamp date)
         const dayPlans = prodLogs.filter(item => {
           if (Number(item.planQty) <= 0) return false;
           if (item.planDate) return item.planDate === currentDateKey;
@@ -536,6 +536,7 @@
       });
     }
 
+    // 🔒 ล้างข้อมูลแยกตาม Line
     function resetLineData(lineName) {
       const inputPin = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการล้างข้อมูล [${lineName}]:`);
       if (inputPin === null) return;
@@ -550,6 +551,24 @@
         }
       } else {
         alert("❌ รหัสผ่านไม่ถูกต้อง!");
+      }
+    }
+
+    // 🔒 ล้างประวัติการบันทึกทั้งหมด
+    function clearAllHistory() {
+      const inputPin = prompt(`🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการล้างประวัติทั้งหมด:`);
+      if (inputPin === null) return;
+
+      if (inputPin === ADMIN_PIN) {
+        if (confirm(`⚠️ คำเตือน! ยืนยันการล้างประวัติการบันทึก "ทั้งหมดทุกไลน์" ใช่หรือไม่?`)) {
+          prodLogs = [];
+          calculateDashboard();
+          renderCalendar();
+          renderLogs();
+          alert(`✅ ล้างประวัติการบันทึกทั้งหมดเรียบร้อยแล้ว!`);
+        }
+      } else {
+        alert("❌ รหัสผ่านไม่ถูกต้อง! เฉพาะผู้ได้รับอนุญาตเท่านั้น");
       }
     }
 
