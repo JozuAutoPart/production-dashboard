@@ -15,10 +15,10 @@
     .btn-refresh { background: #334155; color: #f8fafc; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
     /* Total Summary Metrics */
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .metric-card { background: #1e293b; padding: 12px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
-    .metric-title { font-size: 11px; color: #94a3b8; font-weight: bold; }
-    .metric-val { font-size: 18px; font-weight: 800; margin-top: 4px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .metric-card { background: #1e293b; padding: 10px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
+    .metric-title { font-size: 10px; color: #94a3b8; font-weight: bold; }
+    .metric-val { font-size: 16px; font-weight: 800; margin-top: 4px; }
 
     /* Line Cards (5 Lines) */
     .dashboard-title { font-size: 14px; font-weight: bold; color: #94a3b8; margin-bottom: 2px; }
@@ -35,9 +35,9 @@
     .progress-fill { height: 100%; background: #10b981; transition: width 0.4s ease; }
     .progress-fill.low { background: #f43f5e; }
 
-    .line-details { display: grid; grid-template-columns: repeat(4, 1fr); font-size: 11px; text-align: center; color: #cbd5e1; margin-top: 6px; }
+    .line-details { display: grid; grid-template-columns: repeat(5, 1fr); font-size: 10px; text-align: center; color: #cbd5e1; margin-top: 6px; }
 
-    /* Form Container */
+    /* Forms */
     .mobile-form { background: #1e293b; padding: 16px; border-radius: 16px; border: 1px solid #334155; }
     .form-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
     .plan-title { color: #38bdf8; }
@@ -92,6 +92,10 @@
         <div class="metric-title">❌ Defect Total</div>
         <div id="totalDefect" class="metric-val" style="color: #f43f5e;">0</div>
       </div>
+      <div class="metric-card">
+        <div class="metric-title">⚖️ Balance</div>
+        <div id="totalBalance" class="metric-val" style="color: #fbbf24;">0</div>
+      </div>
     </div>
 
     <!-- 5 Production Lines Cards -->
@@ -110,7 +114,8 @@
             <div>Plan: <b id="planLineA">0</b></div>
             <div>Actual: <b id="actualLineA">0</b></div>
             <div>Defect: <b id="defectLineA" style="color:#f43f5e;">0</b></div>
-            <div>Achieve: <b id="pctLineA">0%</b></div>
+            <div>Bal: <b id="balLineA" style="color:#fbbf24;">0</b></div>
+            <div>Progress: <b id="pctLineA">0%</b></div>
           </div>
         </div>
 
@@ -125,7 +130,8 @@
             <div>Plan: <b id="planLineQ">0</b></div>
             <div>Actual: <b id="actualLineQ">0</b></div>
             <div>Defect: <b id="defectLineQ" style="color:#f43f5e;">0</b></div>
-            <div>Achieve: <b id="pctLineQ">0%</b></div>
+            <div>Bal: <b id="balLineQ" style="color:#fbbf24;">0</b></div>
+            <div>Progress: <b id="pctLineQ">0%</b></div>
           </div>
         </div>
 
@@ -140,7 +146,8 @@
             <div>Plan: <b id="planLineC1">0</b></div>
             <div>Actual: <b id="actualLineC1">0</b></div>
             <div>Defect: <b id="defectLineC1" style="color:#f43f5e;">0</b></div>
-            <div>Achieve: <b id="pctLineC1">0%</b></div>
+            <div>Bal: <b id="balLineC1" style="color:#fbbf24;">0</b></div>
+            <div>Progress: <b id="pctLineC1">0%</b></div>
           </div>
         </div>
 
@@ -155,7 +162,8 @@
             <div>Plan: <b id="planLineC2">0</b></div>
             <div>Actual: <b id="actualLineC2">0</b></div>
             <div>Defect: <b id="defectLineC2" style="color:#f43f5e;">0</b></div>
-            <div>Achieve: <b id="pctLineC2">0%</b></div>
+            <div>Bal: <b id="balLineC2" style="color:#fbbf24;">0</b></div>
+            <div>Progress: <b id="pctLineC2">0%</b></div>
           </div>
         </div>
 
@@ -170,7 +178,8 @@
             <div>Plan: <b id="planLineC3">0</b></div>
             <div>Actual: <b id="actualLineC3">0</b></div>
             <div>Defect: <b id="defectLineC3" style="color:#f43f5e;">0</b></div>
-            <div>Achieve: <b id="pctLineC3">0%</b></div>
+            <div>Bal: <b id="balLineC3" style="color:#fbbf24;">0</b></div>
+            <div>Progress: <b id="pctLineC3">0%</b></div>
           </div>
         </div>
 
@@ -194,18 +203,18 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>ชื่อชิ้นงาน (Part Name)</label>
-            <input type="text" id="planPartName" placeholder="เช่น Bracket A" required>
+            <label>Plan Part No. (รหัสชิ้นงาน)</label>
+            <input type="text" id="planPartNo" placeholder="เช่น Part-A1" required>
           </div>
           <div class="form-group">
-            <label>Lot No.</label>
+            <label>Plan Lot No.</label>
             <input type="text" id="planLotNo" placeholder="เช่น L6907-01" required>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>เป้าหมายการผลิต (Plan Pcs)</label>
+            <label>จำนวนสั่ง/Plan (Pcs)</label>
             <input type="number" id="planQtyInput" required placeholder="0" inputmode="numeric">
           </div>
           <div class="form-group">
@@ -235,7 +244,18 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>ยอดผลิตได้จริง (Actual Pcs)</label>
+            <label>Actual Part No. (รหัสชิ้นงาน)</label>
+            <input type="text" id="actualPartNo" placeholder="เช่น Part-A1" required>
+          </div>
+          <div class="form-group">
+            <label>Actual Lot No.</label>
+            <input type="text" id="actualLotNo" placeholder="เช่น L6907-01" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>ผลิตได้จริง (Actual Pcs)</label>
             <input type="number" id="actualQtyInput" required placeholder="0" inputmode="numeric">
           </div>
           <div class="form-group">
@@ -308,19 +328,24 @@
         totDefect += Number(item.defectQty) || 0;
       });
 
+      const totBalance = totPlan - totActual;
+
       // Update Summary Cards
       document.getElementById('totalPlan').innerText = totPlan.toLocaleString();
       document.getElementById('totalActual').innerText = totActual.toLocaleString();
       document.getElementById('totalDefect').innerText = totDefect.toLocaleString();
+      document.getElementById('totalBalance').innerText = totBalance.toLocaleString();
 
       // Update Individual Lines
       for (let key in lineData) {
         const d = lineData[key];
         const pct = d.plan > 0 ? Math.round((d.actual / d.plan) * 100) : 0;
+        const bal = d.plan - d.actual;
         
         document.getElementById(`plan${d.id}`).innerText = d.plan.toLocaleString();
         document.getElementById(`actual${d.id}`).innerText = d.actual.toLocaleString();
         document.getElementById(`defect${d.id}`).innerText = d.defect.toLocaleString();
+        document.getElementById(`bal${d.id}`).innerText = bal.toLocaleString();
         document.getElementById(`pct${d.id}`).innerText = `${pct}%`;
 
         const fill = document.getElementById(`progress${d.id}`);
@@ -351,17 +376,17 @@
       [...prodLogs].reverse().slice(0, 10).forEach(item => {
         const div = document.createElement('div');
         div.className = 'log-item';
-        const isPlan = Number(item.planQty) > 0 && Number(item.actualQty) === 0;
+        const isPlan = Number(item.planQty) > 0;
         
         div.innerHTML = `
           <div>
-            <strong style="color:${isPlan ? '#38bdf8' : '#34d399'};">[${item.line}] ${item.partName || '-'}</strong>
-            <div style="color:#94a3b8; font-size:10px;">${item.operator || '-'} | ${item.timestamp || '-'}</div>
+            <strong style="color:${isPlan ? '#38bdf8' : '#34d399'};">[${item.line}] ${isPlan ? item.planPartNo : item.actualPartNo}</strong>
+            <div style="color:#94a3b8; font-size:10px;">${isPlan ? item.planner : item.operator} | ${item.timestamp || '-'}</div>
           </div>
           <div style="text-align:right;">
             ${isPlan ? 
               `<span style="color:#38bdf8; font-weight:bold;">Plan: ${item.planQty} Pcs</span>` : 
-              `<span style="color:#34d399; font-weight:bold;">+${item.actualQty} Pcs</span> <span style="color:#f43f5e; font-size:10px;">(NG: ${item.defectQty})</span>`
+              `<span style="color:#34d399; font-weight:bold;">Actual: ${item.actualQty} Pcs</span> <span style="color:#f43f5e; font-size:10px;">(NG: ${item.defectQty})</span>`
             }
           </div>
         `;
@@ -376,12 +401,10 @@
 
       const data = {
         line: document.getElementById('planLineSelect').value,
-        partName: document.getElementById('planPartName').value,
-        lotNo: document.getElementById('planLotNo').value,
+        planPartNo: document.getElementById('planPartNo').value,
+        planLotNo: document.getElementById('planLotNo').value,
         planQty: document.getElementById('planQtyInput').value,
-        actualQty: 0,
-        defectQty: 0,
-        operator: `[Planner] ${document.getElementById('plannerName').value}`
+        planner: `[Planner] ${document.getElementById('plannerName').value}`
       };
 
       await sendToGoogleSheet(data, 'planForm');
@@ -394,9 +417,8 @@
 
       const data = {
         line: document.getElementById('actualLineSelect').value,
-        partName: '-',
-        lotNo: '-',
-        planQty: 0,
+        actualPartNo: document.getElementById('actualPartNo').value,
+        actualLotNo: document.getElementById('actualLotNo').value,
         actualQty: document.getElementById('actualQtyInput').value,
         defectQty: document.getElementById('defectQtyInput').value,
         operator: `[Operator] ${document.getElementById('operatorName').value}`
