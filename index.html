@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Production, Stock & Die Maintenance System</title>
+    <title>Production, Stock & Die Maintenance System - Jozu Auto Part</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -67,6 +67,14 @@
             color: #f8fafc;
             border: 1px solid #334155;
         }
+        .logo-box {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="p-3 p-md-4">
@@ -81,9 +89,14 @@
     <div class="container-fluid max-width-lg">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h3 class="fw-bold mb-1"><i class="fa-solid fa-gears text-info me-2"></i>Production & Die Maintenance System</h3>
-                <p class="text-secondary small mb-0">ระบบวางแผน การผลิต สต็อก และจัดการแม่พิมพ์ (Die PM/BM)</p>
+            <div class="d-flex align-items-center gap-3">
+                <div class="logo-box">
+                    <img src="Jozu.png" alt="Jozu Auto Part Logo" style="height: 48px; width: auto; object-fit: contain;">
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Production & Die Maintenance System</h3>
+                    <p class="text-secondary small mb-0">Jozu Auto Part Co.,ltd. - ระบบวางแผน การผลิต สต็อก และจัดการแม่พิมพ์ (Die PM/BM)</p>
+                </div>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
