@@ -220,7 +220,7 @@
                     <div id="noPlanAlert" class="alert alert-danger d-none align-items-center mb-4" role="alert">
                         <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
                         <div>
-                            <strong>ไม่สามารถบันทึกข้อมูลได้!</strong> <span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับ Line นี้ โปรดแจ้งผู้ควบคุมแผนลงข้อมูลก่อน</span>
+                            <strong>ไม่สามารถบันทึกข้อมูลได้!</strong> <span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับ Part ใน Line นี้</span>
                         </div>
                     </div>
 
@@ -228,7 +228,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small text-secondary">สายการผลิต (Line)</label>
-                                <select id="actualLine" class="form-select" onchange="checkPlanStatusForActual()" required>
+                                <select id="actualLine" class="form-select" onchange="updateActualPartOptions()" required>
                                     <option value="Line A">Line A</option>
                                     <option value="Line Q">Line Q</option>
                                     <option value="Line C1">Line C1</option>
@@ -241,26 +241,9 @@
                                 <input type="date" id="actualDate" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-secondary">Part No.</label>
+                                <label class="form-label small text-secondary">Part No. (เลือกเฉพาะที่มีใน Plan)</label>
                                 <select id="actualPartNo" class="form-select" required>
-                                    <option value="">-- โปรดเลือก Part No. --</option>
-                                    <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
-                                    <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
-                                    <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
-                                    <option value="J0701-17620-Z1T-8000-25">J0701-17620-Z1T-8000-25</option>
-                                    <option value="J0802-17622-ZOT-8200">J0802-17622-ZOT-8200</option>
-                                    <option value="J0804-17625-Z4H-3000">J0804-17625-Z4H-3000</option>
-                                    <option value="J0804-17636-Z4H-0100">J0804-17636-Z4H-0100</option>
-                                    <option value="J0803-17620-899-8000-20">J0803-17620-899-8000-20</option>
-                                    <option value="J0803-17620-899-8000-21">J0803-17620-899-8000-21</option>
-                                    <option value="J0803-17620-899-8000-22">J0803-17620-899-8000-22</option>
-                                    <option value="J0803-17625-434-3000">J0803-17625-434-3000</option>
-                                    <option value="J0803-17620-899-8000-23">J0803-17620-899-8000-23</option>
-                                    <option value="J0804-17621-Z4H-3100">J0804-17621-Z4H-3100</option>
-                                    <option value="J1901-17622-Z4H-9100">J1901-17622-Z4H-9100</option>
-                                    <option value="J1701-17625-K59K-T110-Y1">J1701-17625-K59K-T110-Y1</option>
-                                    <option value="J1201-17628-K20-9010-Y1">J1201-17628-K20-9010-Y1</option>
-                                    <option value="J1201-17623-K20-A110-Y1">J1201-17623-K20-A110-Y1</option>
+                                    <option value="">-- กรุณาเลือก Line ก่อน --</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -269,7 +252,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small text-secondary">จำนวนผลิตได้ (Actual Qty)</label>
-                                <input type="number" id="actualQty" class="form-control" value="0" min="0" required>
+                                <input type="number" id="actualQty" class="form-control" value="0" min="1" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small text-secondary">จำนวนของเสีย (Defect Qty)</label>
@@ -355,7 +338,7 @@
                 const response = await fetch(GOOGLE_SCRIPT_URL);
                 globalData = await response.json();
                 renderDashboard();
-                checkPlanStatusForActual(); // ตรวจสอบสถานะแผนสำหรับหน้า Actual
+                updateActualPartOptions(); // อัปเดตตัวเลือก Part No. ในหน้า Actual
             } catch (err) {
                 console.error("Error loading data:", err);
             } finally {
@@ -363,29 +346,40 @@
             }
         }
 
-        // ฟังก์ชันตรวจสอบว่า Line ที่เลือกมียอดแผน (Plan Qty) แล้วหรือยัง
-        function checkPlanStatusForActual() {
+        // ฟังก์ชันดึงเฉพาะ Part No. ที่มี Plan ใน Line นั้นๆ
+        function updateActualPartOptions() {
             const selectedLine = document.getElementById('actualLine').value;
+            const partSelect = document.getElementById('actualPartNo');
             const btnSubmit = document.getElementById('btnSubmitActual');
             const alertBox = document.getElementById('noPlanAlert');
             const alertText = document.getElementById('noPlanAlertText');
 
-            // หาว่า Line นี้มีแผนที่วางไว้ (planQty > 0) หรือไม่
-            let hasPlan = false;
-            if (globalData && globalData.length > 0) {
-                hasPlan = globalData.some(item => item.line === selectedLine && Number(item.planQty) > 0);
-            }
+            partSelect.innerHTML = '';
 
-            if (!hasPlan) {
-                // ถ้าไม่มีแผน ให้แสดงการเตือนและปิดปุ่ม
-                alertText.innerText = `ยังไม่มีการวางแผนการผลิตสำหรับ ${selectedLine} โปรดตั้งแผนการผลิตก่อนทำการลงยอด Actual`;
+            // กรองหา Part No. ที่มี planQty > 0 ใน Line ที่เลือก
+            const availableParts = [...new Set(
+                globalData
+                    .filter(item => item.line === selectedLine && item.planPartNo && Number(item.planQty) > 0)
+                    .map(item => item.planPartNo)
+            )];
+
+            if (availableParts.length === 0) {
+                partSelect.innerHTML = '<option value="">-- ไม่พบ Part ที่มีแผนการผลิต --</option>';
+                alertText.innerText = `ไม่พบการวางแผนการผลิตใน ${selectedLine} โปรดตั้งแผนการผลิตก่อน`;
                 alertBox.classList.remove('d-none');
                 alertBox.classList.add('d-flex');
                 btnSubmit.disabled = true;
                 btnSubmit.classList.add('btn-secondary');
                 btnSubmit.classList.remove('btn-success');
             } else {
-                // ถ้ามีแผนแล้ว ให้เปิดปุ่มตามปกติ
+                partSelect.innerHTML = '<option value="">-- เลือก Part No. --</option>';
+                availableParts.forEach(part => {
+                    const opt = document.createElement('option');
+                    opt.value = part;
+                    opt.textContent = part;
+                    partSelect.appendChild(opt);
+                });
+
                 alertBox.classList.add('d-none');
                 alertBox.classList.remove('d-flex');
                 btnSubmit.disabled = false;
@@ -399,43 +393,57 @@
             const container = document.getElementById('lineDashboardContainer');
             container.innerHTML = '';
 
-            const linesGrouped = {};
-            ALL_LINES.forEach(l => linesGrouped[l] = []);
-
-            if (globalData && globalData.length > 0) {
-                globalData.forEach(item => {
-                    const lineName = item.line || 'Unassigned';
-                    if (!linesGrouped[lineName]) {
-                        linesGrouped[lineName] = [];
-                    }
-                    linesGrouped[lineName].push(item);
-                });
-            }
-
-            const targetLines = (lineFilter === 'ALL') ? Object.keys(linesGrouped) : [lineFilter];
+            const targetLines = (lineFilter === 'ALL') ? ALL_LINES : [lineFilter];
 
             targetLines.forEach(lineName => {
-                const items = linesGrouped[lineName] || [];
-                
+                // ดึงเฉพาะข้อมูลของ Line นี้
+                const lineItems = globalData.filter(i => i.line === lineName);
+
+                // ยุบรวมข้อมูลตาม Part No. (เพื่อไม่ให้แสดงแยกแถวเมื่อมี Actual)
+                const partsGrouped = {};
+
+                lineItems.forEach(item => {
+                    const partNo = item.planPartNo || item.actualPartNo;
+                    if (!partNo) return;
+
+                    if (!partsGrouped[partNo]) {
+                        partsGrouped[partNo] = {
+                            partNo: partNo,
+                            lotNo: item.planLotNo || item.actualLotNo || '-',
+                            planQty: 0,
+                            actualQty: 0,
+                            defectQty: 0,
+                            operator: item.operator || item.planner || '-'
+                        };
+                    }
+
+                    partsGrouped[partNo].planQty += Number(item.planQty) || 0;
+                    partsGrouped[partNo].actualQty += Number(item.actualQty) || 0;
+                    partsGrouped[partNo].defectQty += Number(item.defectQty) || 0;
+
+                    if (item.actualLotNo) partsGrouped[partNo].lotNo = item.actualLotNo;
+                    if (item.operator) partsGrouped[partNo].operator = item.operator;
+                });
+
+                const partsList = Object.values(partsGrouped);
+
                 let totalPlan = 0;
                 let totalActual = 0;
-                let totalDefect = 0;
 
-                items.forEach(i => {
-                    totalPlan += Number(i.planQty) || 0;
-                    totalActual += Number(i.actualQty) || 0;
-                    totalDefect += Number(i.defectQty) || 0;
+                partsList.forEach(p => {
+                    totalPlan += p.planQty;
+                    totalActual += p.actualQty;
                 });
 
                 const overallPercent = totalPlan > 0 ? Math.min(Math.round((totalActual / totalPlan) * 100), 100) : 0;
 
                 let tableRowsHtml = '';
-                if (items.length === 0) {
+                if (partsList.length === 0) {
                     tableRowsHtml = '<tr><td colspan="8" class="text-center text-secondary py-3">ไม่มีรายการ Part ในไลน์นี้</td></tr>';
                 } else {
-                    items.forEach(item => {
-                        const plan = Number(item.planQty) || 0;
-                        const actual = Number(item.actualQty) || 0;
+                    partsList.forEach(item => {
+                        const plan = item.planQty;
+                        const actual = item.actualQty;
                         const percent = plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : 0;
 
                         let statusBadge = '';
@@ -449,11 +457,11 @@
 
                         tableRowsHtml += `
                             <tr>
-                                <td class="fw-bold text-info">${item.planPartNo || item.actualPartNo || '-'}</td>
-                                <td>${item.planLotNo || item.actualLotNo || '-'}</td>
+                                <td class="fw-bold text-info">${item.partNo}</td>
+                                <td>${item.lotNo}</td>
                                 <td>${plan.toLocaleString()}</td>
                                 <td class="text-success fw-bold">${actual.toLocaleString()}</td>
-                                <td class="text-danger">${(Number(item.defectQty) || 0).toLocaleString()}</td>
+                                <td class="text-danger">${item.defectQty.toLocaleString()}</td>
                                 <td style="width: 140px;">
                                     <div class="progress" style="height: 12px; background-color: #0f172a;">
                                         <div class="progress-bar ${percent >= 100 ? 'bg-success' : 'bg-info'}" style="width: ${percent}%;"></div>
@@ -461,7 +469,7 @@
                                     <small class="text-secondary" style="font-size: 10px;">${percent}%</small>
                                 </td>
                                 <td>${statusBadge}</td>
-                                <td><small class="text-secondary">${item.operator || item.planner || '-'}</small></td>
+                                <td><small class="text-secondary">${item.operator}</small></td>
                             </tr>
                         `;
                     });
@@ -580,11 +588,9 @@
         async function submitActual(e) {
             e.preventDefault();
             
-            const selectedLine = document.getElementById('actualLine').value;
-            const hasPlan = globalData.some(item => item.line === selectedLine && Number(item.planQty) > 0);
-
-            if (!hasPlan) {
-                alert(`ไม่สามารถบันทึกได้! เนื่องจากยังไม่มีแผนการผลิตสำหรับ ${selectedLine}`);
+            const selectedPart = document.getElementById('actualPartNo').value;
+            if (!selectedPart) {
+                alert('กรุณาเลือก Part No. ที่มีแผนการผลิต');
                 return;
             }
 
@@ -593,9 +599,9 @@
             const payload = {
                 action: "addProductionLog",
                 data: {
-                    line: selectedLine,
+                    line: document.getElementById('actualLine').value,
                     actualDate: document.getElementById('actualDate').value,
-                    actualPartNo: document.getElementById('actualPartNo').value,
+                    actualPartNo: selectedPart,
                     actualLotNo: document.getElementById('actualLotNo').value,
                     actualQty: document.getElementById('actualQty').value,
                     defectQty: document.getElementById('defectQty').value,
