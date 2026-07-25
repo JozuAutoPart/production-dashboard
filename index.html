@@ -347,35 +347,48 @@
                 filtered = globalData.filter(item => item.line === lineFilter);
             }
 
-            if (!filtered || filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-4">ไม่พบข้อมูลการผลิต</td></tr>';
-                return;
-            }
+           if (!filtered || filtered.length === 0) {
+        // แก้ colspan จาก 8 เป็น 9 ครับ
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-4">ไม่พบข้อมูลการผลิต</td></tr>';
+        return;
+    }
 
-            filtered.forEach(item => {
-                const plan = Number(item.planQty) || 0;
-                const actual = Number(item.actualQty) || 0;
-                const percent = plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : 0;
+    filtered.forEach(item => {
+        const plan = Number(item.planQty) || 0;
+        const actual = Number(item.actualQty) || 0;
+        const percent = plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : 0;
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><span class="badge bg-secondary">${item.line || '-'}</span></td>
-                    <td class="fw-bold text-info">${item.planPartNo || item.actualPartNo || '-'}</td>
-                    <td>${item.planLotNo || item.actualLotNo || '-'}</td>
-                    <td>${plan.toLocaleString()}</td>
-                    <td class="text-success fw-bold">${actual.toLocaleString()}</td>
-                    <td class="text-danger">${(Number(item.defectQty) || 0).toLocaleString()}</td>
-                    <td style="width: 150px;">
-                        <div class="progress" style="height: 15px; background-color: #0f172a;">
-                            <div class="progress-bar ${percent >= 100 ? 'bg-success' : 'bg-info'}" 
-                                 role="progressbar" style="width: ${percent}%;">
-                                 ${percent}%
-                            </div>
-                        </div>
-                    </td>
-                    <td><small class="text-secondary">${item.operator || item.planner || '-'}</small></td>
-                `;
-                tbody.appendChild(tr);
+        // --- เพิ่มการคำนวณ Badge สถานะ ---
+        let statusBadge = '';
+        if (plan > 0 && actual >= plan) {
+            statusBadge = '<span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Completed</span>';
+        } else if (actual > 0) {
+            statusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-spinner fa-spin me-1"></i>In Progress</span>';
+        } else {
+            statusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-clock me-1"></i>Pending</span>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span class="badge bg-secondary">${item.line || '-'}</span></td>
+            <td class="fw-bold text-info">${item.planPartNo || item.actualPartNo || '-'}</td>
+            <td>${item.planLotNo || item.actualLotNo || '-'}</td>
+            <td>${plan.toLocaleString()}</td>
+            <td class="text-success fw-bold">${actual.toLocaleString()}</td>
+            <td class="text-danger">${(Number(item.defectQty) || 0).toLocaleString()}</td>
+            <td style="width: 150px;">
+                <div class="progress" style="height: 15px; background-color: #0f172a;">
+                    <div class="progress-bar ${percent >= 100 ? 'bg-success' : 'bg-info'}" 
+                         role="progressbar" style="width: ${percent}%;">
+                         ${percent}%
+                    </div>
+                </div>
+            </td>
+            <td>${statusBadge}</td> <!-- แทรกคอลัมน์สถานะตรงนี้ -->
+            <td><small class="text-secondary">${item.operator || item.planner || '-'}</small></td>
+        `;
+        tbody.appendChild(tr);
+    });
             });
         }
 
