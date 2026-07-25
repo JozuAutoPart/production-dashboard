@@ -1,7 +1,4 @@
-!DOCTYPE html>
-<html lang="th">
-<head>
-html_code = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -84,10 +81,6 @@ html_code = """<!DOCTYPE html>
             align-items: center;
             justify-content: center;
         }
-        /* Style เพิ่มเติมสำหรับแถวที่ Delay */
-        .table-hover tbody tr.table-danger-custom {
-            background-color: rgba(239, 68, 68, 0.15) !important;
-        }
     </style>
 </head>
 <body class="p-3 p-md-4">
@@ -155,10 +148,6 @@ html_code = """<!DOCTYPE html>
             
             <!-- Dashboard Tab -->
             <div class="tab-pane fade show active" id="content-dashboard" role="tabpanel">
-                
-                <!-- Delay Alert Banner Area -->
-                <div id="delayAlertBannerArea"></div>
-
                 <div class="card p-3 mb-4">
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -799,19 +788,12 @@ html_code = """<!DOCTYPE html>
             }
         }
 
-        // =========================================================
-        //  RENDER DASHBOARD & DELAY NOTIFICATION LOGIC
-        // =========================================================
         function renderDashboard() {
             const lineFilter = document.getElementById('filterLine').value;
             const container = document.getElementById('lineDashboardContainer');
-            const delayBannerArea = document.getElementById('delayAlertBannerArea');
             container.innerHTML = '';
-            delayBannerArea.innerHTML = '';
 
-            const todayStr = new Date().toISOString().split('T')[0]; // วันที่ปัจจุบันรูปแบบ YYYY-MM-DD
             const targetLines = (lineFilter === 'ALL') ? ALL_LINES : [lineFilter];
-            let allDelayedItems = [];
 
             targetLines.forEach(lineName => {
                 const lineItems = globalData.filter(i => i.line === lineName);
@@ -828,8 +810,6 @@ html_code = """<!DOCTYPE html>
                             planQty: 0,
                             actualQty: 0,
                             defectQty: 0,
-                            targetDate: item.planTargetDate || '-',
-                            line: lineName,
                             operator: item.operator || item.planner || '-'
                         };
                     }
@@ -838,7 +818,6 @@ html_code = """<!DOCTYPE html>
                     partsGrouped[partNo].actualQty += Number(item.actualQty) || 0;
                     partsGrouped[partNo].defectQty += Number(item.defectQty) || 0;
 
-                    if (item.planTargetDate) partsGrouped[partNo].targetDate = item.planTargetDate;
                     if (item.actualLotNo) partsGrouped[partNo].lotNo = item.actualLotNo;
                     if (item.operator) partsGrouped[partNo].operator = item.operator;
                 });
@@ -856,53 +835,35 @@ html_code = """<!DOCTYPE html>
 
                 let tableRowsHtml = '';
                 if (partsList.length === 0) {
-                    tableRowsHtml = '<tr><td colspan="9" class="text-center text-secondary py-3">ไม่มีรายการ Part ในไลน์นี้</td></tr>';
+                    tableRowsHtml = '<tr><td colspan="8" class="text-center text-secondary py-3">ไม่มีรายการ Part ในไลน์นี้</td></tr>';
                 } else {
                     partsList.forEach(item => {
                         const plan = item.planQty;
                         const actual = item.actualQty;
                         const percent = plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : 0;
 
-                        // เงื่อนไขการเช็ก Delay:
-                        // 1. มี Target Date ระบุไว้
-                        // 2. วันที่ปัจจุบัน เกิน Target Date (todayStr > item.targetDate)
-                        // 3. ผลิตยังไม่ครบตามแผน (actual < plan)
-                        const isDelayed = (item.targetDate !== '-' && todayStr > item.targetDate && actual < plan);
-
-                        if (isDelayed) {
-                            allDelayedItems.push(item);
-                        }
-
                         let statusBadge = '';
                         if (plan > 0 && actual >= plan) {
                             statusBadge = '<span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Completed</span>';
-                        } else if (isDelayed) {
-                            statusBadge = '<span class="badge bg-danger animate__animated animate__pulse animate__infinite"><i class="fa-solid fa-clock-rotate-left me-1"></i>Delayed</span>';
                         } else if (actual > 0) {
                             statusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-spinner fa-spin me-1"></i>In Progress</span>';
                         } else {
-                            statusBadge = '<span class="badge bg-secondary"><i class="fa-solid fa-clock me-1"></i>Pending</span>';
+                            statusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-clock me-1"></i>Pending</span>';
                         }
 
-                        // แสดงวันที่ Target พร้อมสีเน้นถ้า Delay
-                        const targetDateDisplay = isDelayed 
-                            ? `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>${item.targetDate}</span>` 
-                            : `<span class="text-secondary">${item.targetDate}</span>`;
-
                         tableRowsHtml += `
-                            <tr class="${isDelayed ? 'table-danger-custom' : ''}">
+                            <tr>
                                 <td class="fw-bold text-info">${item.partNo}</td>
                                 <td>${item.lotNo}</td>
                                 <td>${plan.toLocaleString()}</td>
                                 <td class="text-success fw-bold">${actual.toLocaleString()}</td>
                                 <td class="text-danger">${item.defectQty.toLocaleString()}</td>
-                                <td style="width: 120px;">
+                                <td style="width: 140px;">
                                     <div class="progress" style="height: 12px; background-color: #0f172a;">
-                                        <div class="progress-bar ${percent >= 100 ? 'bg-success' : (isDelayed ? 'bg-danger' : 'bg-info')}" style="width: ${percent}%;"></div>
+                                        <div class="progress-bar ${percent >= 100 ? 'bg-success' : 'bg-info'}" style="width: ${percent}%;"></div>
                                     </div>
                                     <small class="text-secondary" style="font-size: 10px;">${percent}%</small>
                                 </td>
-                                <td>${targetDateDisplay}</td>
                                 <td>${statusBadge}</td>
                                 <td><small class="text-secondary">${item.operator}</small></td>
                             </tr>
@@ -933,7 +894,6 @@ html_code = """<!DOCTYPE html>
                                         <th>Actual</th>
                                         <th>Defect</th>
                                         <th>Progress</th>
-                                        <th>Target Date</th>
                                         <th>Status</th>
                                         <th>Operator</th>
                                     </tr>
@@ -945,25 +905,6 @@ html_code = """<!DOCTYPE html>
                 `;
                 container.appendChild(colDiv);
             });
-
-            // แสดง Banner แจ้งเตือนยอดรวมรายการที่ Delay ด้านบน Dashboard
-            if (allDelayedItems.length > 0) {
-                const delayedListText = allDelayedItems.map(i => `<strong>${i.line}</strong>: ${i.partNo} (กำหนดส่ง ${i.targetDate})`).join('<br>');
-                delayBannerArea.innerHTML = `
-                    <div class="alert alert-danger shadow-lg mb-4 border-2 border-danger" role="alert">
-                        <div class="d-flex align-items-start gap-3">
-                            <i class="fa-solid fa-triangle-exclamation fa-2x text-danger mt-1"></i>
-                            <div class="w-100">
-                                <h5 class="fw-bold mb-1 text-danger">🚨 แจ้งเตือน: มีรายการผลิตล่าช้ากว่ากำหนด (Delay Alert)!</h5>
-                                <p class="mb-2">พบทั้งหมด <strong>${allDelayedItems.length} รายการ</strong> ที่เลยกำหนดส่ง (Target Date) แต่ยังผลิตไม่ครบตามแผน:</p>
-                                <div class="bg-dark p-2 rounded border border-danger-subtle small text-light mb-0">
-                                    ${delayedListText}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
         }
 
         function openClearDataModal() {
@@ -1083,9 +1024,3 @@ html_code = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(html_code)
-
-print("Updated index.html created successfully.")
