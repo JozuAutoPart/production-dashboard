@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Production Management System</title>
+    <title>Production & Stock Management System</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -86,8 +86,8 @@
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold mb-1"><i class="fa-solid fa-chart-column text-info me-2"></i>Production Management</h3>
-                <p class="text-secondary small mb-0">ระบบวางแผนและบันทึกการผลิตสายไลน์</p>
+                <h3 class="fw-bold mb-1"><i class="fa-solid fa-boxes-stacked text-info me-2"></i>Production & Stock Management</h3>
+                <p class="text-secondary small mb-0">ระบบวางแผน การผลิต และติดตาม Stock สะสม</p>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
@@ -114,6 +114,11 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab">
                     <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
+                    <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม (Part Stock)
                 </button>
             </li>
         </ul>
@@ -216,7 +221,6 @@
                 <div class="card p-4">
                     <h5 class="fw-bold mb-4"><i class="fa-solid fa-pen-to-square text-success me-2"></i>ฟอร์มบันทึกผลการผลิต (Production Actual)</h5>
                     
-                    <!-- กล่องเตือนกรณีไม่มีแผน -->
                     <div id="noPlanAlert" class="alert alert-danger d-none align-items-center mb-4" role="alert">
                         <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
                         <div>
@@ -269,6 +273,48 @@
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+
+            <!-- Stock Tab (หน้า Stock สะสม) -->
+            <div class="tab-pane fade" id="content-stock" role="tabpanel">
+                <!-- สรุปการผลิตสะสม -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card p-3 border-start border-info border-4">
+                            <span class="text-secondary small">ยอดผลิตสะสมรวมทุก Part</span>
+                            <h3 class="fw-bold text-info mb-0" id="totalAccumulatedQty">0 Pcs</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card p-3 border-start border-success border-4">
+                            <span class="text-secondary small">จำนวน Part No. ที่มีการผลิตสะสม</span>
+                            <h3 class="fw-bold text-success mb-0" id="totalPartTypes">0 รายการ</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตาราง Stock สะสม -->
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-info mb-0"><i class="fa-solid fa-boxes-packing me-2"></i>ตาราง Stock ผลิตสะสมราย Part No.</h5>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th>Part No.</th>
+                                    <th>ผลิตสะสมทั้งหมด (Total Actual)</th>
+                                    <th>วันที่ลงผลิตล่าสุด</th>
+                                    <th>สถานะ Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockTableBody">
+                                <tr><td colspan="4" class="text-center text-secondary py-3">ยังไม่มีข้อมูลการผลิตสะสม</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -338,7 +384,8 @@
                 const response = await fetch(GOOGLE_SCRIPT_URL);
                 globalData = await response.json();
                 renderDashboard();
-                updateActualPartOptions(); // อัปเดตตัวเลือก Part No. ในหน้า Actual
+                updateActualPartOptions();
+                renderStock(); // อัปเดตตาราง Stock สะสม
             } catch (err) {
                 console.error("Error loading data:", err);
             } finally {
@@ -346,7 +393,6 @@
             }
         }
 
-        // ฟังก์ชันดึงเฉพาะ Part No. ที่มี Plan ใน Line นั้นๆ
         function updateActualPartOptions() {
             const selectedLine = document.getElementById('actualLine').value;
             const partSelect = document.getElementById('actualPartNo');
@@ -356,7 +402,6 @@
 
             partSelect.innerHTML = '';
 
-            // กรองหา Part No. ที่มี planQty > 0 ใน Line ที่เลือก
             const availableParts = [...new Set(
                 globalData
                     .filter(item => item.line === selectedLine && item.planPartNo && Number(item.planQty) > 0)
@@ -388,6 +433,57 @@
             }
         }
 
+        // ฟังก์ชันคำนวณ Stock สะสม
+        function renderStock() {
+            const stockSummary = {};
+            let totalAccumulated = 0;
+
+            globalData.forEach(item => {
+                const partNo = item.actualPartNo;
+                const actualQty = Number(item.actualQty) || 0;
+
+                if (partNo && actualQty > 0) {
+                    if (!stockSummary[partNo]) {
+                        stockSummary[partNo] = {
+                            totalQty: 0,
+                            lastDate: item.actualDate || '-'
+                        };
+                    }
+                    stockSummary[partNo].totalQty += actualQty;
+                    totalAccumulated += actualQty;
+
+                    if (item.actualDate) {
+                        stockSummary[partNo].lastDate = item.actualDate;
+                    }
+                }
+            });
+
+            const stockTableBody = document.getElementById('stockTableBody');
+            stockTableBody.innerHTML = '';
+
+            const partKeys = Object.keys(stockSummary);
+
+            document.getElementById('totalAccumulatedQty').innerText = `${totalAccumulated.toLocaleString()} Pcs`;
+            document.getElementById('totalPartTypes').innerText = `${partKeys.length} รายการ`;
+
+            if (partKeys.length === 0) {
+                stockTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-secondary py-3">ยังไม่มีข้อมูลการผลิตสะสม</td></tr>';
+                return;
+            }
+
+            partKeys.forEach(part => {
+                const data = stockSummary[part];
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="fw-bold text-info">${part}</td>
+                    <td class="text-success fw-bold fs-6">${data.totalQty.toLocaleString()} Pcs</td>
+                    <td class="text-secondary">${data.lastDate}</td>
+                    <td><span class="badge bg-success"><i class="fa-solid fa-box me-1"></i>Active Stock</span></td>
+                `;
+                stockTableBody.appendChild(tr);
+            });
+        }
+
         function renderDashboard() {
             const lineFilter = document.getElementById('filterLine').value;
             const container = document.getElementById('lineDashboardContainer');
@@ -396,10 +492,7 @@
             const targetLines = (lineFilter === 'ALL') ? ALL_LINES : [lineFilter];
 
             targetLines.forEach(lineName => {
-                // ดึงเฉพาะข้อมูลของ Line นี้
                 const lineItems = globalData.filter(i => i.line === lineName);
-
-                // ยุบรวมข้อมูลตาม Part No. (เพื่อไม่ให้แสดงแยกแถวเมื่อมี Actual)
                 const partsGrouped = {};
 
                 lineItems.forEach(item => {
@@ -426,7 +519,6 @@
                 });
 
                 const partsList = Object.values(partsGrouped);
-
                 let totalPlan = 0;
                 let totalActual = 0;
 
