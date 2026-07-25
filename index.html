@@ -93,7 +93,6 @@
                 <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
                     <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
                 </button>
-                <!-- ปุ่มล้างข้อมูล -->
                 <button class="btn btn-outline-danger btn-sm" onclick="openClearDataModal()">
                     <i class="fa-solid fa-trash-can me-1"></i> ล้างข้อมูล
                 </button>
@@ -124,7 +123,6 @@
             
             <!-- Dashboard Tab -->
             <div class="tab-pane fade show active" id="content-dashboard" role="tabpanel">
-                <!-- Filter -->
                 <div class="card p-3 mb-4">
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -141,10 +139,7 @@
                     </div>
                 </div>
 
-                <!-- ส่วนแสดง Cards แยกตาม Line -->
-                <div id="lineDashboardContainer" class="row g-4">
-                    <!-- JS จะสร้าง Cards แยก Line ตรงนี้ -->
-                </div>
+                <div id="lineDashboardContainer" class="row g-4"></div>
             </div>
 
             <!-- Planning Tab -->
@@ -288,16 +283,26 @@
         </div>
     </div>
 
-    <!-- Modal ยืนยันรหัสผ่านเพื่อล้างข้อมูล -->
+    <!-- Modal ยืนยันการล้างข้อมูลแยกตาม Line -->
     <div class="modal fade" id="clearDataModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>ยืนยันการล้างข้อมูล</h5>
+                    <h5 class="modal-title text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>ล้างข้อมูลสายการผลิต</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-secondary small mb-3">การล้างข้อมูลจะลบรายการทั้งหมดในระบบ โปรดใส่รหัสผ่านผู้ดูแลระบบเพื่อยืนยัน:</p>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">เลือกลายน์ที่ต้องการล้างข้อมูล</label>
+                        <select id="clearTargetLine" class="form-select">
+                            <option value="Line A">Line A</option>
+                            <option value="Line Q">Line Q</option>
+                            <option value="Line C1">Line C1</option>
+                            <option value="Line C2">Line C2</option>
+                            <option value="Line C3">Line C3</option>
+                            <option value="ALL">⚠️ ล้างทุกสายการผลิต (All Lines)</option>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label small text-secondary">รหัสผ่าน (Password)</label>
                         <input type="password" id="clearDataPassword" class="form-control" placeholder="กรอกรหัสผ่าน">
@@ -315,10 +320,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // URL ของ Google Apps Script Web App (อย่าลืมใช้ URL ของพี่มิวครับ)
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_YOUR_SCRIPT_ID_HERE/exec"; 
-
-        // 🔑 ตั้งค่ารหัสผ่านสำหรับล้างข้อมูลตรงนี้ (ค่าเริ่มต้นคือ 1234)
         const ADMIN_PASSWORD = "1234";
 
         let globalData = [];
@@ -462,16 +464,16 @@
             });
         }
 
-        // ฟังก์ชันเปิด Modal ล้างข้อมูล
         function openClearDataModal() {
             document.getElementById('clearDataPassword').value = '';
             clearModal = new bootstrap.Modal(document.getElementById('clearDataModal'));
             clearModal.show();
         }
 
-        // ฟังก์ชันยืนยันการล้างข้อมูล
         async function confirmClearData() {
             const pwd = document.getElementById('clearDataPassword').value;
+            const targetLine = document.getElementById('clearTargetLine').value;
+
             if (pwd !== ADMIN_PASSWORD) {
                 alert('รหัสผ่านไม่ถูกต้อง!');
                 return;
@@ -481,7 +483,8 @@
             showLoading(true);
 
             const payload = {
-                action: "clearAllData"
+                action: "clearData",
+                line: targetLine
             };
 
             try {
@@ -491,7 +494,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                alert('ล้างข้อมูลเรียบร้อยแล้ว!');
+                alert(`ล้างข้อมูล ${targetLine === 'ALL' ? 'ทุกสายการผลิต' : targetLine} เรียบร้อยแล้ว!`);
                 setTimeout(loadData, 1500);
             } catch (err) {
                 alert('เกิดข้อผิดพลาดในการล้างข้อมูล');
