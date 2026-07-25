@@ -167,6 +167,7 @@
                                 <label class="form-label small text-secondary">Part No.</label>
                                 <select id="planPartNo" class="form-select" required>
                                     <option value="">-- โปรดเลือก Part No. --</option>
+                                    <option value="5678">5678</option>
                                     <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
                                     <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
                                     <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
@@ -241,9 +242,27 @@
                                 <input type="date" id="actualDate" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-secondary">Part No. (เลือกเฉพาะที่มีใน Plan)</label>
+                                <label class="form-label small text-secondary">Part No.</label>
                                 <select id="actualPartNo" class="form-select" required>
-                                    <option value="">-- กรุณาเลือก Line ก่อน --</option>
+                                    <option value="">-- โปรดเลือก Part No. --</option>
+                                    <option value="9123">9123</option>
+                                    <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
+                                    <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
+                                    <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
+                                    <option value="J0701-17620-Z1T-8000-25">J0701-17620-Z1T-8000-25</option>
+                                    <option value="J0802-17622-ZOT-8200">J0802-17622-ZOT-8200</option>
+                                    <option value="J0804-17625-Z4H-3000">J0804-17625-Z4H-3000</option>
+                                    <option value="J0804-17636-Z4H-0100">J0804-17636-Z4H-0100</option>
+                                    <option value="J0803-17620-899-8000-20">J0803-17620-899-8000-20</option>
+                                    <option value="J0803-17620-899-8000-21">J0803-17620-899-8000-21</option>
+                                    <option value="J0803-17620-899-8000-22">J0803-17620-899-8000-22</option>
+                                    <option value="J0803-17625-434-3000">J0803-17625-434-3000</option>
+                                    <option value="J0803-17620-899-8000-23">J0803-17620-899-8000-23</option>
+                                    <option value="J0804-17621-Z4H-3100">J0804-17621-Z4H-3100</option>
+                                    <option value="J1901-17622-Z4H-9100">J1901-17622-Z4H-9100</option>
+                                    <option value="J1701-17625-K59K-T110-Y1">J1701-17625-K59K-T110-Y1</option>
+                                    <option value="J1201-17628-K20-9010-Y1">J1201-17628-K20-9010-Y1</option>
+                                    <option value="J1201-17623-K20-A110-Y1">J1201-17623-K20-A110-Y1</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -308,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- Die PM & Die BM Tab (เพิ่มใหม่) -->
+            <!-- Die PM & Die BM Tab -->
             <div class="tab-pane fade" id="content-die" role="tabpanel">
                 <!-- PM Alert Section -->
                 <div id="diePmAlertContainer" class="mb-4"></div>
@@ -350,6 +369,8 @@
                                         <label class="form-label small text-secondary">Part No. แม่พิมพ์</label>
                                         <select id="bmPartNo" class="form-select" required>
                                             <option value="">-- เลือก Part No. --</option>
+                                            <option value="5678">5678</option>
+                                            <option value="9123">9123</option>
                                             <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
                                             <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
                                             <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
@@ -468,7 +489,7 @@
 
         let globalData = [];
         const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
-        const DIE_PM_TARGET = 100000; // เงื่อนไข Die PM ครบ 100,000 Pcs
+        const DIE_PM_TARGET = 100000;
         let clearModal;
 
         function showLoading(show) {
@@ -491,53 +512,12 @@
                 const response = await fetch(GOOGLE_SCRIPT_URL);
                 globalData = await response.json();
                 renderDashboard();
-                updateActualPartOptions();
                 renderStock();
-                renderDieManagement(); // อัปเดตข้อมูล Die PM & Die BM
+                renderDieManagement();
             } catch (err) {
                 console.error("Error loading data:", err);
             } finally {
                 showLoading(false);
-            }
-        }
-
-        function updateActualPartOptions() {
-            const selectedLine = document.getElementById('actualLine').value;
-            const partSelect = document.getElementById('actualPartNo');
-            const btnSubmit = document.getElementById('btnSubmitActual');
-            const alertBox = document.getElementById('noPlanAlert');
-            const alertText = document.getElementById('noPlanAlertText');
-
-            partSelect.innerHTML = '';
-
-            const availableParts = [...new Set(
-                globalData
-                    .filter(item => item.line === selectedLine && item.planPartNo && Number(item.planQty) > 0)
-                    .map(item => item.planPartNo)
-            )];
-
-            if (availableParts.length === 0) {
-                partSelect.innerHTML = '<option value="">-- ไม่พบ Part ที่มีแผนการผลิต --</option>';
-                alertText.innerText = `ไม่พบการวางแผนการผลิตใน ${selectedLine} โปรดตั้งแผนการผลิตก่อน`;
-                alertBox.classList.remove('d-none');
-                alertBox.classList.add('d-flex');
-                btnSubmit.disabled = true;
-                btnSubmit.classList.add('btn-secondary');
-                btnSubmit.classList.remove('btn-success');
-            } else {
-                partSelect.innerHTML = '<option value="">-- เลือก Part No. --</option>';
-                availableParts.forEach(part => {
-                    const opt = document.createElement('option');
-                    opt.value = part;
-                    opt.textContent = part;
-                    partSelect.appendChild(opt);
-                });
-
-                alertBox.classList.add('d-none');
-                alertBox.classList.remove('d-flex');
-                btnSubmit.disabled = false;
-                btnSubmit.classList.remove('btn-secondary');
-                btnSubmit.classList.add('btn-success');
             }
         }
 
@@ -584,26 +564,22 @@
             });
         }
 
-        // ระบบ Die PM & Die BM Calculation
         function renderDieManagement() {
             const diePmSummary = {};
             const bmLogs = [];
 
             globalData.forEach(item => {
-                // คำนวณ Die PM ยอดปั๊มสะสม
                 if (item.actualPartNo && Number(item.actualQty) > 0) {
                     const part = item.actualPartNo;
                     if (!diePmSummary[part]) diePmSummary[part] = 0;
                     diePmSummary[part] += Number(item.actualQty);
                 }
 
-                // ดึงรายการซ่อม Die BM
                 if (item.bmProblem) {
                     bmLogs.push(item);
                 }
             });
 
-            // 1. Render Die PM Alerts & Status
             const alertContainer = document.getElementById('diePmAlertContainer');
             const statusTable = document.getElementById('diePmStatusTable');
             alertContainer.innerHTML = '';
@@ -620,7 +596,6 @@
                 const pmPercent = Math.min(Math.round((currentQty / DIE_PM_TARGET) * 100), 100);
                 const needPm = currentQty >= DIE_PM_TARGET;
 
-                // สร้าง Banner Alert ถ้ายอดครบ 100,000 Pcs
                 if (needPm) {
                     const alertDiv = document.createElement('div');
                     alertDiv.className = 'alert alert-danger d-flex justify-content-between align-items-center shadow-lg mb-3';
@@ -636,7 +611,6 @@
                     alertContainer.appendChild(alertDiv);
                 }
 
-                // เติมตารางสถานะ Die PM
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="fw-bold text-info">${part}</td>
@@ -652,7 +626,6 @@
                 statusTable.appendChild(tr);
             });
 
-            // 2. Render Die BM History Table
             const bmTable = document.getElementById('dieBmHistoryTable');
             bmTable.innerHTML = '';
 
@@ -676,7 +649,6 @@
             });
         }
 
-        // บันทึก Die BM
         async function submitDieBm(e) {
             e.preventDefault();
             showLoading(true);
@@ -901,13 +873,6 @@
 
         async function submitActual(e) {
             e.preventDefault();
-            
-            const selectedPart = document.getElementById('actualPartNo').value;
-            if (!selectedPart) {
-                alert('กรุณาเลือก Part No. ที่มีแผนการผลิต');
-                return;
-            }
-
             showLoading(true);
 
             const payload = {
@@ -915,7 +880,7 @@
                 data: {
                     line: document.getElementById('actualLine').value,
                     actualDate: document.getElementById('actualDate').value,
-                    actualPartNo: selectedPart,
+                    actualPartNo: document.getElementById('actualPartNo').value,
                     actualLotNo: document.getElementById('actualLotNo').value,
                     actualQty: document.getElementById('actualQty').value,
                     defectQty: document.getElementById('defectQty').value,
