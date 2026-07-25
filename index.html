@@ -241,10 +241,10 @@
                 <div class="card p-4">
                     <h5 class="fw-bold mb-4"><i class="fa-solid fa-pen-to-square text-success me-2"></i>ฟอร์มบันทึกผลการผลิต (Production Actual)</h5>
                     
-                    <!-- Alert กรณีไม่มีแผนการผลิต -->
+                    <!-- Alert กรณีไม่มีแผนการผลิต หรือ จบ Lot ไปหมดแล้ว -->
                     <div id="noPlanAlert" class="alert alert-danger d-none align-items-center mb-4" role="alert">
                         <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
-                        <div><strong>ไม่สามารถบันทึกยอดผลิตได้!</strong> <span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับสายการผลิตนี้</span></div>
+                        <div><span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับสายการผลิตนี้</span></div>
                     </div>
 
                     <form id="actualForm" onsubmit="submitActual(event)">
@@ -264,7 +264,7 @@
                                 <input type="date" id="actualDate" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-secondary">Part No. (เลือกจากแผนที่มี)</label>
+                                <label class="form-label small text-secondary">Part No. (เลือกจากแผนที่ยังผลิตไม่ครบ)</label>
                                 <select id="actualPartNo" class="form-select" onchange="onActualPartChange()" required>
                                     <option value="">-- เลือก Line ก่อน --</option>
                                 </select>
@@ -524,9 +524,9 @@
             }
         }
 
-        // ==========================================
-        //  LOGIC ตรวจสอบแผนผลิต & กำหนด Lot No.
-        // ==========================================
+        // =========================================================
+        //  LOGIC กรองเอาเฉพาะ Part No. ที่ "ยังผลิตไม่ครบ" มาแสดง
+        // =========================================================
         function updateActualFormState() {
             const selectedLine = document.getElementById('actualLine').value;
             const actualPartSelect = document.getElementById('actualPartNo');
@@ -534,16 +534,23 @@
             const alertText = document.getElementById('noPlanAlertText');
             const btnSubmit = document.getElementById('btnSubmitActual');
 
-            // ค้นหารายการที่มี Plan ใน Line นี้
+            // 1. ดึงรายการ Plan ทั้งหมดใน Line ที่เลือก
             const plannedItems = globalData.filter(i => i.line === selectedLine && i.planPartNo && Number(i.planQty) > 0);
+
+            // 2. คัดกรองเฉพาะ Part ที่ยอดผลิตสะสมยังน้อยกว่า Plan (ยังผลิตไม่ครบ Lot)
+            const activePlans = plannedItems.filter(plan => {
+                const actuals = globalData.filter(i => i.line === selectedLine && i.actualPartNo === plan.planPartNo);
+                const totalActual = actuals.reduce((sum, item) => sum + (Number(item.actualQty) || 0), 0);
+                return totalActual < Number(plan.planQty); // เอาเฉพาะที่ Actual < Plan
+            });
 
             actualPartSelect.innerHTML = '';
 
             if (plannedItems.length === 0) {
-                // กรณีไม่มีแผนการผลิต
+                // กรณีไม่มีการตั้ง Plan ในไลน์นี้เลย
                 alertBox.classList.remove('d-none');
                 alertBox.classList.add('d-flex');
-                alertText.innerText = `ไม่มีการวางแผนการผลิตสำหรับ ${selectedLine} ไม่สามารถลงยอดผลิตได้`;
+                alertText.innerHTML = `<strong>ไม่สามารถบันทึกยอดผลิตได้!</strong> ยังไม่มีการวางแผนการผลิตสำหรับ ${selectedLine}`;
                 btnSubmit.disabled = true;
 
                 const option = document.createElement('option');
@@ -553,8 +560,24 @@
                 
                 document.getElementById('actualLotNo').value = "";
                 document.getElementById('actualLotNo').readOnly = true;
-            } else {
-                // มีแผนการผลิต
+            } 
+            else if (activePlans.length === 0) {
+                // กรณีมี Plan แต่ผลิตครบจบ Lot ไปทั้งหมดแล้ว
+                alertBox.classList.remove('d-none');
+                alertBox.classList.add('d-flex');
+                alertText.innerHTML = `<strong>จบ Lot ทั้งหมดแล้ว!</strong> ทุก Part No. ใน ${selectedLine} ผลิตครบตามแผนเรียบร้อยแล้ว`;
+                btnSubmit.disabled = true;
+
+                const option = document.createElement('option');
+                option.value = "";
+                option.text = "-- ผลิตครบจบ Lot ทุกรายการแล้ว --";
+                actualPartSelect.appendChild(option);
+
+                document.getElementById('actualLotNo').value = "";
+                document.getElementById('actualLotNo').readOnly = true;
+            } 
+            else {
+                // กรณียังมีรายการที่ผลิตไม่เสร็จ -> โชว์เฉพาะ Part เหล่านั้น
                 alertBox.classList.add('d-none');
                 alertBox.classList.remove('d-flex');
                 btnSubmit.disabled = false;
@@ -564,9 +587,8 @@
                 defaultOpt.text = "-- เลือก Part No. ที่มีแผนผลิต --";
                 actualPartSelect.appendChild(defaultOpt);
 
-                // ดึงเฉพาะ Part ที่มี Plan ขึ้นมาโชว์ใน Dropdown
-                const uniqueParts = [...new Set(plannedItems.map(item => item.planPartNo))];
-                uniqueParts.forEach(partNo => {
+                const uniqueActiveParts = [...new Set(activePlans.map(item => item.planPartNo))];
+                uniqueActiveParts.forEach(partNo => {
                     const option = document.createElement('option');
                     option.value = partNo;
                     option.text = partNo;
@@ -588,30 +610,15 @@
                 return;
             }
 
-            // ค้นหาข้อมูล Plan ของ Part นี้ใน Line นี้
+            // ค้นหาข้อมูล Plan ของ Part นี้
             const planItem = globalData.find(i => i.line === selectedLine && i.planPartNo === selectedPart);
-            
-            // คำนวณยอดผลิตสะสมเดิมเพื่อเช็คว่า "จบ Lot แรก" แล้วหรือยัง
-            const actualItems = globalData.filter(i => i.line === selectedLine && i.actualPartNo === selectedPart);
-            let totalActualQty = 0;
-            actualItems.forEach(i => totalActualQty += (Number(i.actualQty) || 0));
-
-            const totalPlanQty = Number(planItem ? planItem.planQty : 0);
 
             if (planItem && planItem.planLotNo) {
-                if (totalActualQty < totalPlanQty) {
-                    // ยังไม่จบ Lot แรก -> อ้างอิงจาก Plan และล็อกไม่ให้พิมพ์
-                    lotInput.value = planItem.planLotNo;
-                    lotInput.readOnly = true;
-                    noticeSpan.innerText = "(อ้างอิงจาก Plan อัตโนมัติ - ยังผลิตไม่ครบ Lot)";
-                    noticeSpan.className = "text-info small";
-                } else {
-                    // จบ Lot แรกแล้ว -> ปลดล็อกให้สามารถคีย์ Lot ใหม่ได้
-                    lotInput.value = planItem.planLotNo;
-                    lotInput.readOnly = false;
-                    noticeSpan.innerText = "(ผลิตครบ Lot แรกแล้ว - สามารถเปลี่ยน/คีย์ Lot ใหม่ได้)";
-                    noticeSpan.className = "text-warning small";
-                }
+                // ดึง Lot No. จาก Plan และล็อกไม่ให้แก้ไข
+                lotInput.value = planItem.planLotNo;
+                lotInput.readOnly = true;
+                noticeSpan.innerText = "(อ้างอิงจาก Plan อัตโนมัติ)";
+                noticeSpan.className = "text-info small";
             } else {
                 lotInput.value = "";
                 lotInput.readOnly = false;
