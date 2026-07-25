@@ -113,44 +113,26 @@
             
             <!-- Dashboard Tab -->
             <div class="tab-pane fade show active" id="content-dashboard" role="tabpanel">
+                <!-- Filter -->
                 <div class="card p-3 mb-4">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label small text-secondary">กรองสายการผลิต (Line)</label>
                             <select id="filterLine" class="form-select" onchange="renderDashboard()">
-                                <option value="ALL">ทุกสายการผลิต</option>
+                                <option value="ALL">ทุกสายการผลิต (All Lines)</option>
                                 <option value="Line A">Line A</option>
-                                <option value="Line B">Line B</option>
-                                <option value="Line C">Line C</option>
+                                <option value="Line Q">Line Q</option>
+                                <option value="Line C1">Line C1</option>
+                                <option value="Line C2">Line C2</option>
+                                <option value="Line C3">Line C3</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <div class="card p-3">
-                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-warning"></i>รายการสถานะการผลิต</h5>
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle mb-0">
-                            </thead>
-                                <tr>
-                                    <th>Line</th>
-                                    <th>Part No.</th>
-                                    <th>Lot No.</th>
-                                    <th>Plan Qty</th>
-                                    <th>Actual Qty</th>
-                                    <th>Defect Qty</th>
-                                    <th>Progress</th>
-                                    <th>Operator</th>
-                                </tr>
-                           <thead>
-   
-<tbody id="dashboardTableBody">
-    <tr>
-        <td colspan="9" class="text-center text-secondary py-4">กำลังโหลดข้อมูล...</td> <!-- เปลี่ยนจาก 8 เป็น 9 -->
-    </tr>
-</tbody>
-                        </table>
-                    </div>
+                <!-- ส่วนแสดง Cards แยกตาม Line -->
+                <div id="lineDashboardContainer" class="row g-4">
+                    <!-- JS จะสร้าง Cards แยก Line ตรงนี้ -->
                 </div>
             </div>
 
@@ -164,8 +146,10 @@
                                 <label class="form-label small text-secondary">สายการผลิต (Line)</label>
                                 <select id="planLine" class="form-select" required>
                                     <option value="Line A">Line A</option>
-                                    <option value="Line B">Line B</option>
-                                    <option value="Line C">Line C</option>
+                                    <option value="Line Q">Line Q</option>
+                                    <option value="Line C1">Line C1</option>
+                                    <option value="Line C2">Line C2</option>
+                                    <option value="Line C3">Line C3</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -231,8 +215,10 @@
                                 <label class="form-label small text-secondary">สายการผลิต (Line)</label>
                                 <select id="actualLine" class="form-select" required>
                                     <option value="Line A">Line A</option>
-                                    <option value="Line B">Line B</option>
-                                    <option value="Line C">Line C</option>
+                                    <option value="Line Q">Line Q</option>
+                                    <option value="Line C1">Line C1</option>
+                                    <option value="Line C2">Line C2</option>
+                                    <option value="Line C3">Line C3</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -295,10 +281,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // URL ของ Google Apps Script Web App
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqV4mE6VLYdbFna04S-IkgnxDn7EGQU1TdjF0Z63cSbd51sDBHLxzHaMGw6LMpB1MU/exec"; 
+        // URL ของ Google Apps Script Web App (อย่าลืมใช้ URL ของพี่มิวครับ)
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_YOUR_SCRIPT_ID_HERE/exec"; 
 
         let globalData = [];
+        const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
 
         function showLoading(show) {
             const overlay = document.getElementById('loadingOverlay');
@@ -328,56 +315,114 @@
 
         function renderDashboard() {
             const lineFilter = document.getElementById('filterLine').value;
-            const tbody = document.getElementById('dashboardTableBody');
-            tbody.innerHTML = '';
+            const container = document.getElementById('lineDashboardContainer');
+            container.innerHTML = '';
 
-            let filtered = globalData;
-            if (lineFilter !== 'ALL') {
-                filtered = globalData.filter(item => item.line === lineFilter);
+            // จัดกลุ่มข้อมูลตาม Line
+            const linesGrouped = {};
+            ALL_LINES.forEach(l => linesGrouped[l] = []);
+
+            if (globalData && globalData.length > 0) {
+                globalData.forEach(item => {
+                    const lineName = item.line || 'Unassigned';
+                    if (!linesGrouped[lineName]) {
+                        linesGrouped[lineName] = [];
+                    }
+                    linesGrouped[lineName].push(item);
+                });
             }
 
-           if (!filtered || filtered.length === 0) {
-        // แก้ colspan จาก 8 เป็น 9 ครับ
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-4">ไม่พบข้อมูลการผลิต</td></tr>';
-        return;
-    }
+            // เลือกแสดงผลตาม Filter
+            const targetLines = (lineFilter === 'ALL') ? Object.keys(linesGrouped) : [lineFilter];
 
-    filtered.forEach(item => {
-        const plan = Number(item.planQty) || 0;
-        const actual = Number(item.actualQty) || 0;
-        const percent = plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : 0;
+            targetLines.forEach(lineName => {
+                const items = linesGrouped[lineName] || [];
+                
+                let totalPlan = 0;
+                let totalActual = 0;
+                let totalDefect = 0;
 
-        // --- เพิ่มการคำนวณ Badge สถานะ ---
-        let statusBadge = '';
-        if (plan > 0 && actual >= plan) {
-            statusBadge = '<span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Completed</span>';
-        } else if (actual > 0) {
-            statusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-spinner fa-spin me-1"></i>In Progress</span>';
-        } else {
-            statusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-clock me-1"></i>Pending</span>';
-        }
+                items.forEach(i => {
+                    totalPlan += Number(i.planQty) || 0;
+                    totalActual += Number(i.actualQty) || 0;
+                    totalDefect += Number(i.defectQty) || 0;
+                });
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><span class="badge bg-secondary">${item.line || '-'}</span></td>
-            <td class="fw-bold text-info">${item.planPartNo || item.actualPartNo || '-'}</td>
-            <td>${item.planLotNo || item.actualLotNo || '-'}</td>
-            <td>${plan.toLocaleString()}</td>
-            <td class="text-success fw-bold">${actual.toLocaleString()}</td>
-            <td class="text-danger">${(Number(item.defectQty) || 0).toLocaleString()}</td>
-            <td style="width: 150px;">
-                <div class="progress" style="height: 15px; background-color: #0f172a;">
-                    <div class="progress-bar ${percent >= 100 ? 'bg-success' : 'bg-info'}" 
-                         role="progressbar" style="width: ${percent}%;">
-                         ${percent}%
+                const overallPercent = totalPlan > 0 ? Math.min(Math.round((totalActual / totalPlan) * 100), 100) : 0;
+
+                let tableRowsHtml = '';
+                if (items.length === 0) {
+                    tableRowsHtml = '<tr><td colspan="8" class="text-center text-secondary py-3">ไม่มีรายการ Part ในไลน์นี้</td></tr>';
+                } else {
+                    items.forEach(item => {
+                        const plan = Number(item.planQty) || 0;
+                        const actual = Number(item.actualQty) || 0;
+                        const percent = plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : 0;
+
+                        let statusBadge = '';
+                        if (plan > 0 && actual >= plan) {
+                            statusBadge = '<span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Completed</span>';
+                        } else if (actual > 0) {
+                            statusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-spinner fa-spin me-1"></i>In Progress</span>';
+                        } else {
+                            statusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-clock me-1"></i>Pending</span>';
+                        }
+
+                        tableRowsHtml += `
+                            <tr>
+                                <td class="fw-bold text-info">${item.planPartNo || item.actualPartNo || '-'}</td>
+                                <td>${item.planLotNo || item.actualLotNo || '-'}</td>
+                                <td>${plan.toLocaleString()}</td>
+                                <td class="text-success fw-bold">${actual.toLocaleString()}</td>
+                                <td class="text-danger">${(Number(item.defectQty) || 0).toLocaleString()}</td>
+                                <td style="width: 140px;">
+                                    <div class="progress" style="height: 12px; background-color: #0f172a;">
+                                        <div class="progress-bar ${percent >= 100 ? 'bg-success' : 'bg-info'}" style="width: ${percent}%;"></div>
+                                    </div>
+                                    <small class="text-secondary" style="font-size: 10px;">${percent}%</small>
+                                </td>
+                                <td>${statusBadge}</td>
+                                <td><small class="text-secondary">${item.operator || item.planner || '-'}</small></td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                const colDiv = document.createElement('div');
+                colDiv.className = 'col-12 col-lg-6'; // แสดงฝั่งละ 2 กล่องในหน้าจอใหญ่
+                colDiv.innerHTML = `
+                    <div class="card p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                            <h5 class="fw-bold text-warning mb-0"><i class="fa-solid fa-industry me-2"></i>${lineName}</h5>
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="badge bg-secondary">Plan: ${totalPlan.toLocaleString()}</span>
+                                <span class="badge bg-success">Act: ${totalActual.toLocaleString()}</span>
+                                <span class="badge ${overallPercent >= 100 ? 'bg-success' : 'bg-info'}">${overallPercent}%</span>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle mb-0 small">
+                                <thead>
+                                    <tr class="text-secondary">
+                                        <th>Part No.</th>
+                                        <th>Lot No.</th>
+                                        <th>Plan</th>
+                                        <th>Actual</th>
+                                        <th>Defect</th>
+                                        <th>Progress</th>
+                                        <th>Status</th>
+                                        <th>Operator</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableRowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-            </td>
-            <td>${statusBadge}</td> <!-- แทรกคอลัมน์สถานะตรงนี้ -->
-            <td><small class="text-secondary">${item.operator || item.planner || '-'}</small></td>
-        `;
-        tbody.appendChild(tr);
-    });
+                `;
+                container.appendChild(colDiv);
             });
         }
 
