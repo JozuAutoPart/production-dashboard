@@ -66,6 +66,11 @@
             align-items: center;
             z-index: 9999;
         }
+        .modal-content {
+            background-color: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+        }
     </style>
 </head>
 <body class="p-3 p-md-4">
@@ -84,9 +89,15 @@
                 <h3 class="fw-bold mb-1"><i class="fa-solid fa-chart-column text-info me-2"></i>Production Management</h3>
                 <p class="text-secondary small mb-0">ระบบวางแผนและบันทึกการผลิตสายไลน์</p>
             </div>
-            <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
-                <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
+                    <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+                </button>
+                <!-- ปุ่มล้างข้อมูล -->
+                <button class="btn btn-outline-danger btn-sm" onclick="openClearDataModal()">
+                    <i class="fa-solid fa-trash-can me-1"></i> ล้างข้อมูล
+                </button>
+            </div>
         </div>
 
         <!-- Navigation Tabs -->
@@ -277,15 +288,42 @@
         </div>
     </div>
 
+    <!-- Modal ยืนยันรหัสผ่านเพื่อล้างข้อมูล -->
+    <div class="modal fade" id="clearDataModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>ยืนยันการล้างข้อมูล</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-secondary small mb-3">การล้างข้อมูลจะลบรายการทั้งหมดในระบบ โปรดใส่รหัสผ่านผู้ดูแลระบบเพื่อยืนยัน:</p>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">รหัสผ่าน (Password)</label>
+                        <input type="password" id="clearDataPassword" class="form-control" placeholder="กรอกรหัสผ่าน">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-danger btn-sm fw-bold" onclick="confirmClearData()">ยืนยันการล้างข้อมูล</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
         // URL ของ Google Apps Script Web App (อย่าลืมใช้ URL ของพี่มิวครับ)
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqV4mE6VLYdbFna04S-IkgnxDn7EGQU1TdjF0Z63cSbd51sDBHLxzHaMGw6LMpB1MU/exec"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_YOUR_SCRIPT_ID_HERE/exec"; 
+
+        // 🔑 ตั้งค่ารหัสผ่านสำหรับล้างข้อมูลตรงนี้ (ค่าเริ่มต้นคือ 1234)
+        const ADMIN_PASSWORD = "1234";
 
         let globalData = [];
         const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
+        let clearModal;
 
         function showLoading(show) {
             const overlay = document.getElementById('loadingOverlay');
@@ -318,7 +356,6 @@
             const container = document.getElementById('lineDashboardContainer');
             container.innerHTML = '';
 
-            // จัดกลุ่มข้อมูลตาม Line
             const linesGrouped = {};
             ALL_LINES.forEach(l => linesGrouped[l] = []);
 
@@ -332,7 +369,6 @@
                 });
             }
 
-            // เลือกแสดงผลตาม Filter
             const targetLines = (lineFilter === 'ALL') ? Object.keys(linesGrouped) : [lineFilter];
 
             targetLines.forEach(lineName => {
@@ -389,7 +425,7 @@
                 }
 
                 const colDiv = document.createElement('div');
-                colDiv.className = 'col-12 col-lg-6'; // แสดงฝั่งละ 2 กล่องในหน้าจอใหญ่
+                colDiv.className = 'col-12 col-lg-6';
                 colDiv.innerHTML = `
                     <div class="card p-3 h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
@@ -424,6 +460,43 @@
                 `;
                 container.appendChild(colDiv);
             });
+        }
+
+        // ฟังก์ชันเปิด Modal ล้างข้อมูล
+        function openClearDataModal() {
+            document.getElementById('clearDataPassword').value = '';
+            clearModal = new bootstrap.Modal(document.getElementById('clearDataModal'));
+            clearModal.show();
+        }
+
+        // ฟังก์ชันยืนยันการล้างข้อมูล
+        async function confirmClearData() {
+            const pwd = document.getElementById('clearDataPassword').value;
+            if (pwd !== ADMIN_PASSWORD) {
+                alert('รหัสผ่านไม่ถูกต้อง!');
+                return;
+            }
+
+            clearModal.hide();
+            showLoading(true);
+
+            const payload = {
+                action: "clearAllData"
+            };
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                alert('ล้างข้อมูลเรียบร้อยแล้ว!');
+                setTimeout(loadData, 1500);
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการล้างข้อมูล');
+                showLoading(false);
+            }
         }
 
         async function submitPlan(e) {
