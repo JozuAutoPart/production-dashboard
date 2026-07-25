@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Production & Stock Management System</title>
+    <title>Production, Stock & Die Maintenance System</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -46,10 +46,6 @@
             background-color: #0284c7;
             border-color: #0284c7;
         }
-        .btn-primary:hover {
-            background-color: #0369a1;
-            border-color: #0369a1;
-        }
         .table-dark {
             --bs-table-bg: #1e293b;
             --bs-table-border-color: #334155;
@@ -86,8 +82,8 @@
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold mb-1"><i class="fa-solid fa-boxes-stacked text-info me-2"></i>Production & Stock Management</h3>
-                <p class="text-secondary small mb-0">ระบบวางแผน การผลิต และติดตาม Stock สะสม</p>
+                <h3 class="fw-bold mb-1"><i class="fa-solid fa-gears text-info me-2"></i>Production & Die Maintenance System</h3>
+                <p class="text-secondary small mb-0">ระบบวางแผน การผลิต สต็อก และจัดการแม่พิมพ์ (Die PM/BM)</p>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
@@ -118,7 +114,12 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
-                    <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม (Part Stock)
+                    <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-die" data-bs-toggle="pill" data-bs-target="#content-die" type="button" role="tab">
+                    <i class="fa-solid fa-wrench me-2 text-warning"></i>Die PM & Die BM
                 </button>
             </li>
         </ul>
@@ -143,7 +144,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="lineDashboardContainer" class="row g-4"></div>
             </div>
 
@@ -220,14 +220,10 @@
             <div class="tab-pane fade" id="content-actual" role="tabpanel">
                 <div class="card p-4">
                     <h5 class="fw-bold mb-4"><i class="fa-solid fa-pen-to-square text-success me-2"></i>ฟอร์มบันทึกผลการผลิต (Production Actual)</h5>
-                    
                     <div id="noPlanAlert" class="alert alert-danger d-none align-items-center mb-4" role="alert">
                         <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
-                        <div>
-                            <strong>ไม่สามารถบันทึกข้อมูลได้!</strong> <span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับ Part ใน Line นี้</span>
-                        </div>
+                        <div><strong>ไม่สามารถบันทึกข้อมูลได้!</strong> <span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับ Part ใน Line นี้</span></div>
                     </div>
-
                     <form id="actualForm" onsubmit="submitActual(event)">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -276,9 +272,8 @@
                 </div>
             </div>
 
-            <!-- Stock Tab (หน้า Stock สะสม) -->
+            <!-- Stock Tab -->
             <div class="tab-pane fade" id="content-stock" role="tabpanel">
-                <!-- สรุปการผลิตสะสม -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-6 col-lg-4">
                         <div class="card p-3 border-start border-info border-4">
@@ -293,13 +288,8 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- ตาราง Stock สะสม -->
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-info mb-0"><i class="fa-solid fa-boxes-packing me-2"></i>ตาราง Stock ผลิตสะสมราย Part No.</h5>
-                    </div>
-
+                    <h5 class="fw-bold text-info mb-3"><i class="fa-solid fa-boxes-packing me-2"></i>ตาราง Stock ผลิตสะสมราย Part No.</h5>
                     <div class="table-responsive">
                         <table class="table table-dark table-hover align-middle mb-0">
                             <thead>
@@ -316,6 +306,121 @@
                         </table>
                     </div>
                 </div>
+            </div>
+
+            <!-- Die PM & Die BM Tab (เพิ่มใหม่) -->
+            <div class="tab-pane fade" id="content-die" role="tabpanel">
+                <!-- PM Alert Section -->
+                <div id="diePmAlertContainer" class="mb-4"></div>
+
+                <div class="row g-4">
+                    <!-- Die PM Status List -->
+                    <div class="col-lg-6">
+                        <div class="card p-4 h-100">
+                            <h5 class="fw-bold text-info mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>สถานะ Die PM (รอบละ 100,000 Pcs)</h5>
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover align-middle mb-0 small">
+                                    <thead>
+                                        <tr class="text-secondary">
+                                            <th>Part No.</th>
+                                            <th>ปั๊มสะสม (Stroke Qty)</th>
+                                            <th>ความคืบหน้า (PM Target)</th>
+                                            <th>สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="diePmStatusTable">
+                                        <tr><td colspan="4" class="text-center text-secondary py-3">ไม่มีข้อมูลแม่พิมพ์</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Die BM Record Form -->
+                    <div class="col-lg-6">
+                        <div class="card p-4">
+                            <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>บันทึกแม่พิมพ์เสียฉุกเฉิน (Die BM)</h5>
+                            <form id="dieBmForm" onsubmit="submitDieBm(event)">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-secondary">วันที่เกิดเหตุ</label>
+                                        <input type="date" id="bmDate" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-secondary">Part No. แม่พิมพ์</label>
+                                        <select id="bmPartNo" class="form-select" required>
+                                            <option value="">-- เลือก Part No. --</option>
+                                            <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
+                                            <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
+                                            <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
+                                            <option value="J0701-17620-Z1T-8000-25">J0701-17620-Z1T-8000-25</option>
+                                            <option value="J0802-17622-ZOT-8200">J0802-17622-ZOT-8200</option>
+                                            <option value="J0804-17625-Z4H-3000">J0804-17625-Z4H-3000</option>
+                                            <option value="J0804-17636-Z4H-0100">J0804-17636-Z4H-0100</option>
+                                            <option value="J0803-17620-899-8000-20">J0803-17620-899-8000-20</option>
+                                            <option value="J0803-17620-899-8000-21">J0803-17620-899-8000-21</option>
+                                            <option value="J0803-17620-899-8000-22">J0803-17620-899-8000-22</option>
+                                            <option value="J0803-17625-434-3000">J0803-17625-434-3000</option>
+                                            <option value="J0803-17620-899-8000-23">J0803-17620-899-8000-23</option>
+                                            <option value="J0804-17621-Z4H-3100">J0804-17621-Z4H-3100</option>
+                                            <option value="J1901-17622-Z4H-9100">J1901-17622-Z4H-9100</option>
+                                            <option value="J1701-17625-K59K-T110-Y1">J1701-17625-K59K-T110-Y1</option>
+                                            <option value="J1201-17628-K20-9010-Y1">J1201-17628-K20-9010-Y1</option>
+                                            <option value="J1201-17623-K20-A110-Y1">J1201-17623-K20-A110-Y1</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small text-secondary">รายละเอียดอาการเสีย / ปัญหา (Problem Statement)</label>
+                                        <textarea id="bmProblem" class="form-control" rows="2" placeholder="เช่น เข็มหัก, ชิ้นงานเป็นรอย, แม่พิมพ์ติด" required></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small text-secondary">แนวทางแก้ไข / รายละเอียดการซ่อม (Action Taken)</label>
+                                        <textarea id="bmAction" class="form-control" rows="2" placeholder="เช่น เจียรแต่งเข็มใหม่, ขัดผิวหน้าแม่พิมพ์" required></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-secondary">ช่างผู้ซ่อม / ผู้รับผิดชอบ</label>
+                                        <input type="text" id="bmTechnician" class="form-control" placeholder="ชื่อช่างซ่อม" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-secondary">สถานะการซ่อม</label>
+                                        <select id="bmStatus" class="form-select" required>
+                                            <option value="Under Repair">กำลังซ่อมแซม (Under Repair)</option>
+                                            <option value="Completed">ซ่อมเสร็จสิ้น (Completed)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <button type="submit" class="btn btn-danger w-100 py-2 fw-bold">
+                                            <i class="fa-solid fa-wrench me-2"></i>บันทึกการส่งซ่อม Die BM
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Die BM History Table -->
+                <div class="card p-4 mt-4">
+                    <h5 class="fw-bold text-warning mb-3"><i class="fa-solid fa-list-check me-2"></i>ประวัติการซ่อมแม่พิมพ์ฉุกเฉิน (Die BM History Log)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0 small">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th>วันที่</th>
+                                    <th>Part No.</th>
+                                    <th>อาการเสีย / ปัญหา</th>
+                                    <th>แนวทางการแก้ไข</th>
+                                    <th>ช่างผู้ซ่อม</th>
+                                    <th>สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dieBmHistoryTable">
+                                <tr><td colspan="6" class="text-center text-secondary py-3">ยังไม่มีประวัติการส่งซ่อม BM</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
         </div>
@@ -363,6 +468,7 @@
 
         let globalData = [];
         const ALL_LINES = ["Line A", "Line Q", "Line C1", "Line C2", "Line C3"];
+        const DIE_PM_TARGET = 100000; // เงื่อนไข Die PM ครบ 100,000 Pcs
         let clearModal;
 
         function showLoading(show) {
@@ -376,6 +482,7 @@
             document.getElementById('planOrderDate').value = today;
             document.getElementById('planTargetDate').value = today;
             document.getElementById('actualDate').value = today;
+            document.getElementById('bmDate').value = today;
         }
 
         async function loadData() {
@@ -385,7 +492,8 @@
                 globalData = await response.json();
                 renderDashboard();
                 updateActualPartOptions();
-                renderStock(); // อัปเดตตาราง Stock สะสม
+                renderStock();
+                renderDieManagement(); // อัปเดตข้อมูล Die PM & Die BM
             } catch (err) {
                 console.error("Error loading data:", err);
             } finally {
@@ -433,7 +541,6 @@
             }
         }
 
-        // ฟังก์ชันคำนวณ Stock สะสม
         function renderStock() {
             const stockSummary = {};
             let totalAccumulated = 0;
@@ -444,17 +551,11 @@
 
                 if (partNo && actualQty > 0) {
                     if (!stockSummary[partNo]) {
-                        stockSummary[partNo] = {
-                            totalQty: 0,
-                            lastDate: item.actualDate || '-'
-                        };
+                        stockSummary[partNo] = { totalQty: 0, lastDate: item.actualDate || '-' };
                     }
                     stockSummary[partNo].totalQty += actualQty;
                     totalAccumulated += actualQty;
-
-                    if (item.actualDate) {
-                        stockSummary[partNo].lastDate = item.actualDate;
-                    }
+                    if (item.actualDate) stockSummary[partNo].lastDate = item.actualDate;
                 }
             });
 
@@ -462,7 +563,6 @@
             stockTableBody.innerHTML = '';
 
             const partKeys = Object.keys(stockSummary);
-
             document.getElementById('totalAccumulatedQty').innerText = `${totalAccumulated.toLocaleString()} Pcs`;
             document.getElementById('totalPartTypes').innerText = `${partKeys.length} รายการ`;
 
@@ -482,6 +582,133 @@
                 `;
                 stockTableBody.appendChild(tr);
             });
+        }
+
+        // ระบบ Die PM & Die BM Calculation
+        function renderDieManagement() {
+            const diePmSummary = {};
+            const bmLogs = [];
+
+            globalData.forEach(item => {
+                // คำนวณ Die PM ยอดปั๊มสะสม
+                if (item.actualPartNo && Number(item.actualQty) > 0) {
+                    const part = item.actualPartNo;
+                    if (!diePmSummary[part]) diePmSummary[part] = 0;
+                    diePmSummary[part] += Number(item.actualQty);
+                }
+
+                // ดึงรายการซ่อม Die BM
+                if (item.bmProblem) {
+                    bmLogs.push(item);
+                }
+            });
+
+            // 1. Render Die PM Alerts & Status
+            const alertContainer = document.getElementById('diePmAlertContainer');
+            const statusTable = document.getElementById('diePmStatusTable');
+            alertContainer.innerHTML = '';
+            statusTable.innerHTML = '';
+
+            const pmPartKeys = Object.keys(diePmSummary);
+
+            if (pmPartKeys.length === 0) {
+                statusTable.innerHTML = '<tr><td colspan="4" class="text-center text-secondary py-3">ไม่มีข้อมูลแม่พิมพ์</td></tr>';
+            }
+
+            pmPartKeys.forEach(part => {
+                const currentQty = diePmSummary[part];
+                const pmPercent = Math.min(Math.round((currentQty / DIE_PM_TARGET) * 100), 100);
+                const needPm = currentQty >= DIE_PM_TARGET;
+
+                // สร้าง Banner Alert ถ้ายอดครบ 100,000 Pcs
+                if (needPm) {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger d-flex justify-content-between align-items-center shadow-lg mb-3';
+                    alertDiv.innerHTML = `
+                        <div>
+                            <h6 class="fw-bold mb-1"><i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>🚨 แจ้งเตือน: Die PM ถึงกำหนด PM (ครบ 100,000 Pcs)</h6>
+                            <p class="mb-0 small">Part No: <strong>${part}</strong> | ยอดปั๊มปัจจุบัน: <strong class="fs-6">${currentQty.toLocaleString()} Pcs</strong></p>
+                        </div>
+                        <button class="btn btn-light btn-sm fw-bold text-danger" onclick="alert('กรุณาติดต่อแผนก Maintenance เพื่อบันทึกการซ่อมบำรุงแม่พิมพ์')">
+                            <i class="fa-solid fa-wrench me-1"></i>ส่งทำ PM
+                        </button>
+                    `;
+                    alertContainer.appendChild(alertDiv);
+                }
+
+                // เติมตารางสถานะ Die PM
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="fw-bold text-info">${part}</td>
+                    <td class="${needPm ? 'text-danger fw-bold' : 'text-white'}">${currentQty.toLocaleString()} Pcs</td>
+                    <td style="width: 130px;">
+                        <div class="progress" style="height: 10px; background-color: #0f172a;">
+                            <div class="progress-bar ${needPm ? 'bg-danger' : 'bg-warning'}" style="width: ${pmPercent}%;"></div>
+                        </div>
+                        <small class="text-secondary" style="font-size: 10px;">${pmPercent}% (100k Target)</small>
+                    </td>
+                    <td>${needPm ? '<span class="badge bg-danger">🚨 ต้อง PM</span>' : '<span class="badge bg-success">ปกติ</span>'}</td>
+                `;
+                statusTable.appendChild(tr);
+            });
+
+            // 2. Render Die BM History Table
+            const bmTable = document.getElementById('dieBmHistoryTable');
+            bmTable.innerHTML = '';
+
+            if (bmLogs.length === 0) {
+                bmTable.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-3">ยังไม่มีประวัติการส่งซ่อม BM</td></tr>';
+                return;
+            }
+
+            bmLogs.reverse().forEach(log => {
+                const isCompleted = log.bmStatus === 'Completed';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${log.bmDate || '-'}</td>
+                    <td class="fw-bold text-info">${log.bmPartNo}</td>
+                    <td class="text-danger">${log.bmProblem}</td>
+                    <td class="text-success">${log.bmAction}</td>
+                    <td>${log.bmTechnician}</td>
+                    <td><span class="badge ${isCompleted ? 'bg-success' : 'bg-warning text-dark'}">${log.bmStatus}</span></td>
+                `;
+                bmTable.appendChild(tr);
+            });
+        }
+
+        // บันทึก Die BM
+        async function submitDieBm(e) {
+            e.preventDefault();
+            showLoading(true);
+
+            const payload = {
+                action: "addProductionLog",
+                data: {
+                    line: "Die BM",
+                    bmDate: document.getElementById('bmDate').value,
+                    bmPartNo: document.getElementById('bmPartNo').value,
+                    bmProblem: document.getElementById('bmProblem').value,
+                    bmAction: document.getElementById('bmAction').value,
+                    bmTechnician: document.getElementById('bmTechnician').value,
+                    bmStatus: document.getElementById('bmStatus').value
+                }
+            };
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                alert('บันทึกการส่งซ่อม Die BM เรียบร้อยแล้ว!');
+                document.getElementById('dieBmForm').reset();
+                setDefaultDates();
+                setTimeout(loadData, 1500);
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                showLoading(false);
+            }
         }
 
         function renderDashboard() {
@@ -594,9 +821,7 @@
                                         <th>Operator</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    ${tableRowsHtml}
-                                </tbody>
+                                <tbody>${tableRowsHtml}</tbody>
                             </table>
                         </div>
                     </div>
@@ -623,10 +848,7 @@
             clearModal.hide();
             showLoading(true);
 
-            const payload = {
-                action: "clearData",
-                line: targetLine
-            };
+            const payload = { action: "clearData", line: targetLine };
 
             try {
                 await fetch(GOOGLE_SCRIPT_URL, {
