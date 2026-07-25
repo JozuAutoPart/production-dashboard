@@ -33,6 +33,12 @@
             color: #f8fafc;
             box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
         }
+        .form-control:read-only {
+            background-color: #1e293b;
+            color: #38bdf8;
+            border-color: #0284c7;
+            font-weight: bold;
+        }
         .nav-pills .nav-link {
             color: #94a3b8;
             border-radius: 8px;
@@ -121,7 +127,7 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab">
+                <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab" onclick="updateActualFormState()">
                     <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
                 </button>
             </li>
@@ -234,15 +240,18 @@
             <div class="tab-pane fade" id="content-actual" role="tabpanel">
                 <div class="card p-4">
                     <h5 class="fw-bold mb-4"><i class="fa-solid fa-pen-to-square text-success me-2"></i>ฟอร์มบันทึกผลการผลิต (Production Actual)</h5>
+                    
+                    <!-- Alert กรณีไม่มีแผนการผลิต -->
                     <div id="noPlanAlert" class="alert alert-danger d-none align-items-center mb-4" role="alert">
                         <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>
-                        <div><strong>ไม่สามารถบันทึกข้อมูลได้!</strong> <span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับ Part ใน Line นี้</span></div>
+                        <div><strong>ไม่สามารถบันทึกยอดผลิตได้!</strong> <span id="noPlanAlertText">ยังไม่มีการวางแผนการผลิตสำหรับสายการผลิตนี้</span></div>
                     </div>
+
                     <form id="actualForm" onsubmit="submitActual(event)">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small text-secondary">สายการผลิต (Line)</label>
-                                <select id="actualLine" class="form-select" onchange="updateActualPartOptions()" required>
+                                <select id="actualLine" class="form-select" onchange="updateActualFormState()" required>
                                     <option value="Line A">Line A</option>
                                     <option value="Line Q">Line Q</option>
                                     <option value="Line C1">Line C1</option>
@@ -255,32 +264,14 @@
                                 <input type="date" id="actualDate" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-secondary">Part No.</label>
-                                <select id="actualPartNo" class="form-select" required>
-                                    <option value="">-- โปรดเลือก Part No. --</option>
-                                    <option value="9123">9123</option>
-                                    <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
-                                    <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
-                                    <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
-                                    <option value="J0701-17620-Z1T-8000-25">J0701-17620-Z1T-8000-25</option>
-                                    <option value="J0802-17622-ZOT-8200">J0802-17622-ZOT-8200</option>
-                                    <option value="J0804-17625-Z4H-3000">J0804-17625-Z4H-3000</option>
-                                    <option value="J0804-17636-Z4H-0100">J0804-17636-Z4H-0100</option>
-                                    <option value="J0803-17620-899-8000-20">J0803-17620-899-8000-20</option>
-                                    <option value="J0803-17620-899-8000-21">J0803-17620-899-8000-21</option>
-                                    <option value="J0803-17620-899-8000-22">J0803-17620-899-8000-22</option>
-                                    <option value="J0803-17625-434-3000">J0803-17625-434-3000</option>
-                                    <option value="J0803-17620-899-8000-23">J0803-17620-899-8000-23</option>
-                                    <option value="J0804-17621-Z4H-3100">J0804-17621-Z4H-3100</option>
-                                    <option value="J1901-17622-Z4H-9100">J1901-17622-Z4H-9100</option>
-                                    <option value="J1701-17625-K59K-T110-Y1">J1701-17625-K59K-T110-Y1</option>
-                                    <option value="J1201-17628-K20-9010-Y1">J1201-17628-K20-9010-Y1</option>
-                                    <option value="J1201-17623-K20-A110-Y1">J1201-17623-K20-A110-Y1</option>
+                                <label class="form-label small text-secondary">Part No. (เลือกจากแผนที่มี)</label>
+                                <select id="actualPartNo" class="form-select" onchange="onActualPartChange()" required>
+                                    <option value="">-- เลือก Line ก่อน --</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-secondary">Lot No.</label>
-                                <input type="text" id="actualLotNo" class="form-control" placeholder="เช่น L6907-01" required>
+                                <label class="form-label small text-secondary">Lot No. <span id="lotNoNotice" class="text-info small">(อ้างอิงจาก Plan อัตโนมัติ)</span></label>
+                                <input type="text" id="actualLotNo" class="form-control" placeholder="จะดึงจาก Plan อัตโนมัติ" readonly required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small text-secondary">จำนวนผลิตได้ (Actual Qty)</label>
@@ -342,7 +333,6 @@
 
             <!-- Die PM & Die BM Tab -->
             <div class="tab-pane fade" id="content-die" role="tabpanel">
-                <!-- PM Alert Section -->
                 <div id="diePmAlertContainer" class="mb-4"></div>
 
                 <div class="row g-4">
@@ -383,7 +373,6 @@
                                         <select id="bmPartNo" class="form-select" required>
                                             <option value="">-- เลือก Part No. --</option>
                                             <option value="5678">5678</option>
-                                            <option value="9123">9123</option>
                                             <option value="J0701-17620-Z1T-8000-20">J0701-17620-Z1T-8000-20</option>
                                             <option value="J0701-17620-Z1T-8000-21">J0701-17620-Z1T-8000-21</option>
                                             <option value="J0701-17620-Z1T-8000-23">J0701-17620-Z1T-8000-23</option>
@@ -527,10 +516,106 @@
                 renderDashboard();
                 renderStock();
                 renderDieManagement();
+                updateActualFormState();
             } catch (err) {
                 console.error("Error loading data:", err);
             } finally {
                 showLoading(false);
+            }
+        }
+
+        // ==========================================
+        //  LOGIC ตรวจสอบแผนผลิต & กำหนด Lot No.
+        // ==========================================
+        function updateActualFormState() {
+            const selectedLine = document.getElementById('actualLine').value;
+            const actualPartSelect = document.getElementById('actualPartNo');
+            const alertBox = document.getElementById('noPlanAlert');
+            const alertText = document.getElementById('noPlanAlertText');
+            const btnSubmit = document.getElementById('btnSubmitActual');
+
+            // ค้นหารายการที่มี Plan ใน Line นี้
+            const plannedItems = globalData.filter(i => i.line === selectedLine && i.planPartNo && Number(i.planQty) > 0);
+
+            actualPartSelect.innerHTML = '';
+
+            if (plannedItems.length === 0) {
+                // กรณีไม่มีแผนการผลิต
+                alertBox.classList.remove('d-none');
+                alertBox.classList.add('d-flex');
+                alertText.innerText = `ไม่มีการวางแผนการผลิตสำหรับ ${selectedLine} ไม่สามารถลงยอดผลิตได้`;
+                btnSubmit.disabled = true;
+
+                const option = document.createElement('option');
+                option.value = "";
+                option.text = "-- ไม่มีแผนการผลิตในไลน์นี้ --";
+                actualPartSelect.appendChild(option);
+                
+                document.getElementById('actualLotNo').value = "";
+                document.getElementById('actualLotNo').readOnly = true;
+            } else {
+                // มีแผนการผลิต
+                alertBox.classList.add('d-none');
+                alertBox.classList.remove('d-flex');
+                btnSubmit.disabled = false;
+
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = "";
+                defaultOpt.text = "-- เลือก Part No. ที่มีแผนผลิต --";
+                actualPartSelect.appendChild(defaultOpt);
+
+                // ดึงเฉพาะ Part ที่มี Plan ขึ้นมาโชว์ใน Dropdown
+                const uniqueParts = [...new Set(plannedItems.map(item => item.planPartNo))];
+                uniqueParts.forEach(partNo => {
+                    const option = document.createElement('option');
+                    option.value = partNo;
+                    option.text = partNo;
+                    actualPartSelect.appendChild(option);
+                });
+
+                document.getElementById('actualLotNo').value = "";
+            }
+        }
+
+        function onActualPartChange() {
+            const selectedLine = document.getElementById('actualLine').value;
+            const selectedPart = document.getElementById('actualPartNo').value;
+            const lotInput = document.getElementById('actualLotNo');
+            const noticeSpan = document.getElementById('lotNoNotice');
+
+            if (!selectedPart) {
+                lotInput.value = "";
+                return;
+            }
+
+            // ค้นหาข้อมูล Plan ของ Part นี้ใน Line นี้
+            const planItem = globalData.find(i => i.line === selectedLine && i.planPartNo === selectedPart);
+            
+            // คำนวณยอดผลิตสะสมเดิมเพื่อเช็คว่า "จบ Lot แรก" แล้วหรือยัง
+            const actualItems = globalData.filter(i => i.line === selectedLine && i.actualPartNo === selectedPart);
+            let totalActualQty = 0;
+            actualItems.forEach(i => totalActualQty += (Number(i.actualQty) || 0));
+
+            const totalPlanQty = Number(planItem ? planItem.planQty : 0);
+
+            if (planItem && planItem.planLotNo) {
+                if (totalActualQty < totalPlanQty) {
+                    // ยังไม่จบ Lot แรก -> อ้างอิงจาก Plan และล็อกไม่ให้พิมพ์
+                    lotInput.value = planItem.planLotNo;
+                    lotInput.readOnly = true;
+                    noticeSpan.innerText = "(อ้างอิงจาก Plan อัตโนมัติ - ยังผลิตไม่ครบ Lot)";
+                    noticeSpan.className = "text-info small";
+                } else {
+                    // จบ Lot แรกแล้ว -> ปลดล็อกให้สามารถคีย์ Lot ใหม่ได้
+                    lotInput.value = planItem.planLotNo;
+                    lotInput.readOnly = false;
+                    noticeSpan.innerText = "(ผลิตครบ Lot แรกแล้ว - สามารถเปลี่ยน/คีย์ Lot ใหม่ได้)";
+                    noticeSpan.className = "text-warning small";
+                }
+            } else {
+                lotInput.value = "";
+                lotInput.readOnly = false;
+                noticeSpan.innerText = "";
             }
         }
 
@@ -886,6 +971,13 @@
 
         async function submitActual(e) {
             e.preventDefault();
+            
+            const selectedPart = document.getElementById('actualPartNo').value;
+            if (!selectedPart) {
+                alert('กรุณาเลือก Part No. ที่ต้องการบันทึก');
+                return;
+            }
+
             showLoading(true);
 
             const payload = {
@@ -893,7 +985,7 @@
                 data: {
                     line: document.getElementById('actualLine').value,
                     actualDate: document.getElementById('actualDate').value,
-                    actualPartNo: document.getElementById('actualPartNo').value,
+                    actualPartNo: selectedPart,
                     actualLotNo: document.getElementById('actualLotNo').value,
                     actualQty: document.getElementById('actualQty').value,
                     defectQty: document.getElementById('defectQty').value,
