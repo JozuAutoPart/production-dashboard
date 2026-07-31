@@ -114,86 +114,35 @@
             </div>
         </div>
 
-       <!-- Navigation Tabs -->
-<ul class="nav nav-pills nav-fill mb-4 card p-1 row" id="pills-tab" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" role="tab">
-            <i class="fa-solid fa-chart-line me-2"></i>Dashboard
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-material" data-bs-toggle="pill" data-bs-target="#content-material" type="button" role="tab">
-            <i class="fa-solid fa-truck-ramp-box me-2 text-primary"></i>รับ-จ่าย Material
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-planning" data-bs-toggle="pill" data-bs-target="#content-planning" type="button" role="tab">
-            <i class="fa-solid fa-pen-to-square me-2"></i>วางแผน (Planning)
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab" onclick="updateActualFormState()">
-            <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-qgate" data-bs-toggle="pill" data-bs-target="#content-qgate" type="button" role="tab">
-            <i class="fa-solid fa-clipboard-check me-2 text-success"></i>Q-Gate Inspection
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
-            <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-die" data-bs-toggle="pill" data-bs-target="#content-die" type="button" role="tab">
-            <i class="fa-solid fa-wrench me-2 text-warning"></i>Die PM & Die BM
-        </button>
-    </li>
-</ul>
-<!-- Material Receiving & Issuing Tab -->
-<div class="tab-pane fade" id="content-material" role="tabpanel">
-    <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-truck-ramp-box me-2"></i>บันทึกรับ-จ่าย Material (Material Control)</h5>
-        <form id="materialForm" onsubmit="submitMaterial(event)">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">ประเภทรายการ</label>
-                    <select id="matType" class="form-select" required>
-                        <option value="Receive">รับเข้า (Material Receive)</option>
-                        <option value="Issue">จ่ายออก (Material Issue)</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">วันที่ทำรายการ</label>
-                    <input type="date" id="matDate" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">Part No. / Material Code</label>
-                    <input type="text" id="matPartNo" class="form-control" placeholder="ระบุรหัสวัตถุดิบ หรือ Part No." required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">จำนวน (Qty)</label>
-                    <input type="number" id="matQty" class="form-control" value="0" min="1" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">Lot No.</label>
-                    <input type="text" id="matLotNo" class="form-control" placeholder="ระบุ Lot วัตถุดิบ">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">ผู้บันทึก / ผู้เบิก</label>
-                    <input type="text" id="matUser" class="form-control" placeholder="ชื่อผู้ทำรายการ" required>
-                </div>
-                <div class="col-12 mt-4">
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
-                        <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกข้อมูล Material
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills nav-fill mb-4 p-1 card flex-row" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" role="tab">
+                    <i class="fa-solid fa-chart-line me-2"></i>Dashboard
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-plan" data-bs-toggle="pill" data-bs-target="#content-plan" type="button" role="tab">
+                    <i class="fa-solid fa-pushpin me-2"></i>วางแผน (Planning)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab" onclick="updateActualFormState()">
+                    <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
+                    <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-die" data-bs-toggle="pill" data-bs-target="#content-die" type="button" role="tab">
+                    <i class="fa-solid fa-wrench me-2 text-warning"></i>Die PM & Die BM
+                </button>
+            </li>
+        </ul>
+
         <!-- Tab Contents -->
         <div class="tab-content" id="pills-tabContent">
             
@@ -408,67 +357,7 @@
                             </div>
                         </div>
                     </div>
-<!-- Q-Gate Inspection Tab -->
-<div class="tab-pane fade" id="content-qgate" role="tabpanel">
-    <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-4 text-success"><i class="fa-solid fa-clipboard-check me-2"></i>บันทึกผลตรวจสอบคุณภาพ Q-Gate Inspection</h5>
-        <form id="qgateForm" onsubmit="submitQGate(event)">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">สายการผลิต (Line)</label>
-                    <select id="qgateLine" class="form-select" required>
-                        <option value="Line A">Line A</option>
-                        <option value="Line Q">Line Q</option>
-                        <option value="Line C1">Line C1</option>
-                        <option value="Line C2">Line C2</option>
-                        <option value="Line C3">Line C3</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">วันที่ตรวจ (Inspection Date)</label>
-                    <input type="date" id="qgateDate" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">Part No.</label>
-                    <input type="text" id="qgatePartNo" class="form-control" placeholder="ระบุ Part No. ที่ตรวจสอบ" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small text-secondary">Lot No.</label>
-                    <input type="text" id="qgateLotNo" class="form-control" placeholder="ระบุ Lot No." required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label small text-secondary">จำนวนตรวจทั้งหมด (Checked Qty)</label>
-                    <input type="number" id="qgateChecked" class="form-control" value="0" min="1" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label small text-secondary">จำนวนผ่าน (Pass Qty)</label>
-                    <input type="number" id="qgatePass" class="form-control" value="0" min="0" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label small text-secondary">จำนวนไม่ผ่าน (NG Qty)</label>
-                    <input type="number" id="qgateNg" class="form-control" value="0" min="0" required>
-                </div>
-                <div class="col-12">
-                    <label class="form-label small text-secondary">ผลการตัดสิน (Judgment)</label>
-                    <select id="qgateStatus" class="form-select" required>
-                        <option value="Pass">ผ่าน (Accept)</option>
-                        <option value="Pending">รอ 3G/กักC/A (Pending)</option>
-                        <option value="Reject">ไม่ผ่าน (Reject)</option>
-                    </select>
-                </div>
-                <div class="col-12">
-                    <label class="form-label small text-secondary">ผู้ตรวจสอบ (Inspector Name)</label>
-                    <input type="text" id="qgateInspector" class="form-control" placeholder="ชื่อผู้ตรวจสอบคุณภาพ" required>
-                </div>
-                <div class="col-12 mt-4">
-                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
-                        <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกผล Q-Gate Inspection
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+
                     <!-- Die BM Record Form -->
                     <div class="col-lg-6">
                         <div class="card p-4">
@@ -597,7 +486,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwDf7ok3og8z0UQtZzExxApPiEnNCLB-GRKDpDcVYHS3l2yzzuqvoh8d7vOTOsgkncnQ/exec"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqV4mE6VLYdbFna04S-IkgnxDn7EGQU1TdjF0Z63cSbd51sDBHLxzHaMGw6LMpB1MU/exec"; 
         const ADMIN_PASSWORD = "1234";
 
         let globalData = [];
