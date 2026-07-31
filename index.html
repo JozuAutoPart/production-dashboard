@@ -347,7 +347,57 @@
                     </form>
                 </div>
             </div>
-
+<!-- หน้า Q-Gate Inspection -->
+<div class="tab-pane fade" id="content-qgate" role="tabpanel">
+    <div class="card p-4 mb-4 shadow-sm border-0">
+        <h5 class="fw-bold mb-4 text-success">
+            <i class="fa-solid fa-clipboard-check me-2"></i>ฟอร์มบันทึกผลการตรวจสอบคุณภาพ (Q-Gate Inspection)
+        </h5>
+        <form id="qgateForm" onsubmit="submitQGate(event)">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small text-secondary">สายการผลิต (Line)</label>
+                    <select id="qgateLine" class="form-select" required>
+                        <option value="Line A">Line A</option>
+                        <option value="Line Q">Line Q</option>
+                        <option value="Line C1">Line C1</option>
+                        <option value="Line C2">Line C2</option>
+                        <option value="Line C3">Line C3</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-secondary">วันที่ตรวจสอบ (Inspection Date)</label>
+                    <input type="date" id="qgateDate" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-secondary">Part No.</label>
+                    <input type="text" id="qgatePartNo" class="form-control" placeholder="ระบุ Part No." required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-secondary">Lot No.</label>
+                    <input type="text" id="qgateLotNo" class="form-control" placeholder="ระบุ Lot No.">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-secondary">จำนวนที่ตรวจสอบ (Check Qty)</label>
+                    <input type="number" id="qgateCheckQty" class="form-control" value="0" min="1" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-secondary">จำนวนของเสีย (Defect Qty)</label>
+                    <input type="number" id="qgateDefectQty" class="form-control" value="0" min="0" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small text-secondary">ผู้ตรวจสอบ (Inspector)</label>
+                    <input type="text" id="qgateInspector" class="form-control" placeholder="ชื่อผู้ตรวจสอบ" required>
+                </div>
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกผล Q-Gate Inspection
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
             <!-- Stock Tab -->
             <div class="tab-pane fade" id="content-stock" role="tabpanel">
                 <div class="row g-3 mb-4">
@@ -383,7 +433,7 @@
                     </div>
                 </div>
             </div>
-
+         
             <!-- Die PM & Die BM Tab -->
             <div class="tab-pane fade" id="content-die" role="tabpanel">
                 <div id="diePmAlertContainer" class="mb-4"></div>
