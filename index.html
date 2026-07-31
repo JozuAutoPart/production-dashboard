@@ -114,44 +114,44 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <ul class="nav nav-pills nav-fill mb-4 p-1 card flex-row" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" role="tab">
-                    <i class="fa-solid fa-chart-line me-2"></i>Dashboard
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-    <button class="nav-link" id="tab-material" data-bs-toggle="pill" data-bs-target="#content-material" type="button" role="tab">
-        <i class="fa-solid fa-truck-ramp-box me-2 text-primary"></i>รับ-จ่าย Material
-    </button>
-</li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-plan" data-bs-toggle="pill" data-bs-target="#content-plan" type="button" role="tab">
-                    <i class="fa-solid fa-pushpin me-2"></i>วางแผน (Planning)
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab" onclick="updateActualFormState()">
-                    <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-    <button class="nav-link" id="tab-qgate" data-bs-toggle="pill" data-bs-target="#content-qgate" type="button" role="tab">
-        <i class="fa-solid fa-clipboard-check me-2 text-success"></i>Q-Gate Inspection
-    </button>
-</li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
-                    <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-die" data-bs-toggle="pill" data-bs-target="#content-die" type="button" role="tab">
-                    <i class="fa-solid fa-wrench me-2 text-warning"></i>Die PM & Die BM
-                </button>
-            </li>
-        </ul>
+       <!-- Navigation Tabs -->
+<ul class="nav nav-pills nav-fill mb-4 card p-1 row" id="pills-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" role="tab">
+            <i class="fa-solid fa-chart-line me-2"></i>Dashboard
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-material" data-bs-toggle="pill" data-bs-target="#content-material" type="button" role="tab">
+            <i class="fa-solid fa-truck-ramp-box me-2 text-primary"></i>รับ-จ่าย Material
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-planning" data-bs-toggle="pill" data-bs-target="#content-planning" type="button" role="tab">
+            <i class="fa-solid fa-pen-to-square me-2"></i>วางแผน (Planning)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab" onclick="updateActualFormState()">
+            <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-qgate" data-bs-toggle="pill" data-bs-target="#content-qgate" type="button" role="tab">
+            <i class="fa-solid fa-clipboard-check me-2 text-success"></i>Q-Gate Inspection
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
+            <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-die" data-bs-toggle="pill" data-bs-target="#content-die" type="button" role="tab">
+            <i class="fa-solid fa-wrench me-2 text-warning"></i>Die PM & Die BM
+        </button>
+    </li>
+</ul>
 <!-- Material Receiving & Issuing Tab -->
 <div class="tab-pane fade" id="content-material" role="tabpanel">
     <div class="card p-4 mb-4">
