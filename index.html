@@ -114,34 +114,43 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <ul class="nav nav-pills nav-fill mb-4 p-1 card flex-row" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" role="tab">
-                    <i class="fa-solid fa-chart-line me-2"></i>Dashboard
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-plan" data-bs-toggle="pill" data-bs-target="#content-plan" type="button" role="tab">
-                    <i class="fa-solid fa-pushpin me-2"></i>วางแผน (Planning)
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab" onclick="updateActualFormState()">
-                    <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
-                    <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-die" data-bs-toggle="pill" data-bs-target="#content-die" type="button" role="tab">
-                    <i class="fa-solid fa-wrench me-2 text-warning"></i>Die PM & Die BM
-                </button>
-            </li>
-        </ul>
+       <ul class="nav nav-pills nav-fill mb-4 card p-1 row" id="pills-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" role="tab">
+            <i class="fa-solid fa-chart-line me-2"></i>Dashboard
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-material" data-bs-toggle="pill" data-bs-target="#content-material" type="button" role="tab">
+            <i class="fa-solid fa-truck-ramp-box me-2 text-primary"></i>รับ-จ่าย Material
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-planning" data-bs-toggle="pill" data-bs-target="#content-planning" type="button" role="tab">
+            <i class="fa-solid fa-pen-to-square me-2"></i>วางแผน (Planning)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-actual" data-bs-toggle="pill" data-bs-target="#content-actual" type="button" role="tab">
+            <i class="fa-solid fa-gear me-2"></i>บันทึกการผลิต (Actual)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-qgate" data-bs-toggle="pill" data-bs-target="#content-qgate" type="button" role="tab">
+            <i class="fa-solid fa-clipboard-check me-2 text-success"></i>Q-Gate Inspection
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-stock" data-bs-toggle="pill" data-bs-target="#content-stock" type="button" role="tab">
+            <i class="fa-solid fa-warehouse me-2"></i>Stock สะสม
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-die" data-bs-toggle="pill" data-bs-target="#content-die" type="button" role="tab">
+            <i class="fa-solid fa-wrench me-2 text-warning"></i>Die PM & Die BM
+        </button>
+    </li>
+</ul>
 
         <!-- Tab Contents -->
         <div class="tab-content" id="pills-tabContent">
@@ -165,7 +174,52 @@
                 </div>
                 <div id="lineDashboardContainer" class="row g-4"></div>
             </div>
-
+            
+             <!-- หน้ารับ-จ่าย Material (ตั้งเป็นหน้าแรก active) -->
+    <div class="tab-pane fade show active" id="content-material" role="tabpanel">
+        <div class="card p-4 mb-4 shadow-sm border-0">
+            <h5 class="fw-bold mb-4 text-primary">
+                <i class="fa-solid fa-truck-ramp-box me-2"></i>บันทึกรับ-จ่าย Material (Material Control)
+            </h5>
+            <form id="materialForm" onsubmit="submitMaterial(event)">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">ประเภทรายการ</label>
+                        <select id="matType" class="form-select" required>
+                            <option value="Receive">รับเข้า (Material Receive)</option>
+                            <option value="Issue">จ่ายออก (Material Issue)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">วันที่ทำรายการ</label>
+                        <input type="date" id="matDate" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Part No. / Material Code</label>
+                        <input type="text" id="matPartNo" class="form-control" placeholder="ระบุรหัสวัตถุดิบ หรือ Part No." required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">จำนวน (Qty)</label>
+                        <input type="number" id="matQty" class="form-control" value="0" min="1" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Lot No.</label>
+                        <input type="text" id="matLotNo" class="form-control" placeholder="ระบุ Lot วัตถุดิบ">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">ผู้บันทึก / ผู้เบิก</label>
+                        <input type="text" id="matUser" class="form-control" placeholder="ชื่อผู้ทำรายการ" required>
+                    </div>
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                            <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกข้อมูล Material
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+            
             <!-- Planning Tab -->
             <div class="tab-pane fade" id="content-plan" role="tabpanel">
                 <div class="card p-4">
@@ -1021,6 +1075,41 @@
             setDefaultDates();
             loadData();
         };
+        function submitMaterial(event) {
+            event.preventDefault();
+            
+            const data = {
+                matType: document.getElementById('matType').value,
+                matDate: document.getElementById('matDate').value,
+                matPartNo: document.getElementById('matPartNo').value,
+                matQty: Number(document.getElementById('matQty').value),
+                matLotNo: document.getElementById('matLotNo').value,
+                matUser: document.getElementById('matUser').value
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "addMaterialLog", data: data })
+            })
+            .then(() => {
+                alert('บันทึกข้อมูล Material สำเร็จ!');
+                document.getElementById('materialForm').reset();
+                document.getElementById('matDate').valueAsDate = new Date();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateInput = document.getElementById('matDate');
+            if(dateInput) {
+                dateInput.valueAsDate = new Date();
+            }
+        });
     </script>
 </body>
 </html>
