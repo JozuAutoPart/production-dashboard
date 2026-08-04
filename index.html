@@ -345,7 +345,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="9" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการ Set-Up ในระบบ</td>
+                            <td colspan="9" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -429,7 +429,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการตรวจสอบ QC ในระบบ</td>
+                            <td colspan="7" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -441,6 +441,9 @@
     <script>
         // URL Web App ของ Google Apps Script
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
+
+        let setupHistoryData = [];
+        let qcHistoryData = [];
 
         // ฟังก์ชันสลับหน้า Tab
         function openTab(evt, tabName) {
@@ -456,7 +459,7 @@
             evt.currentTarget.classList.add("active");
         }
 
-        // กำหนดค่าวันที่-เวลาปัจจุบันให้อัตโนมัติเมื่อเปิดหน้าเว็บ
+        // โหลดข้อมูลจาก Google Sheets ทันทีที่เปิดหน้าเว็บ
         window.addEventListener('DOMContentLoaded', (event) => {
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -465,10 +468,75 @@
             document.getElementById('setup_start').value = localIsoTime;
             document.getElementById('setup_end').value = localIsoTime;
             document.getElementById('qc_datetime').value = localIsoTime;
+
+            loadDataFromGoogleSheet();
         });
 
-        let setupHistoryData = [];
-        let qcHistoryData = [];
+        // ฟังก์ชันดึงข้อมูลจาก Google Sheets มาแสดงที่หน้าเว็บ
+        function loadDataFromGoogleSheet() {
+            fetch(SCRIPT_URL)
+            .then(response => response.json())
+            .then(data => {
+                setupHistoryData = [];
+                qcHistoryData = [];
+                
+                let setupCount = 0;
+                let passCount = 0;
+                let failCount = 0;
+
+                data.forEach((row, index) => {
+                    // สมมติโครงสร้างคอลัมน์จาก Sheet: 
+                    // [0] Timestamp, [1] Type, [2] Line, [3] Lot No, [4] Part No, [5] Process, [6] Machine No, [7] Air, [8] Cushion, [9] SPM, [10] Material, [11] DH, [12] Start Time, [13] End Time / Remark, [14] QC Result, [15] Inspector
+                    if(index === 0) return; // ข้าม Header แถวแรก
+
+                    const type = row[1];
+                    const record = {
+                        id: index,
+                        line: row[2] || '-',
+                        lot: row[3] || '-',
+                        part: row[4] || '-',
+                        process: row[5] || '-',
+                        machine: row[6] || '-',
+                        air: row[7] || '-',
+                        cushion: row[8] || '-',
+                        spm: row[9] || '-',
+                        material: row[10] || '-',
+                        dh: row[11] || '-',
+                        start: row[12] || '-',
+                        end: row[13] || '-',
+                        status: row[14] || '-',
+                        actual: row[5] ? row[5].replace('QC Check (', '').replace(')', '') : '-',
+                        remark: row[13] || '-',
+                        datetime: row[12] || '-',
+                        inspector: row[15] || '-'
+                    };
+
+                    if (type === 'Setup') {
+                        setupHistoryData.push(record);
+                        setupCount++;
+                    } else if (type === 'QC Pass') {
+                        qcHistoryData.push(record);
+                        passCount++;
+                    } else if (type === 'QC Not Pass') {
+                        qcHistoryData.push(record);
+                        failCount++;
+                    }
+                });
+
+                document.getElementById('stat-setup').innerText = setupCount;
+                document.getElementById('stat-pass').innerText = passCount;
+                document.getElementById('stat-fail').innerText = failCount;
+                updateDashboardStats();
+
+                renderSetupHistory();
+                renderQcHistory();
+            })
+            .catch(error => {
+                console.log('ไม่สามารถโหลดข้อมูลอัตโนมัติได้: ', error);
+                document.querySelector('#setupHistoryTable tbody').innerHTML = `<tr><td colspan="9" style="color: var(--danger-color); padding: 20px;">โหลดข้อมูลไม่สำเร็จ (ตรวจสอบสิทธิ์ Web App Deploy)</td></tr>`;
+                document.querySelector('#qcHistoryTable tbody').innerHTML = `<tr><td colspan="7" style="color: var(--danger-color); padding: 20px;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+            });
+        }
 
         function updateDashboardStats() {
             const setupVal = document.getElementById('stat-setup').innerText;
@@ -515,19 +583,7 @@
                 document.getElementById('setup-loading').style.display = 'none';
                 document.getElementById('btnSetupSubmit').disabled = false;
 
-                const newRecord = {
-                    id: Date.now(),
-                    ...formData
-                };
-
-                setupHistoryData.push(newRecord);
-                renderSetupHistory();
-
-                let setupCount = parseInt(document.getElementById('stat-setup').innerText);
-                document.getElementById('stat-setup').innerText = setupCount + 1;
-                updateDashboardStats();
-
-                alert('บันทึกข้อมูล Set-Up แม่พิมพ์ และส่งเข้า Google Sheets สำเร็จ!');
+                alert('บันทึกข้อมูล Set-Up แม่พิมพ์ สำเร็จ!');
                 document.getElementById('setupForm').reset();
                 
                 const now = new Date();
@@ -535,6 +591,9 @@
                 const localIsoTime = now.toISOString().slice(0,16);
                 document.getElementById('setup_start').value = localIsoTime;
                 document.getElementById('setup_end').value = localIsoTime;
+
+                // โหลดข้อมูลอัปเดตใหม่ทันที
+                loadDataFromGoogleSheet();
             })
             .catch(error => {
                 document.getElementById('setup-loading').style.display = 'none';
@@ -573,12 +632,6 @@
             if (confirm('คุณต้องการลบประวัติการ Set-Up นี้ใช่หรือไม่?')) {
                 setupHistoryData = setupHistoryData.filter(item => item.id !== id);
                 renderSetupHistory();
-
-                let setupCount = parseInt(document.getElementById('stat-setup').innerText);
-                if (setupCount > 0) {
-                    document.getElementById('stat-setup').innerText = setupCount - 1;
-                }
-                updateDashboardStats();
             }
         }
 
@@ -626,36 +679,15 @@
                 document.getElementById('qc-loading').style.display = 'none';
                 document.getElementById('btnQcSubmit').disabled = false;
 
-                const newQcRecord = {
-                    id: Date.now(),
-                    line: lineName,
-                    part: qcFormData.part,
-                    actual: document.getElementById('qc_actual_data').value,
-                    status: qcStatus,
-                    remark: qcFormData.end,
-                    datetime: qcFormData.start,
-                    inspector: inspectorName
-                };
-
-                qcHistoryData.push(newQcRecord);
-                renderQcHistory();
-
-                alert(`บันทึกผล QC Check (${lineName}) และส่งเข้า Google Sheets สำเร็จ!`);
-
-                if(qcStatus === 'QC Pass') {
-                    let passCount = parseInt(document.getElementById('stat-pass').innerText);
-                    document.getElementById('stat-pass').innerText = passCount + 1;
-                } else {
-                    let failCount = parseInt(document.getElementById('stat-fail').innerText);
-                    document.getElementById('stat-fail').innerText = failCount + 1;
-                }
-                updateDashboardStats();
-
+                alert(`บันทึกผล QC Check (${lineName}) สำเร็จ!`);
                 document.getElementById('qcForm').reset();
                 
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
                 document.getElementById('qc_datetime').value = now.toISOString().slice(0,16);
+
+                // โหลดข้อมูลอัปเดตใหม่ทันที
+                loadDataFromGoogleSheet();
             })
             .catch(error => {
                 document.getElementById('qc-loading').style.display = 'none';
@@ -691,37 +723,17 @@
 
         function deleteQcRecord(id) {
             if (confirm('คุณต้องการลบประวัติ QC นี้ใช่หรือไม่?')) {
-                const target = qcHistoryData.find(item => item.id === id);
-                if (target) {
-                    if (target.status === 'QC Pass') {
-                        let passCount = parseInt(document.getElementById('stat-pass').innerText);
-                        if (passCount > 0) document.getElementById('stat-pass').innerText = passCount - 1;
-                    } else {
-                        let failCount = parseInt(document.getElementById('stat-fail').innerText);
-                        if (failCount > 0) document.getElementById('stat-fail').innerText = failCount - 1;
-                    }
-                }
                 qcHistoryData = qcHistoryData.filter(item => item.id !== id);
                 renderQcHistory();
-                updateDashboardStats();
             }
         }
 
-        // ฟังก์ชัน Export Excel รองรับการตัดคอลัมน์ปุ่มจัดการออก
+        // ฟังก์ชัน Export Excel
         function exportTableToExcel(tableID, filename = '', actionColumnIndex = -1) {
             let downloadLink;
             let dataType = 'application/vnd.ms-excel;charset=utf-8;';
             let tableSelect = document.getElementById(tableID);
             
-            if(setupHistoryData.length === 0 && tableID === 'setupHistoryTable') {
-                alert('ยังไม่มีข้อมูลประวัติ Set-Up สำหรับการ Export เป็นไฟล์ Excel');
-                return;
-            }
-            if(qcHistoryData.length === 0 && tableID === 'qcHistoryTable') {
-                alert('ยังไม่มีข้อมูลประวัติ QC สำหรับการ Export เป็นไฟล์ Excel');
-                return;
-            }
-
             let cloneTable = tableSelect.cloneNode(true);
             let rows = cloneTable.rows;
             for (let i = 0; i < rows.length; i++) {
