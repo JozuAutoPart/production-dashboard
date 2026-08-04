@@ -13,7 +13,7 @@
         .navbar button.active { background-color: #3498db; }
 
         /* Container */
-        .container { max-width: 900px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -77,10 +77,20 @@
 
         <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
         <div id="tab2" class="tab-content">
-            <h2>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & ประวัติการทำงาน</h2>
+            <h2>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition เครื่องจักร</h2>
             <form id="setupForm">
                 
                 <h3>1. ข้อมูลการผลิต</h3>
+                <div class="form-group">
+                    <label>เลือก Line การผลิต:</label>
+                    <select id="production_line" required>
+                        <option value="" disabled selected>-- เลือก Line --</option>
+                        <option value="Line A">Line A</option>
+                        <option value="Line Q">Line Q</option>
+                        <option value="Line C1">Line C1</option>
+                        <option value="Line C2">Line C2</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Lot No.:</label>
                     <input type="text" id="lot_no" placeholder="เช่น LOT-2026-0804" required>
@@ -143,6 +153,7 @@
                 <table class="history-table" id="setupHistoryTable">
                     <thead>
                         <tr>
+                            <th>Line</th>
                             <th>Lot No.</th>
                             <th>Part No.</th>
                             <th>M/C No.</th>
@@ -155,7 +166,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="8" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td>
+                            <td colspan="9" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td>
                         </tr>
                     </tbody>
                 </table>
@@ -170,6 +181,16 @@
             <form id="qcForm">
                 
                 <h3>1. ข้อมูลชิ้นงานที่ตรวจสอบ</h3>
+                <div class="form-group">
+                    <label>เลือก Line การผลิต:</label>
+                    <select id="qc_production_line" required>
+                        <option value="" disabled selected>-- เลือก Line --</option>
+                        <option value="Line A">Line A</option>
+                        <option value="Line Q">Line Q</option>
+                        <option value="Line C1">Line C1</option>
+                        <option value="Line C2">Line C2</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Part No.:</label>
                     <input type="text" id="qc_part_no" placeholder="เช่น P-AB1234-5" required>
@@ -246,6 +267,7 @@
             
             const newRecord = {
                 id: Date.now(),
+                line: document.getElementById('production_line').value,
                 lot: document.getElementById('lot_no').value,
                 part: document.getElementById('part_no').value,
                 process: document.getElementById('process_name').value,
@@ -283,13 +305,14 @@
             tbody.innerHTML = '';
 
             if (setupHistoryData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td></tr>`;
                 return;
             }
 
             setupHistoryData.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td><b>${item.line}</b></td>
                     <td>${item.lot}</td>
                     <td>${item.part}</td>
                     <td><b>${item.machine}</b></td>
@@ -322,12 +345,14 @@
             e.preventDefault();
             
             const qcStatus = document.getElementById('qc_command_status').value;
+            const lineName = document.getElementById('qc_production_line').value;
+            
             if(!qcStatus) {
                 alert('กรุณาเลือกคำสั่ง QC Pass หรือ QC Not Pass');
                 return;
             }
 
-            alert('บันทึกผล QC Check สำเร็จเรียบร้อย!');
+            alert(`บันทึกผล QC Check (${lineName}) สำเร็จเรียบร้อย!`);
 
             // อัปเดตสถิติใน Dashboard ตามผลลัพธ์
             if(qcStatus === 'QC Pass') {
