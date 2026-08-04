@@ -2,89 +2,191 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Mold Setup & QC to Google Sheets</title>
+    <title>Mold Setup & QC Management System</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 600px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: auto; }
-        h2 { color: #333; text-align: center; }
-        .form-group { margin-bottom: 12px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        /* Navigation Tabs */
+        .navbar { background-color: #2c3e50; overflow: hidden; display: flex; justify-content: center; padding: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .navbar button { background-color: inherit; color: white; float: left; border: none; outline: none; cursor: pointer; padding: 14px 25px; font-size: 16px; transition: 0.3s; border-radius: 4px; margin: 0 5px; font-weight: bold; }
+        .navbar button:hover { background-color: #34495e; }
+        .navbar button.active { background-color: #3498db; }
+
+        /* Container */
+        .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 15px; }
-        button:hover { background-color: #218838; }
-        #loading { display: none; text-align: center; color: #007bff; font-weight: bold; margin-top: 10px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        
+        .btn-submit { background-color: #27ae60; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .btn-submit:hover { background-color: #219653; }
+        
+        /* Dashboard Cards */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        .card { background: #ecf0f1; padding: 20px; border-radius: 6px; text-align: center; border-left: 5px solid #3498db; }
+        .card h3 { margin: 0; font-size: 24px; color: #2c3e50; }
+        .card p { margin: 5px 0 0; color: #7f8c8d; font-size: 14px; }
+        
+        #loading { display: none; text-align: center; color: #2980b9; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>ระบบ Set-Up & QC บันทึกเข้า Google Sheets</h2>
-    
-    <form id="moldForm">
-        <div class="form-group">
-            <label>รหัสเครื่องจักร (Machine Code):</label>
-            <input type="text" id="machine_code" value="MC-01" required>
-        </div>
-        <div class="form-group">
-            <label>รหัสแม่พิมพ์ (Mold Code):</label>
-            <input type="text" id="mold_code" value="MLD-2026-001" required>
-        </div>
-        <div class="form-group">
-            <label>ค่าพารามิเตอร์ติดตั้งจริง:</label>
-            <input type="number" id="actual_param" placeholder="ระบุค่าที่ตั้งจริง" required>
-        </div>
-        <div class="form-group">
-            <label>ผลการตรวจสอบ QC (First Article Inspection):</label>
-            <select id="qc_result">
-                <option value="PASS">PASS (ผ่าน - อนุญาตผลิต)</option>
-                <option value="FAIL">FAIL (ไม่ผ่าน - ต้องแก้ไข)</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>หมายเหตุ / ข้อเสนอแนะ:</label>
-            <input type="text" id="qc_remark" placeholder="เช่น ขนาดปกติ ไม่มีรอย">
-        </div>
+    <!-- เมนูด้านบนสำหรับสลับหน้าจอ -->
+    <div class="navbar">
+        <button class="tab-btn active" onclick="openTab(event, 'tab1')">1. Dashboard (ภาพรวม)</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab2')">2. Set-Up Die & Condition</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab3')">3. QC Check (ตรวจสอบ)</button>
+    </div>
+
+    <div class="container">
         
-        <button type="submit">บันทึกข้อมูลลง Google Sheet</button>
-        <div id="loading">กำลังบันทึกข้อมูล... กรุณารอสักครู่</div>
-    </form>
-</div>
+        <!-- หน้าที่ 1: Dashboard -->
+        <div id="tab1" class="tab-content active">
+            <h2>📊 Dashboard ภาพรวมระบบ Set-Up & QC</h2>
+            <p>สรุปสถานะการทำงานภายในโรงงานแบบเรียลไทม์</p>
+            <div class="dashboard-grid">
+                <div class="card" style="border-left-color: #f39c12;">
+                    <h3 id="stat-setup">0</h3>
+                    <p>กำลัง Set-Up</p>
+                </div>
+                <div class="card" style="border-left-color: #27ae60;">
+                    <h3 id="stat-pass">0</h3>
+                    <p>QC ผ่าน (พร้อมผลิต)</p>
+                </div>
+                <div class="card" style="border-left-color: #c0392b;">
+                    <h3 id="stat-fail">0</h3>
+                    <p>QC ไม่ผ่าน (รอแก้)</p>
+                </div>
+            </div>
+        </div>
 
-<script>
-    // ⚠️ นำ Web App URL ที่ได้จากการ Deploy Google Apps Script มาใส่ตรงนี้
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec';
+        <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
+        <div id="tab2" class="tab-content">
+            <h2>⚙️ บันทึกการ Set-Up แม่พิมพ์ & ค่า Condition เครื่องจักร</h2>
+            <form id="setupForm">
+                <div class="form-group">
+                    <label>รหัสเครื่องจักร (Machine Code):</label>
+                    <input type="text" id="machine_code" placeholder="เช่น MC-01" required>
+                </div>
+                <div class="form-group">
+                    <label>รหัสแม่พิมพ์ (Mold Code / Die):</label>
+                    <input type="text" id="mold_code" placeholder="เช่น MLD-2026-001" required>
+                </div>
+                <div class="form-group">
+                    <label>Condition: แรงหนีบแม่พิมพ์ (Clamping Force - Ton):</label>
+                    <input type="number" id="param_clamp" placeholder="เช่น 150" required>
+                </div>
+                <div class="form-group">
+                    <label>Condition: อุณหภูมิห้องหลอม / ฮีตเตอร์ (°C):</label>
+                    <input type="number" id="param_temp" placeholder="เช่น 220" required>
+                </div>
+                <button type="submit" class="btn-submit">บันทึกข้อมูล Set-Up</button>
+                <div id="loading">กำลังส่งข้อมูล...</div>
+            </form>
+        </div>
 
-    document.getElementById('moldForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        document.getElementById('loading').style.display = 'block';
+        <!-- หน้าที่ 3: QC Check -->
+        <div id="tab3" class="tab-content">
+            <h2>🔍 QC Check (ตรวจสอบชิ้นงานแรก / First Article)</h2>
+            <form id="qcForm">
+                <div class="form-group">
+                    <label>เลือกเครื่องจักรที่ต้องการตรวจสอบ:</label>
+                    <input type="text" id="qc_machine" placeholder="เช่น MC-01" required>
+                </div>
+                <div class="form-group">
+                    <label>ผลการตรวจสอบคุณภาพชิ้นงาน:</label>
+                    <select id="qc_result">
+                        <option value="PASS">PASS (ผ่าน - อนุญาตเดินเครื่องผลิต)</option>
+                        <option value="FAIL">FAIL (ไม่ผ่าน - ต้องปรับปรุง Set-Up ใหม่)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>หมายเหตุ / ข้อบกพร่องที่พบ (ถ้ามี):</label>
+                    <input type="text" id="qc_remark" placeholder="เช่น ขนาดความหนาได้มาตรฐาน, มีรอยแฟลช">
+                </div>
+                <button type="submit" class="btn-submit" style="background-color: #2980b9;">ยืนยันผลการตรวจสอบ QC</button>
+            </form>
+        </div>
 
-        const data = {
-            machine_code: document.getElementById('machine_code').value,
-            mold_code: document.getElementById('mold_code').value,
-            actual_param: document.getElementById('actual_param').value,
-            qc_result: document.getElementById('qc_result').value,
-            qc_remark: document.getElementById('qc_remark').value
-        };
+    </div>
 
-        try {
-            const response = await fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors', // สำคัญมากสำหรับการยิงข้ามโด메นไป Google Script
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            document.getElementById('loading').style.display = 'none';
-            alert('บันทึกข้อมูลลง Google Sheet สำเร็จเรียบร้อย!');
-            document.getElementById('moldForm').reset();
-            
-        } catch (error) {
-            document.getElementById('loading').style.display = 'none';
-            alert('เกิดข้อผิดพลาดในการบันทึก: ' + error);
+    <script>
+        // ฟังก์ชันสลับหน้า Tab
+        function openTab(evt, tabName) {
+            let contents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < contents.length; i++) {
+                contents[i].classList.remove("active");
+            }
+            let btns = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < btns.length; i++) {
+                btns[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
         }
-    });
-</script>
+
+        // URL Google Apps Script (นำมาใส่แทนที่ข้อความด้านล่างเมื่อเชื่อมต่อ Google Sheets)
+        const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+
+        // บันทึกข้อมูล Set-Up (Tab 2)
+        document.getElementById('setupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            document.getElementById('loading').style.display = 'block';
+
+            const payload = {
+                action: "setup",
+                machine_code: document.getElementById('machine_code').value,
+                mold_code: document.getElementById('mold_code').value,
+                param_clamp: document.getElementById('param_clamp').value,
+                param_temp: document.getElementById('param_temp').value
+            };
+
+            try {
+                // จำลองการส่งข้อมูล (หากต่อ Google Sheet ให้เอา comment ออก)
+                /*
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                */
+                document.getElementById('loading').style.display = 'none';
+                alert('บันทึกข้อมูล Set-Up และ Condition เรียบร้อย!');
+                document.getElementById('setupForm').reset();
+                
+                // อัปเดตตัวเลขใน Dashboard (จำลอง)
+                let currentSetup = parseInt(document.getElementById('stat-setup').innerText);
+                document.getElementById('stat-setup').innerText = currentSetup + 1;
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                alert('เกิดข้อผิดพลาด: ' + error);
+            }
+        });
+
+        // บันทึกผล QC (Tab 3)
+        document.getElementById('qcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const result = document.getElementById('qc_result').value;
+            
+            alert('บันทึกผล QC สำเร็จ: ' + result);
+            document.getElementById('qcForm').reset();
+
+            // อัปเดตตัวเลขใน Dashboard ตามผล QC (จำลอง)
+            if(result === 'PASS') {
+                let passCount = parseInt(document.getElementById('stat-pass').innerText);
+                document.getElementById('stat-pass').innerText = passCount + 1;
+            } else {
+                let failCount = parseInt(document.getElementById('stat-fail').innerText);
+                document.getElementById('stat-fail').innerText = failCount + 1;
+            }
+        });
+    </script>
 
 </body>
 </html>
