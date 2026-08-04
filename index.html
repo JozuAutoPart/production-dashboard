@@ -249,7 +249,7 @@
         <div id="tab2" class="tab-content">
             <h2>
                 <span>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition</span>
-                <button class="btn-export" onclick="exportTableToExcel('setupHistoryTable', 'Setup_History_Report.xls')">📥 Export Excel</button>
+                <button class="btn-export" onclick="exportTableToExcel('setupHistoryTable', 'Setup_History_Report.xls', 8)">📥 Export Excel</button>
             </h2>
             
             <form id="setupForm">
@@ -354,7 +354,10 @@
 
         <!-- หน้าที่ 3: QC Check -->
         <div id="tab3" class="tab-content">
-            <h2>🔍 หน้าที่ 3: QC Check (ตรวจสอบชิ้นงานแรก / First Article)</h2>
+            <h2>
+                <span>🔍 หน้าที่ 3: QC Check (ตรวจสอบชิ้นงานแรก / First Article)</span>
+                <button class="btn-export" onclick="exportTableToExcel('qcHistoryTable', 'QC_History_Report.xls', 6)">📥 Export Excel</button>
+            </h2>
             <p style="color: #7f8c8d; font-size: 14px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิตจริง</p>
             
             <form id="qcForm">
@@ -409,12 +412,34 @@
                 <button type="submit" class="btn-submit" id="btnQcSubmit" style="background-color: var(--secondary-color);">บันทึกผล QC Check</button>
                 <div id="qc-loading" class="loading">กำลังส่งผล QC ไปยัง Google Sheets...</div>
             </form>
+
+            <h3 style="margin-top: 35px;">📋 ตารางประวัติการตรวจสอบ QC</h3>
+            <div class="table-container">
+                <table class="history-table" id="qcHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Line</th>
+                            <th>Part No.</th>
+                            <th>ผลการตรวจ (Actual Data)</th>
+                            <th>ผลลัพธ์ (QC Status)</th>
+                            <th>หมายเหตุ NG / เวลา</th>
+                            <th>ผู้ตรวจ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการตรวจสอบ QC ในระบบ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
 
     <script>
-        // URL Web App ของ Google Apps Script ที่คุณให้มา
+        // URL Web App ของ Google Apps Script
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
 
         // ฟังก์ชันสลับหน้า Tab
@@ -443,6 +468,7 @@
         });
 
         let setupHistoryData = [];
+        let qcHistoryData = [];
 
         function updateDashboardStats() {
             const setupVal = document.getElementById('stat-setup').innerText;
@@ -582,7 +608,7 @@
                 material: "-",
                 dh: "-",
                 start: document.getElementById('qc_datetime').value.replace('T', ' '),
-                end: document.getElementById('qc_ng_remark').value, // เก็บช่องหมายเหตุ NG ในคอลัมน์ End Time
+                end: document.getElementById('qc_ng_remark').value,
                 qc_result: qcStatus,
                 inspector: inspectorName
             };
@@ -599,6 +625,20 @@
             .then(() => {
                 document.getElementById('qc-loading').style.display = 'none';
                 document.getElementById('btnQcSubmit').disabled = false;
+
+                const newQcRecord = {
+                    id: Date.now(),
+                    line: lineName,
+                    part: qcFormData.part,
+                    actual: document.getElementById('qc_actual_data').value,
+                    status: qcStatus,
+                    remark: qcFormData.end,
+                    datetime: qcFormData.start,
+                    inspector: inspectorName
+                };
+
+                qcHistoryData.push(newQcRecord);
+                renderQcHistory();
 
                 alert(`บันทึกผล QC Check (${lineName}) และส่งเข้า Google Sheets สำเร็จ!`);
 
@@ -624,22 +664,69 @@
             });
         });
 
-        // ฟังก์ชัน Export Excel
-        function exportTableToExcel(tableID, filename = '') {
+        function renderQcHistory() {
+            const tbody = document.querySelector('#qcHistoryTable tbody');
+            tbody.innerHTML = '';
+
+            if (qcHistoryData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการตรวจสอบ QC ในระบบ</td></tr>`;
+                return;
+            }
+
+            qcHistoryData.forEach((item) => {
+                const tr = document.createElement('tr');
+                const statusColor = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
+                tr.innerHTML = `
+                    <td><b>${item.line}</b></td>
+                    <td>${item.part}</td>
+                    <td>${item.actual}</td>
+                    <td style="${statusColor}">${item.status}</td>
+                    <td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td>
+                    <td>${item.inspector}</td>
+                    <td><button class="btn-delete" onclick="deleteQcRecord(${item.id})">ลบ</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteQcRecord(id) {
+            if (confirm('คุณต้องการลบประวัติ QC นี้ใช่หรือไม่?')) {
+                const target = qcHistoryData.find(item => item.id === id);
+                if (target) {
+                    if (target.status === 'QC Pass') {
+                        let passCount = parseInt(document.getElementById('stat-pass').innerText);
+                        if (passCount > 0) document.getElementById('stat-pass').innerText = passCount - 1;
+                    } else {
+                        let failCount = parseInt(document.getElementById('stat-fail').innerText);
+                        if (failCount > 0) document.getElementById('stat-fail').innerText = failCount - 1;
+                    }
+                }
+                qcHistoryData = qcHistoryData.filter(item => item.id !== id);
+                renderQcHistory();
+                updateDashboardStats();
+            }
+        }
+
+        // ฟังก์ชัน Export Excel รองรับการตัดคอลัมน์ปุ่มจัดการออก
+        function exportTableToExcel(tableID, filename = '', actionColumnIndex = -1) {
             let downloadLink;
             let dataType = 'application/vnd.ms-excel;charset=utf-8;';
             let tableSelect = document.getElementById(tableID);
             
             if(setupHistoryData.length === 0 && tableID === 'setupHistoryTable') {
-                alert('ยังไม่มีข้อมูลประวัติสำหรับการ Export เป็นไฟล์ Excel');
+                alert('ยังไม่มีข้อมูลประวัติ Set-Up สำหรับการ Export เป็นไฟล์ Excel');
+                return;
+            }
+            if(qcHistoryData.length === 0 && tableID === 'qcHistoryTable') {
+                alert('ยังไม่มีข้อมูลประวัติ QC สำหรับการ Export เป็นไฟล์ Excel');
                 return;
             }
 
             let cloneTable = tableSelect.cloneNode(true);
             let rows = cloneTable.rows;
             for (let i = 0; i < rows.length; i++) {
-                if(rows[i].cells.length > 8) {
-                    rows[i].deleteCell(8);
+                if(actionColumnIndex !== -1 && rows[i].cells.length > actionColumnIndex) {
+                    rows[i].deleteCell(actionColumnIndex);
                 }
             }
 
@@ -660,7 +747,7 @@
         }
 
         function exportDashboardToExcel() {
-            exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary_Report.xls');
+            exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary_Report.xls', -1);
         }
     </script>
 
