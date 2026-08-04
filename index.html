@@ -2,109 +2,88 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Mold Setup & QC Verification</title>
+    <title>Mold Setup & QC to Google Sheets</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 650px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: auto; }
-        h2, h3 { color: #333; text-align: center; }
-        .step-box { display: none; margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; }
-        .active-step { display: block; }
+        .container { max-width: 600px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: auto; }
+        h2 { color: #333; text-align: center; }
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; }
-        button:hover { background-color: #0056b3; }
-        .btn-success { background-color: #28a745; }
-        .btn-success:hover { background-color: #218838; }
-        .status-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; display: inline-block; }
-        .pass { background: #d4edda; color: #155724; }
-        .fail { background: #f8d7da; color: #721c24; }
+        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 15px; }
+        button:hover { background-color: #218838; }
+        #loading { display: none; text-align: center; color: #007bff; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>ระบบจัดการ Set-Up แม่พิมพ์ & QC Check</h2>
-    <hr>
-
-    <!-- STEP 1: บันทึกการ Set-Up -->
-    <div id="step1" class="step-box active-step">
-        <h3>Step 1: บันทึกข้อมูลการ Set-Up</h3>
+    <h2>ระบบ Set-Up & QC บันทึกเข้า Google Sheets</h2>
+    
+    <form id="moldForm">
         <div class="form-group">
-            <label>รหัสเครื่องจักร (Machine):</label>
-            <input type="text" id="machine_code" value="MC-01">
+            <label>รหัสเครื่องจักร (Machine Code):</label>
+            <input type="text" id="machine_code" value="MC-01" required>
         </div>
         <div class="form-group">
             <label>รหัสแม่พิมพ์ (Mold Code):</label>
-            <input type="text" id="mold_code" value="MLD-2026-001">
+            <input type="text" id="mold_code" value="MLD-2026-001" required>
         </div>
         <div class="form-group">
-            <label>ค่าพารามิเตอร์ติดตั้งจริง (เช่น แรงหนีบ/อุณหภูมิ):</label>
-            <input type="number" id="actual_param" placeholder="ระบุค่าที่ตั้งจริง">
+            <label>ค่าพารามิเตอร์ติดตั้งจริง:</label>
+            <input type="number" id="actual_param" placeholder="ระบุค่าที่ตั้งจริง" required>
         </div>
-        <button onclick="submitSetup()">บันทึก Set-Up และส่งตรวจสอบ QC</button>
-    </div>
-
-    <!-- STEP 2: ฝั่ง QC ตรวจสอบ (QC Check) -->
-    <div id="step2" class="step-box">
-        <h3>Step 2: ผลการตรวจสอบจาก QC (QC Inspection)</h3>
-        <p><strong>สถานะปัจจุบัน:</strong> <span id="setupStatus" class="status-badge">รอการตรวจสอบ</span></p>
-        
         <div class="form-group">
-            <label>ผลการตรวจสอบชิ้นงานแรก (First Article Inspection):</label>
+            <label>ผลการตรวจสอบ QC (First Article Inspection):</label>
             <select id="qc_result">
-                <option value="PASS">ผ่าน (PASS) - อนุญาตให้ผลิต</option>
-                <option value="FAIL">ไม่ผ่าน (FAIL) - ต้องปรับปรุงค่า Set-Up ใหม่</option>
+                <option value="PASS">PASS (ผ่าน - อนุญาตผลิต)</option>
+                <option value="FAIL">FAIL (ไม่ผ่าน - ต้องแก้ไข)</option>
             </select>
         </div>
         <div class="form-group">
-            <label>หมายเหตุ / ข้อเสนอแนะจาก QC:</label>
-            <input type="text" id="qc_remark" placeholder="เช่น ขนาดรูปร่างได้ตามมาตรฐาน">
+            <label>หมายเหตุ / ข้อเสนอแนะ:</label>
+            <input type="text" id="qc_remark" placeholder="เช่น ขนาดปกติ ไม่มีรอย">
         </div>
-        <button class="btn-success" onclick="submitQC()">ยืนยันผล QC</button>
-    </div>
-
-    <!-- STEP 3: เสร็จสิ้น -->
-    <div id="step3" class="step-box">
-        <h3>Step 3: สรุปผลสถานะการทำงาน</h3>
-        <div id="finalResult" style="text-align: center; font-size: 18px; font-weight: bold; padding: 20px;"></div>
-    </div>
+        
+        <button type="submit">บันทึกข้อมูลลง Google Sheet</button>
+        <div id="loading">กำลังบันทึกข้อมูล... กรุณารอสักครู่</div>
+    </form>
 </div>
 
 <script>
-    let currentData = {};
+    // ⚠️ นำ Web App URL ที่ได้จากการ Deploy Google Apps Script มาใส่ตรงนี้
+    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
 
-    function submitSetup() {
-        currentData.machine = document.getElementById('machine_code').value;
-        currentData.mold = document.getElementById('mold_code').value;
-        currentData.param = document.getElementById('actual_param').value;
+    document.getElementById('moldForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        document.getElementById('loading').style.display = 'block';
 
-        if(!currentData.param) {
-            alert('กรุณากรอกค่าพารามิเตอร์ให้ครบถ้วน');
-            return;
+        const data = {
+            machine_code: document.getElementById('machine_code').value,
+            mold_code: document.getElementById('mold_code').value,
+            actual_param: document.getElementById('actual_param').value,
+            qc_result: document.getElementById('qc_result').value,
+            qc_remark: document.getElementById('qc_remark').value
+        };
+
+        try {
+            const response = await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors', // สำคัญมากสำหรับการยิงข้ามโด메นไป Google Script
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            alert('บันทึกข้อมูลลง Google Sheet สำเร็จเรียบร้อย!');
+            document.getElementById('moldForm').reset();
+            
+        } catch (error) {
+            document.getElementById('loading').style.display = 'none';
+            alert('เกิดข้อผิดพลาดในการบันทึก: ' + error);
         }
-
-        // เปลี่ยนหน้าไปส่วนของ QC Check
-        document.getElementById('step1').classList.remove('active-step');
-        document.getElementById('step2').classList.add('active-step');
-        document.getElementById('setupStatus').innerText = "รอ QC ตรวจสอบ";
-        document.getElementById('setupStatus').className = "status-badge";
-    }
-
-    function submitQC() {
-        const qcDecision = document.getElementById('qc_result').value;
-        const remark = document.getElementById('qc_remark').value;
-
-        document.getElementById('step2').classList.remove('active-step');
-        document.getElementById('step3').classList.add('active-step');
-
-        const finalDiv = document.getElementById('finalResult');
-        if(qcDecision === 'PASS') {
-            finalDiv.innerHTML = `<span style="color: green;">✔ QC ผ่าน (PASS)<br>เครื่องจักร ${currentData.machine} สามารถเริ่มเดินเครื่องผลิตได้ทันที!</span>`;
-        } else {
-            finalDiv.innerHTML = `<span style="color: red;">✖ QC ไม่ผ่าน (FAIL)<br>กรุณากลับไปแก้ไข Set-Up แม่พิมพ์ใหม่ (${remark})</span>`;
-        }
-    }
+    });
 </script>
 
 </body>
