@@ -64,31 +64,69 @@
             </div>
         </div>
 
-        <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
+       <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
         <div id="tab2" class="tab-content">
-            <h2>⚙️ บันทึกการ Set-Up แม่พิมพ์ & ค่า Condition เครื่องจักร</h2>
+            <h2>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition เครื่องจักร</h2>
             <form id="setupForm">
+                
+                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">1. ข้อมูลการผลิต</h3>
                 <div class="form-group">
-                    <label>รหัสเครื่องจักร (Machine Code):</label>
-                    <input type="text" id="machine_code" placeholder="เช่น MC-01" required>
+                    <label>Lot No.:</label>
+                    <input type="text" id="lot_no" placeholder="เช่น LOT-2026-0804" required>
                 </div>
                 <div class="form-group">
-                    <label>รหัสแม่พิมพ์ (Mold Code / Die):</label>
-                    <input type="text" id="mold_code" placeholder="เช่น MLD-2026-001" required>
+                    <label>Part No.:</label>
+                    <input type="text" id="part_no" placeholder="เช่น P-AB1234-5" required>
                 </div>
                 <div class="form-group">
-                    <label>Condition: แรงหนีบแม่พิมพ์ (Clamping Force - Ton):</label>
-                    <input type="number" id="param_clamp" placeholder="เช่น 150" required>
+                    <label>Process (ขั้นตอนการผลิต):</label>
+                    <input type="text" id="process_name" placeholder="เช่น Bending / Blanking / Press" required>
                 </div>
                 <div class="form-group">
-                    <label>Condition: อุณหภูมิห้องหลอม / ฮีตเตอร์ (°C):</label>
-                    <input type="number" id="param_temp" placeholder="เช่น 220" required>
+                    <label>M/C No. (หมายเลขเครื่องจักร):</label>
+                    <input type="text" id="machine_no" placeholder="เช่น MC-01" required>
                 </div>
+
+                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
+                <div class="form-group">
+                    <label>1. Air Pressure (แรงดันลม):</label>
+                    <input type="text" id="cond_air" placeholder="เช่น 5.5 bar" required>
+                </div>
+                <div class="form-group">
+                    <label>2. Cushion Pressure (แรงดันหมอนรอง/เบาะ):</label>
+                    <input type="text" id="cond_cushion" placeholder="เช่น 30 ton" required>
+                </div>
+                <div class="form-group">
+                    <label>3. Stroke (SPM - ความเร็วรอบ/นาที):</label>
+                    <input type="number" id="cond_spm" placeholder="เช่น 45" required>
+                </div>
+
+                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">3. วัสดุ และ แม่พิมพ์</h3>
+                <div class="form-group">
+                    <label>Material (ขนาดวัตถุดิบ / ความหนา x หน้ากว้าง):</label>
+                    <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm x 150 mm" required>
+                </div>
+                <div class="form-group">
+                    <label>แม่พิมพ์ - DH (Die Height / ความสูงแม่พิมพ์):</label>
+                    <input type="text" id="mold_dh" placeholder="เช่น 350 mm" required>
+                </div>
+
+                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">4. เวลาในการติดตั้งแม่พิมพ์</h3>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>เวลาเริ่มต้น (Start Time):</label>
+                        <input type="datetime-local" id="setup_start" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>เวลาสิ้นสุด (End Time):</label>
+                        <input type="datetime-local" id="setup_end" required>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-submit">บันทึกข้อมูล Set-Up</button>
-                <div id="loading">กำลังส่งข้อมูล...</div>
+                <div id="loading" style="display:none; text-align:center; color:#2980b9; font-weight:bold; margin-top:10px;">กำลังส่งข้อมูล...</div>
             </form>
         </div>
-
         <!-- หน้าที่ 3: QC Check -->
         <div id="tab3" class="tab-content">
             <h2>🔍 QC Check (ตรวจสอบชิ้นงานแรก / First Article)</h2>
