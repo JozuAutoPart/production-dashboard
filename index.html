@@ -123,41 +123,6 @@
             box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
         }
         
-        /* QC Checkbox Grid / Table */
-        .qc-checklist-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-        .qc-checklist-table th, .qc-checklist-table td {
-            border: 1px solid #dfe6e9;
-            padding: 10px;
-            text-align: center;
-        }
-        .qc-checklist-table th {
-            background-color: #f8f9fa;
-            color: var(--primary-color);
-        }
-        .qc-checklist-table td:first-child {
-            text-align: left;
-            font-weight: 500;
-        }
-        .radio-group {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            align-items: center;
-        }
-        .radio-group label {
-            font-weight: normal;
-            cursor: pointer;
-            margin-bottom: 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
         /* Action Buttons */
         .btn-submit { 
             background-color: var(--success-color); 
@@ -256,12 +221,12 @@
             </div>
 
             <div style="margin-top: 40px; background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eaecee;">
-                <h3 style="margin-top: 0; border-left: 4px solid var(--secondary-color); padding-left: 10px;">📋 ตารางสรุปสถานะการปฏิบัติงานและรายการเช็ค QC</h3>
+                <h3 style="margin-top: 0; border-left: 4px solid var(--secondary-color); padding-left: 10px;">📋 ตารางสรุปสถานะการปฏิบัติงาน</h3>
                 <div class="table-container" style="border: none; box-shadow: none;">
                     <table class="history-table" id="dashboardSummaryTable">
                         <thead>
                             <tr style="background-color: #f4f6f7;">
-                                <th style="text-align: left; padding-left: 15px;">รายการสถานะระบบ / จุดตรวจ QC</th>
+                                <th style="text-align: left; padding-left: 15px;">รายการสถานะระบบ</th>
                                 <th style="text-align: center;">จำนวนรวม (ครั้ง)</th>
                             </tr>
                         </thead>
@@ -277,10 +242,6 @@
                             <tr>
                                 <td style="text-align: left; padding-left: 15px;">⚠️ ผลตรวจสอบ QC Not Pass (ไม่ผ่าน/รอแก้ไข)</td>
                                 <td><b id="sum-fail" style="color: #e74c3c; font-size: 15px;">0</b></td>
-                            </tr>
-                            <tr>
-                                <td style="text-align: left; padding-left: 15px;">📝 ผลรวมรายการเช็คพารามิเตอร์ QC ทั่วไป</td>
-                                <td><b id="sum-qc-items" style="color: #3498db; font-size: 15px;">0</b></td>
                             </tr>
                         </tbody>
                     </table>
@@ -424,46 +385,7 @@
                     </div>
                 </div>
 
-                <h3>2. รายการตรวจสอบคุณภาพ (QC Checklist - ติ๊กผ่าน/ไม่ผ่าน)</h3>
-                <table class="qc-checklist-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 50%;">หัวข้อการตรวจสอบ (Inspection Item)</th>
-                            <th>ผลการตรวจสอบ (Pass / Fail)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1. ขนาดและมิติชิ้นงาน (Dimension & Size)</td>
-                            <td>
-                                <div class="radio-group">
-                                    <label><input type="radio" name="chk_dim" value="Pass" checked> ผ่าน (Pass)</label>
-                                    <label><input type="radio" name="chk_dim" value="Fail"> ไม่ผ่าน (Fail)</label>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2. ครีบและรอยขีดข่วน (Burrs & Scratches)</td>
-                            <td>
-                                <div class="radio-group">
-                                    <label><input type="radio" name="chk_burr" value="Pass" checked> ผ่าน (Pass)</label>
-                                    <label><input type="radio" name="chk_burr" value="Fail"> ไม่ผ่าน (Fail)</label>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3. ตำแหน่งรูเจาะและการประกอบ (Hole Position)</td>
-                            <td>
-                                <div class="radio-group">
-                                    <label><input type="radio" name="chk_hole" value="Pass" checked> ผ่าน (Pass)</label>
-                                    <label><input type="radio" name="chk_hole" value="Fail"> ไม่ผ่าน (Fail)</label>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>3. ผลการตรวจสอบรวมและบันทึกหน้างาน</h3>
+                <h3>2. ผลการตรวจสอบและบันทึกหน้างาน</h3>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>จุด SC (Actual Data - ค่าที่วัดได้จริง):</label>
@@ -658,6 +580,7 @@
     </div>
 
     <script>
+        // ใส่ URL Web App ของคุณที่นี่
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
 
         let setupHistoryData = [];
@@ -706,7 +629,7 @@
                 let failCount = 0;
 
                 data.forEach((row, index) => {
-                    if(index === 0) return;
+                    if(index === 0) return; // ข้าม Header แถวแรก
 
                     const type = row[1];
                     const record = {
@@ -769,7 +692,6 @@
                 document.getElementById('sum-setup').innerText = setupCount;
                 document.getElementById('sum-pass').innerText = passCount;
                 document.getElementById('sum-fail').innerText = failCount;
-                document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3; // 3 หัวข้อต่อการตรวจ QC 1 ครั้ง
 
                 renderSetupHistory();
                 renderQcHistory();
@@ -815,22 +737,16 @@
             });
         });
 
-        // บันทึก QC Check (รวมค่า Checkbox ผ่าน/ไม่ผ่าน)
+        // บันทึก QC Check
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const chkDim = document.querySelector('input[name="chk_dim"]:checked').value;
-            const chkBurr = document.querySelector('input[name="chk_burr"]:checked').value;
-            const chkHole = document.querySelector('input[name="chk_hole"]:checked').value;
             const qcStatus = document.getElementById('qc_command_status').value;
-
-            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
-            
             const qcFormData = {
                 type: qcStatus,
                 line: document.getElementById('qc_production_line').value,
                 lot: "-",
                 part: document.getElementById('qc_part_no').value,
-                process: "QC Check (" + document.getElementById('qc_actual_data').value + ") " + checklistSummary,
+                process: "QC Check (" + document.getElementById('qc_actual_data').value + ")",
                 machine: "-",
                 air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
                 start: document.getElementById('qc_datetime').value.replace('T', ' '),
