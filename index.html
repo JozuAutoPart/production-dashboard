@@ -5,37 +5,48 @@
     <title>Mold Setup & QC Management System</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        
         /* Navigation Tabs */
         .navbar { background-color: #2c3e50; overflow: hidden; display: flex; justify-content: center; padding: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .navbar button { background-color: inherit; color: white; float: left; border: none; outline: none; cursor: pointer; padding: 14px 25px; font-size: 16px; transition: 0.3s; border-radius: 4px; margin: 0 5px; font-weight: bold; }
+        .navbar button { background-color: inherit; color: white; border: none; outline: none; cursor: pointer; padding: 14px 25px; font-size: 16px; transition: 0.3s; border-radius: 4px; margin: 0 5px; font-weight: bold; }
         .navbar button:hover { background-color: #34495e; }
         .navbar button.active { background-color: #3498db; }
 
         /* Container */
-        .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 0; }
+        h3 { color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; }
+        
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
         
-        .btn-submit { background-color: #27ae60; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .btn-submit { background-color: #27ae60; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 15px; }
         .btn-submit:hover { background-color: #219653; }
         
+        .btn-delete { background-color: #e74c3c; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-delete:hover { background-color: #c0392b; }
+
         /* Dashboard Cards */
         .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
         .card { background: #ecf0f1; padding: 20px; border-radius: 6px; text-align: center; border-left: 5px solid #3498db; }
-        .card h3 { margin: 0; font-size: 24px; color: #2c3e50; }
+        .card h3 { margin: 0; font-size: 28px; color: #2c3e50; border: none; }
         .card p { margin: 5px 0 0; color: #7f8c8d; font-size: 14px; }
         
-        #loading { display: none; text-align: center; color: #2980b9; font-weight: bold; margin-top: 10px; }
+        /* Table Styles */
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        .history-table th, .history-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        .history-table th { background-color: #f8f9fa; color: #333; }
+
+        .loading { display: none; text-align: center; color: #2980b9; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- เมนูด้านบนสำหรับสลับหน้าจอ -->
+    <!-- เมนูด้านบนสำหรับสลับหน้าต่าง -->
     <div class="navbar">
         <button class="tab-btn active" onclick="openTab(event, 'tab1')">1. Dashboard (ภาพรวม)</button>
         <button class="tab-btn" onclick="openTab(event, 'tab2')">2. Set-Up Die & Condition</button>
@@ -47,29 +58,29 @@
         <!-- หน้าที่ 1: Dashboard -->
         <div id="tab1" class="tab-content active">
             <h2>📊 Dashboard ภาพรวมระบบ Set-Up & QC</h2>
-            <p>สรุปสถานะการทำงานภายในโรงงานแบบเรียลไทม์</p>
+            <p>สรุปสถิติสถานะการทำงานภายในโรงงานแบบเรียลไทม์</p>
             <div class="dashboard-grid">
                 <div class="card" style="border-left-color: #f39c12;">
                     <h3 id="stat-setup">0</h3>
-                    <p>กำลัง Set-Up</p>
+                    <p>จำนวน Set-Up ทั้งหมด</p>
                 </div>
                 <div class="card" style="border-left-color: #27ae60;">
                     <h3 id="stat-pass">0</h3>
-                    <p>QC ผ่าน (พร้อมผลิต)</p>
+                    <p>QC Pass (พร้อมผลิต)</p>
                 </div>
                 <div class="card" style="border-left-color: #c0392b;">
                     <h3 id="stat-fail">0</h3>
-                    <p>QC ไม่ผ่าน (รอแก้)</p>
+                    <p>QC Not Pass (รอแก้ไข)</p>
                 </div>
             </div>
         </div>
 
-       <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
+        <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
         <div id="tab2" class="tab-content">
-            <h2>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition เครื่องจักร</h2>
+            <h2>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & ประวัติการทำงาน</h2>
             <form id="setupForm">
                 
-                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">1. ข้อมูลการผลิต</h3>
+                <h3>1. ข้อมูลการผลิต</h3>
                 <div class="form-group">
                     <label>Lot No.:</label>
                     <input type="text" id="lot_no" placeholder="เช่น LOT-2026-0804" required>
@@ -87,13 +98,13 @@
                     <input type="text" id="machine_no" placeholder="เช่น MC-01" required>
                 </div>
 
-                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
+                <h3>2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
                 <div class="form-group">
                     <label>1. Air Pressure (แรงดันลม):</label>
                     <input type="text" id="cond_air" placeholder="เช่น 5.5 bar" required>
                 </div>
                 <div class="form-group">
-                    <label>2. Cushion Pressure (แรงดันหมอนรอง/เบาะ):</label>
+                    <label>2. Cushion Pressure (แรงดันหมอนรอง):</label>
                     <input type="text" id="cond_cushion" placeholder="เช่น 30 ton" required>
                 </div>
                 <div class="form-group">
@@ -101,9 +112,9 @@
                     <input type="number" id="cond_spm" placeholder="เช่น 45" required>
                 </div>
 
-                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">3. วัสดุ และ แม่พิมพ์</h3>
+                <h3>3. วัสดุ และ แม่พิมพ์</h3>
                 <div class="form-group">
-                    <label>Material (ขนาดวัตถุดิบ / ความหนา x หน้ากว้าง):</label>
+                    <label>Material (ขนาดวัตถุดิบ):</label>
                     <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm x 150 mm" required>
                 </div>
                 <div class="form-group">
@@ -111,7 +122,7 @@
                     <input type="text" id="mold_dh" placeholder="เช่น 350 mm" required>
                 </div>
 
-                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">4. เวลาในการติดตั้งแม่พิมพ์</h3>
+                <h3>4. เวลาในการติดตั้งแม่พิมพ์</h3>
                 <div style="display: flex; gap: 10px;">
                     <div class="form-group" style="flex: 1;">
                         <label>เวลาเริ่มต้น (Start Time):</label>
@@ -124,27 +135,51 @@
                 </div>
 
                 <button type="submit" class="btn-submit">บันทึกข้อมูล Set-Up</button>
-                <div id="loading" style="display:none; text-align:center; color:#2980b9; font-weight:bold; margin-top:10px;">กำลังส่งข้อมูล...</div>
+                <div id="setup-loading" class="loading">กำลังบันทึกข้อมูล Set-Up...</div>
             </form>
+
+            <h3 style="margin-top: 30px;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
+            <div style="overflow-x: auto;">
+                <table class="history-table" id="setupHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Lot No.</th>
+                            <th>Part No.</th>
+                            <th>M/C No.</th>
+                            <th>Process</th>
+                            <th>Air / Cushion / SPM</th>
+                            <th>Material / DH</th>
+                            <th>เวลาเริ่ม - สิ้นสุด</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-       <!-- หน้าที่ 3: QC Check -->
+
+        <!-- หน้าที่ 3: QC Check -->
         <div id="tab3" class="tab-content">
             <h2>🔍 หน้าที่ 3: QC Check (ตรวจสอบชิ้นงานแรก / First Article)</h2>
             <p style="color: #7f8c8d; font-size: 14px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิต</p>
             
             <form id="qcForm">
                 
-                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">1. ข้อมูลชิ้นงานที่ตรวจสอบ</h3>
+                <h3>1. ข้อมูลชิ้นงานที่ตรวจสอบ</h3>
                 <div class="form-group">
                     <label>Part No.:</label>
                     <input type="text" id="qc_part_no" placeholder="เช่น P-AB1234-5" required>
                 </div>
                 <div class="form-group">
-                    <label>วันที่ตรวจ - เวลาที่ตรวจ (Inspection Date & Time):</label>
+                    <label>วันที่ตรวจ - เวลาที่ตรวจ:</label>
                     <input type="datetime-local" id="qc_datetime" required>
                 </div>
 
-                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">2. ผลการตรวจสอบและบันทึกหน้างาน</h3>
+                <h3>2. ผลการตรวจสอบและบันทึกหน้างาน</h3>
                 <div class="form-group">
                     <label>จุด SC (Actual Data - ค่าที่วัดได้จริง):</label>
                     <input type="text" id="qc_actual_data" placeholder="เช่น ความหนา 1.18 mm, รูเจาะ Dia 10.02 mm" required>
@@ -161,7 +196,7 @@
 
                 <div class="form-group">
                     <label>อธิบายจุดที่ NG (กรณีไม่ผ่าน):</label>
-                    <textarea id="qc_ng_remark" rows="3" placeholder="ระบุตำแหน่งและลักษณะอาการที่พบ Defect เช่น พบรอยขีดข่วนที่ผิวหน้า, ขนาดความกว้างเกิน Spec (ถ้าผ่านให้ใส่เครื่องหมาย -)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;"></textarea>
+                    <textarea id="qc_ng_remark" rows="3" placeholder="ระบุตำแหน่งและลักษณะอาการที่พบ Defect (ถ้าผ่านให้ใส่เครื่องหมาย -)"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -170,9 +205,11 @@
                 </div>
 
                 <button type="submit" class="btn-submit" style="background-color: #2980b9;">บันทึกผล QC Check</button>
-                <div id="qc-loading" style="display:none; text-align:center; color:#2980b9; font-weight:bold; margin-top:10px;">กำลังบันทึกข้อมูล...</div>
+                <div id="qc-loading" class="loading">กำลังบันทึกผล QC...</div>
             </form>
         </div>
+
+    </div>
 
     <script>
         // ฟังก์ชันสลับหน้า Tab
@@ -189,48 +226,99 @@
             evt.currentTarget.classList.add("active");
         }
 
-        // URL Google Apps Script (นำมาใส่แทนที่ข้อความด้านล่างเมื่อเชื่อมต่อ Google Sheets)
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec';
-
-        // บันทึกข้อมูล Set-Up (Tab 2)
-        document.getElementById('setupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            document.getElementById('loading').style.display = 'block';
-
-            const payload = {
-                action: "setup",
-                machine_code: document.getElementById('machine_code').value,
-                mold_code: document.getElementById('mold_code').value,
-                param_clamp: document.getElementById('param_clamp').value,
-                param_temp: document.getElementById('param_temp').value
-            };
-
-            try {
-                // จำลองการส่งข้อมูล (หากต่อ Google Sheet ให้เอา comment ออก)
-                /*
-                await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                */
-                document.getElementById('loading').style.display = 'none';
-                alert('บันทึกข้อมูล Set-Up และ Condition เรียบร้อย!');
-                document.getElementById('setupForm').reset();
-                
-                // อัปเดตตัวเลขใน Dashboard (จำลอง)
-                let currentSetup = parseInt(document.getElementById('stat-setup').innerText);
-                document.getElementById('stat-setup').innerText = currentSetup + 1;
-
-            } catch (error) {
-                document.getElementById('loading').style.display = 'none';
-                alert('เกิดข้อผิดพลาด: ' + error);
-            }
+        // กำหนดค่าวันที่-เวลาปัจจุบันให้อัตโนมัติเมื่อเปิดหน้าเว็บ
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            const localIsoTime = now.toISOString().slice(0,16);
+            
+            document.getElementById('setup_start').value = localIsoTime;
+            document.getElementById('setup_end').value = localIsoTime;
+            document.getElementById('qc_datetime').value = localIsoTime;
         });
 
+        // เก็บรวบรวมข้อมูลประวัติ Setup
+        let setupHistoryData = [];
+
+        // บันทึกข้อมูล Set-Up (Tab 2)
+        document.getElementById('setupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newRecord = {
+                id: Date.now(),
+                lot: document.getElementById('lot_no').value,
+                part: document.getElementById('part_no').value,
+                process: document.getElementById('process_name').value,
+                machine: document.getElementById('machine_no').value,
+                air: document.getElementById('cond_air').value,
+                cushion: document.getElementById('cond_cushion').value,
+                spm: document.getElementById('cond_spm').value,
+                material: document.getElementById('material_size').value,
+                dh: document.getElementById('mold_dh').value,
+                start: document.getElementById('setup_start').value.replace('T', ' '),
+                end: document.getElementById('setup_end').value.replace('T', ' ')
+            };
+
+            setupHistoryData.push(newRecord);
+            renderSetupHistory();
+
+            // อัปเดตตัวเลขจำนวน Setup ใน Dashboard
+            let setupCount = parseInt(document.getElementById('stat-setup').innerText);
+            document.getElementById('stat-setup').innerText = setupCount + 1;
+
+            alert('บันทึกข้อมูล Set-Up แม่พิมพ์สำเร็จเรียบร้อย!');
+            document.getElementById('setupForm').reset();
+            
+            // รีเซ็ตค่าเวลาเริ่มต้น-สิ้นสุด
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            const localIsoTime = now.toISOString().slice(0,16);
+            document.getElementById('setup_start').value = localIsoTime;
+            document.getElementById('setup_end').value = localIsoTime;
+        });
+
+        // ฟังก์ชันแสดงตารางประวัติ
+        function renderSetupHistory() {
+            const tbody = document.querySelector('#setupHistoryTable tbody');
+            tbody.innerHTML = '';
+
+            if (setupHistoryData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td></tr>`;
+                return;
+            }
+
+            setupHistoryData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.lot}</td>
+                    <td>${item.part}</td>
+                    <td><b>${item.machine}</b></td>
+                    <td>${item.process}</td>
+                    <td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td>
+                    <td>Mat: ${item.material}<br>DH: ${item.dh}</td>
+                    <td>${item.start}<br>ถึง<br>${item.end}</td>
+                    <td><button class="btn-delete" onclick="deleteSetupRecord(${item.id})">ลบ</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ฟังก์ชันลบประวัติ Set-Up
+        function deleteSetupRecord(id) {
+            if (confirm('คุณต้องการลบประวัติการ Set-Up นี้ใช่หรือไม่?')) {
+                setupHistoryData = setupHistoryData.filter(item => item.id !== id);
+                renderSetupHistory();
+
+                // ลดจำนวนใน Dashboard ลง 1
+                let setupCount = parseInt(document.getElementById('stat-setup').innerText);
+                if (setupCount > 0) {
+                    document.getElementById('stat-setup').innerText = setupCount - 1;
+                }
+            }
+        }
+
         // บันทึกผล QC (Tab 3)
-       document.getElementById('qcForm').addEventListener('submit', function(e) {
+        document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const qcStatus = document.getElementById('qc_command_status').value;
@@ -239,28 +327,23 @@
                 return;
             }
 
-            document.getElementById('qc-loading').style.display = 'block';
+            alert('บันทึกผล QC Check สำเร็จเรียบร้อย!');
 
-            setTimeout(() => {
-                document.getElementById('qc-loading').style.display = 'none';
-                alert('บันทึกผล QC Check สำเร็จเรียบร้อย!');
+            // อัปเดตสถิติใน Dashboard ตามผลลัพธ์
+            if(qcStatus === 'QC Pass') {
+                let passCount = parseInt(document.getElementById('stat-pass').innerText);
+                document.getElementById('stat-pass').innerText = passCount + 1;
+            } else {
+                let failCount = parseInt(document.getElementById('stat-fail').innerText);
+                document.getElementById('stat-fail').innerText = failCount + 1;
+            }
 
-                // อัปเดตสถิติใน Dashboard ตามผลลัพธ์
-                if(qcStatus === 'QC Pass') {
-                    let passCount = parseInt(document.getElementById('stat-pass').innerText);
-                    document.getElementById('stat-pass').innerText = passCount + 1;
-                } else {
-                    let failCount = parseInt(document.getElementById('stat-fail').innerText);
-                    document.getElementById('stat-fail').innerText = failCount + 1;
-                }
-
-                document.getElementById('qcForm').reset();
-                
-                // รีเซ็ตเวลาปัจจุบันของช่อง QC
-                const now = new Date();
-                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-                document.getElementById('qc_datetime').value = now.toISOString().slice(0,16);
-            }, 500);
+            document.getElementById('qcForm').reset();
+            
+            // รีเซ็ตเวลาปัจจุบันของช่อง QC
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('qc_datetime').value = now.toISOString().slice(0,16);
         });
     </script>
 
