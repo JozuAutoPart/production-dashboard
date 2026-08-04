@@ -127,30 +127,52 @@
                 <div id="loading" style="display:none; text-align:center; color:#2980b9; font-weight:bold; margin-top:10px;">กำลังส่งข้อมูล...</div>
             </form>
         </div>
-        <!-- หน้าที่ 3: QC Check -->
+       <!-- หน้าที่ 3: QC Check -->
         <div id="tab3" class="tab-content">
-            <h2>🔍 QC Check (ตรวจสอบชิ้นงานแรก / First Article)</h2>
+            <h2>🔍 หน้าที่ 3: QC Check (ตรวจสอบชิ้นงานแรก / First Article)</h2>
+            <p style="color: #7f8c8d; font-size: 14px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิต</p>
+            
             <form id="qcForm">
+                
+                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">1. ข้อมูลชิ้นงานที่ตรวจสอบ</h3>
                 <div class="form-group">
-                    <label>เลือกเครื่องจักรที่ต้องการตรวจสอบ:</label>
-                    <input type="text" id="qc_machine" placeholder="เช่น MC-01" required>
+                    <label>Part No.:</label>
+                    <input type="text" id="qc_part_no" placeholder="เช่น P-AB1234-5" required>
                 </div>
                 <div class="form-group">
-                    <label>ผลการตรวจสอบคุณภาพชิ้นงาน:</label>
-                    <select id="qc_result">
-                        <option value="PASS">PASS (ผ่าน - อนุญาตเดินเครื่องผลิต)</option>
-                        <option value="FAIL">FAIL (ไม่ผ่าน - ต้องปรับปรุง Set-Up ใหม่)</option>
+                    <label>วันที่ตรวจ - เวลาที่ตรวจ (Inspection Date & Time):</label>
+                    <input type="datetime-local" id="qc_datetime" required>
+                </div>
+
+                <h3 style="color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px;">2. ผลการตรวจสอบและบันทึกหน้างาน</h3>
+                <div class="form-group">
+                    <label>จุด SC (Actual Data - ค่าที่วัดได้จริง):</label>
+                    <input type="text" id="qc_actual_data" placeholder="เช่น ความหนา 1.18 mm, รูเจาะ Dia 10.02 mm" required>
+                </div>
+
+                <div class="form-group">
+                    <label>คำสั่งผลการตรวจสอบ (QC Result):</label>
+                    <select id="qc_command_status" required>
+                        <option value="" disabled selected>-- เลือกคำสั่ง QC --</option>
+                        <option value="QC Pass">QC Pass (ผ่าน - อนุญาตเดินเครื่องผลิต)</option>
+                        <option value="QC Not Pass">QC Not Pass (ไม่ผ่าน - ห้ามผลิต ต้องแก้ไข)</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <label>หมายเหตุ / ข้อบกพร่องที่พบ (ถ้ามี):</label>
-                    <input type="text" id="qc_remark" placeholder="เช่น ขนาดความหนาได้มาตรฐาน, มีรอยแฟลช">
+                    <label>อธิบายจุดที่ NG (กรณีไม่ผ่าน):</label>
+                    <textarea id="qc_ng_remark" rows="3" placeholder="ระบุตำแหน่งและลักษณะอาการที่พบ Defect เช่น พบรอยขีดข่วนที่ผิวหน้า, ขนาดความกว้างเกิน Spec (ถ้าผ่านให้ใส่เครื่องหมาย -)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;"></textarea>
                 </div>
-                <button type="submit" class="btn-submit" style="background-color: #2980b9;">ยืนยันผลการตรวจสอบ QC</button>
+
+                <div class="form-group">
+                    <label>ชื่อผู้ตรวจ (QC Inspector):</label>
+                    <input type="text" id="qc_inspector_name" placeholder="เช่น นายตรวจสอบ ดีมาก (EMP-5502)" required>
+                </div>
+
+                <button type="submit" class="btn-submit" style="background-color: #2980b9;">บันทึกผล QC Check</button>
+                <div id="qc-loading" style="display:none; text-align:center; color:#2980b9; font-weight:bold; margin-top:10px;">กำลังบันทึกข้อมูล...</div>
             </form>
         </div>
-
-    </div>
 
     <script>
         // ฟังก์ชันสลับหน้า Tab
