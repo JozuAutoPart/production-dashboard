@@ -190,7 +190,7 @@
         }
 
         // URL Google Apps Script (นำมาใส่แทนที่ข้อความด้านล่างเมื่อเชื่อมต่อ Google Sheets)
-        const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec';
 
         // บันทึกข้อมูล Set-Up (Tab 2)
         document.getElementById('setupForm').addEventListener('submit', async function(e) {
@@ -230,21 +230,37 @@
         });
 
         // บันทึกผล QC (Tab 3)
-        document.getElementById('qcForm').addEventListener('submit', function(e) {
+       document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const result = document.getElementById('qc_result').value;
             
-            alert('บันทึกผล QC สำเร็จ: ' + result);
-            document.getElementById('qcForm').reset();
-
-            // อัปเดตตัวเลขใน Dashboard ตามผล QC (จำลอง)
-            if(result === 'PASS') {
-                let passCount = parseInt(document.getElementById('stat-pass').innerText);
-                document.getElementById('stat-pass').innerText = passCount + 1;
-            } else {
-                let failCount = parseInt(document.getElementById('stat-fail').innerText);
-                document.getElementById('stat-fail').innerText = failCount + 1;
+            const qcStatus = document.getElementById('qc_command_status').value;
+            if(!qcStatus) {
+                alert('กรุณาเลือกคำสั่ง QC Pass หรือ QC Not Pass');
+                return;
             }
+
+            document.getElementById('qc-loading').style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('qc-loading').style.display = 'none';
+                alert('บันทึกผล QC Check สำเร็จเรียบร้อย!');
+
+                // อัปเดตสถิติใน Dashboard ตามผลลัพธ์
+                if(qcStatus === 'QC Pass') {
+                    let passCount = parseInt(document.getElementById('stat-pass').innerText);
+                    document.getElementById('stat-pass').innerText = passCount + 1;
+                } else {
+                    let failCount = parseInt(document.getElementById('stat-fail').innerText);
+                    document.getElementById('stat-fail').innerText = failCount + 1;
+                }
+
+                document.getElementById('qcForm').reset();
+                
+                // รีเซ็ตเวลาปัจจุบันของช่อง QC
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('qc_datetime').value = now.toISOString().slice(0,16);
+            }, 500);
         });
     </script>
 
