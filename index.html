@@ -2,54 +2,189 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mold Setup & QC Management System</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
-        
-        /* Navigation Tabs */
-        .navbar { background-color: #2c3e50; overflow: hidden; display: flex; justify-content: center; padding: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .navbar button { background-color: inherit; color: white; border: none; outline: none; cursor: pointer; padding: 14px 25px; font-size: 16px; transition: 0.3s; border-radius: 4px; margin: 0 5px; font-weight: bold; }
-        .navbar button:hover { background-color: #34495e; }
-        .navbar button.active { background-color: #3498db; }
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
 
-        /* Container */
-        .container { max-width: 950px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        /* Navigation Bar */
+        .navbar { 
+            background-color: var(--primary-color); 
+            display: flex; 
+            justify-content: center; 
+            padding: 12px 0; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar button { 
+            background-color: transparent; 
+            color: #bdc3c7; 
+            border: none; 
+            outline: none; 
+            cursor: pointer; 
+            padding: 12px 20px; 
+            font-size: 15px; 
+            transition: all 0.3s ease; 
+            border-radius: 6px; 
+            margin: 0 5px; 
+            font-weight: 600; 
+        }
+        .navbar button:hover { 
+            background-color: rgba(255, 255, 255, 0.1); 
+            color: #ffffff; 
+        }
+        .navbar button.active { 
+            background-color: var(--secondary-color); 
+            color: #ffffff; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        }
+
+        /* Container Layout */
+        .container { 
+            max-width: 1000px; 
+            margin: 30px auto; 
+            background: var(--card-bg); 
+            padding: 35px; 
+            border-radius: 10px; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08); 
+        }
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
 
-        h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
-        h3 { color: #34495e; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Headings & Section Titles */
+        h2 { 
+            color: var(--primary-color); 
+            border-bottom: 2px solid #ecf0f1; 
+            padding-bottom: 12px; 
+            margin-top: 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 22px;
+        }
+        h3 { 
+            color: var(--primary-color); 
+            font-size: 15px; 
+            border-left: 4px solid var(--secondary-color); 
+            padding-left: 10px; 
+            margin-top: 25px; 
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
         
+        /* Form Inputs & Groups */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px; }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1px solid #ccd1d1; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 14px; 
+            font-family: inherit; 
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
         
-        .btn-submit { background-color: #27ae60; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 15px; }
+        /* Action Buttons */
+        .btn-submit { 
+            background-color: var(--success-color); 
+            color: white; 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 16px; 
+            font-weight: bold; 
+            margin-top: 20px; 
+            transition: background-color 0.2s;
+        }
         .btn-submit:hover { background-color: #219653; }
         
-        .btn-delete { background-color: #e74c3c; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-delete { 
+            background-color: var(--danger-color); 
+            color: white; 
+            padding: 6px 12px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 12px; 
+            transition: background-color 0.2s;
+        }
         .btn-delete:hover { background-color: #c0392b; }
 
-        .btn-export { background-color: #27ae60; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-export { 
+            background-color: var(--success-color); 
+            color: white; 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: bold; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            transition: background-color 0.2s;
+        }
         .btn-export:hover { background-color: #219653; }
 
-        /* Dashboard Cards */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        .card { background: #ecf0f1; padding: 20px; border-radius: 6px; text-align: center; border-left: 5px solid #3498db; }
-        .card h3 { margin: 0; font-size: 28px; color: #2c3e50; border: none; }
-        .card p { margin: 5px 0 0; color: #7f8c8d; font-size: 14px; }
+        /* Dashboard Cards Grid */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card { background: #fdfefe; padding: 25px; border-radius: 8px; text-align: center; border: 1px solid #e5e8e8; border-left: 6px solid var(--secondary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .card h3 { border: none; background: transparent; padding: 0; margin: 0; font-size: 32px; color: var(--primary-color); }
+        .card p { margin: 8px 0 0; color: #7f8c8d; font-size: 14px; font-weight: 500; }
         
-        /* Table Styles */
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        .history-table th, .history-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        .history-table th { background-color: #f8f9fa; color: #333; }
+        /* Tables */
+        .table-container { overflow-x: auto; margin-top: 15px; border-radius: 6px; border: 1px solid #e5e8e8; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+        .history-table th, .history-table td { border-bottom: 1px solid #ecf0f1; padding: 12px 10px; text-align: center; }
+        .history-table th { background-color: #f8f9fa; color: #2c3e50; font-weight: 700; }
+        .history-table tr:hover { background-color: #f9fbfb; }
 
-        .loading { display: none; text-align: center; color: #2980b9; font-weight: bold; margin-top: 10px; }
+        .loading { display: none; text-align: center; color: var(--secondary-color); font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- เมนูด้านบนสำหรับสลับหน้าต่าง -->
+    <!-- เมนูด้านบน (Navbar) -->
     <div class="navbar">
         <button class="tab-btn active" onclick="openTab(event, 'tab1')">1. Dashboard (ภาพรวม)</button>
         <button class="tab-btn" onclick="openTab(event, 'tab2')">2. Set-Up Die & Condition</button>
@@ -64,128 +199,136 @@
                 <span>📊 Dashboard ภาพรวมระบบ Set-Up & QC</span>
                 <button class="btn-export" onclick="exportDashboardToExcel()">📥 Export Excel</button>
             </h2>
-            <p>สรุปสถิติสถานะการทำงานภายในโรงงานแบบเรียลไทม์</p>
+            <p style="color: #7f8c8d; font-size: 14px;">สรุปสถิติสถานะการทำงานภายในโรงงานแบบเรียลไทม์ แยกตามรายการปฏิบัติงาน</p>
+            
             <div class="dashboard-grid">
-                <div class="card" style="border-left-color: #f39c12;">
+                <div class="card" style="border-left-color: var(--warning-color);">
                     <h3 id="stat-setup">0</h3>
                     <p>จำนวน Set-Up ทั้งหมด</p>
                 </div>
-                <div class="card" style="border-left-color: #27ae60;">
+                <div class="card" style="border-left-color: var(--success-color);">
                     <h3 id="stat-pass">0</h3>
                     <p>QC Pass (พร้อมผลิต)</p>
                 </div>
-                <div class="card" style="border-left-color: #c0392b;">
+                <div class="card" style="border-left-color: var(--danger-color);">
                     <h3 id="stat-fail">0</h3>
                     <p>QC Not Pass (รอแก้ไข)</p>
                 </div>
             </div>
 
-            <!-- ตารางสรุปข้อมูลสำหรับ Export หน้า 1 -->
             <div style="margin-top: 40px;">
                 <h3>📋 ข้อมูลสรุปภาพรวมระบบ</h3>
-                <table class="history-table" id="dashboardSummaryTable">
-                    <thead>
-                        <tr>
-                            <th>รายการสถานะ</th>
-                            <th>จำนวนรวม (ครั้ง)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>จำนวน Set-Up ทั้งหมด</td>
-                            <td id="sum-setup">0</td>
-                        </tr>
-                        <tr>
-                            <td>QC Pass (ผ่านพร้อมผลิต)</td>
-                            <td id="sum-pass">0</td>
-                        </tr>
-                        <tr>
-                            <td>QC Not Pass (รอแก้ไข)</td>
-                            <td id="sum-fail">0</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table class="history-table" id="dashboardSummaryTable">
+                        <thead>
+                            <tr>
+                                <th>รายการสถานะระบบ</th>
+                                <th>จำนวนรวม (ครั้ง)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>จำนวน Set-Up แม่พิมพ์ทั้งหมด</td>
+                                <td id="sum-setup">0</td>
+                            </tr>
+                            <tr>
+                                <td>ผลตรวจสอบ QC Pass (ผ่านพร้อมผลิต)</td>
+                                <td id="sum-pass">0</td>
+                            </tr>
+                            <tr>
+                                <td>ผลตรวจสอบ QC Not Pass (ไม่ผ่าน/รอแก้ไข)</td>
+                                <td id="sum-fail">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
         <div id="tab2" class="tab-content">
             <h2>
-                <span>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & ประวัติ</span>
+                <span>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition</span>
                 <button class="btn-export" onclick="exportTableToExcel('setupHistoryTable', 'Setup_History_Report.xls')">📥 Export Excel</button>
             </h2>
+            
             <form id="setupForm">
-                
                 <h3>1. ข้อมูลการผลิต</h3>
-                <div class="form-group">
-                    <label>เลือก Line การผลิต:</label>
-                    <select id="production_line" required>
-                        <option value="" disabled selected>-- เลือก Line --</option>
-                        <option value="Line A">Line A</option>
-                        <option value="Line Q">Line Q</option>
-                        <option value="Line C1">Line C1</option>
-                        <option value="Line C2">Line C2</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Lot No.:</label>
-                    <input type="text" id="lot_no" placeholder="เช่น LOT-2026-0804" required>
-                </div>
-                <div class="form-group">
-                    <label>Part No.:</label>
-                    <input type="text" id="part_no" placeholder="เช่น P-AB1234-5" required>
-                </div>
-                <div class="form-group">
-                    <label>Process (ขั้นตอนการผลิต):</label>
-                    <input type="text" id="process_name" placeholder="เช่น Bending / Blanking / Press" required>
-                </div>
-                <div class="form-group">
-                    <label>M/C No. (หมายเลขเครื่องจักร):</label>
-                    <input type="text" id="machine_no" placeholder="เช่น MC-01" required>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>เลือก Line การผลิต:</label>
+                        <select id="production_line" required>
+                            <option value="" disabled selected>-- เลือก Line --</option>
+                            <option value="Line A">Line A</option>
+                            <option value="Line Q">Line Q</option>
+                            <option value="Line C1">Line C1</option>
+                            <option value="Line C2">Line C2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Lot No.:</label>
+                        <input type="text" id="lot_no" placeholder="เช่น LOT-2026-0804" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Part No.:</label>
+                        <input type="text" id="part_no" placeholder="เช่น P-AB1234-5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Process (ขั้นตอนการผลิต):</label>
+                        <input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
+                    </div>
+                    <div class="form-group">
+                        <label>M/C No. (หมายเลขเครื่องจักร):</label>
+                        <input type="text" id="machine_no" placeholder="เช่น MC-01" required>
+                    </div>
                 </div>
 
                 <h3>2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
-                <div class="form-group">
-                    <label>1. Air Pressure (แรงดันลม):</label>
-                    <input type="text" id="cond_air" placeholder="เช่น 5.5 bar" required>
-                </div>
-                <div class="form-group">
-                    <label>2. Cushion Pressure (แรงดันหมอนรอง):</label>
-                    <input type="text" id="cond_cushion" placeholder="เช่น 30 ton" required>
-                </div>
-                <div class="form-group">
-                    <label>3. Stroke (SPM - ความเร็วรอบ/นาที):</label>
-                    <input type="number" id="cond_spm" placeholder="เช่น 45" required>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Air Pressure (แรงดันลม):</label>
+                        <input type="text" id="cond_air" placeholder="เช่น 5.5 bar" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cushion Pressure (แรงดันหมอนรอง):</label>
+                        <input type="text" id="cond_cushion" placeholder="เช่น 30 ton" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stroke (SPM - ความเร็วรอบ/นาที):</label>
+                        <input type="number" id="cond_spm" placeholder="เช่น 45" required>
+                    </div>
                 </div>
 
                 <h3>3. วัสดุ และ แม่พิมพ์</h3>
-                <div class="form-group">
-                    <label>Material (ขนาดวัตถุดิบ):</label>
-                    <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm x 150 mm" required>
-                </div>
-                <div class="form-group">
-                    <label>แม่พิมพ์ - DH (Die Height / ความสูงแม่พิมพ์):</label>
-                    <input type="text" id="mold_dh" placeholder="เช่น 350 mm" required>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Material (ขนาดวัตถุดิบ):</label>
+                        <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm x 150 mm" required>
+                    </div>
+                    <div class="form-group">
+                        <label>แม่พิมพ์ - DH (Die Height):</label>
+                        <input type="text" id="mold_dh" placeholder="เช่น 350 mm" required>
+                    </div>
                 </div>
 
                 <h3>4. เวลาในการติดตั้งแม่พิมพ์</h3>
-                <div style="display: flex; gap: 10px;">
-                    <div class="form-group" style="flex: 1;">
+                <div class="form-grid">
+                    <div class="form-group">
                         <label>เวลาเริ่มต้น (Start Time):</label>
                         <input type="datetime-local" id="setup_start" required>
                     </div>
-                    <div class="form-group" style="flex: 1;">
+                    <div class="form-group">
                         <label>เวลาสิ้นสุด (End Time):</label>
                         <input type="datetime-local" id="setup_end" required>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-submit">บันทึกข้อมูล Set-Up</button>
-                <div id="setup-loading" class="loading">กำลังบันทึกข้อมูล Set-Up...</div>
+                <button type="submit" class="btn-submit" id="btnSetupSubmit">บันทึกข้อมูล Set-Up</button>
+                <div id="setup-loading" class="loading">กำลังส่งข้อมูลไปยัง Google Sheets...</div>
             </form>
 
-            <h3 style="margin-top: 30px;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
-            <div style="overflow-x: auto;">
+            <h3 style="margin-top: 35px;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
+            <div class="table-container">
                 <table class="history-table" id="setupHistoryTable">
                     <thead>
                         <tr>
@@ -202,7 +345,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="9" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td>
+                            <td colspan="9" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการ Set-Up ในระบบ</td>
                         </tr>
                     </tbody>
                 </table>
@@ -212,43 +355,45 @@
         <!-- หน้าที่ 3: QC Check -->
         <div id="tab3" class="tab-content">
             <h2>🔍 หน้าที่ 3: QC Check (ตรวจสอบชิ้นงานแรก / First Article)</h2>
-            <p style="color: #7f8c8d; font-size: 14px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิต</p>
+            <p style="color: #7f8c8d; font-size: 14px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิตจริง</p>
             
             <form id="qcForm">
-                
                 <h3>1. ข้อมูลชิ้นงานที่ตรวจสอบ</h3>
-                <div class="form-group">
-                    <label>เลือก Line การผลิต:</label>
-                    <select id="qc_production_line" required>
-                        <option value="" disabled selected>-- เลือก Line --</option>
-                        <option value="Line A">Line A</option>
-                        <option value="Line Q">Line Q</option>
-                        <option value="Line C1">Line C1</option>
-                        <option value="Line C2">Line C2</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Part No.:</label>
-                    <input type="text" id="qc_part_no" placeholder="เช่น P-AB1234-5" required>
-                </div>
-                <div class="form-group">
-                    <label>วันที่ตรวจ - เวลาที่ตรวจ:</label>
-                    <input type="datetime-local" id="qc_datetime" required>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>เลือก Line การผลิต:</label>
+                        <select id="qc_production_line" required>
+                            <option value="" disabled selected>-- เลือก Line --</option>
+                            <option value="Line A">Line A</option>
+                            <option value="Line Q">Line Q</option>
+                            <option value="Line C1">Line C1</option>
+                            <option value="Line C2">Line C2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Part No.:</label>
+                        <input type="text" id="qc_part_no" placeholder="เช่น P-AB1234-5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>วันที่ - เวลาที่ตรวจ:</label>
+                        <input type="datetime-local" id="qc_datetime" required>
+                    </div>
                 </div>
 
                 <h3>2. ผลการตรวจสอบและบันทึกหน้างาน</h3>
-                <div class="form-group">
-                    <label>จุด SC (Actual Data - ค่าที่วัดได้จริง):</label>
-                    <input type="text" id="qc_actual_data" placeholder="เช่น ความหนา 1.18 mm, รูเจาะ Dia 10.02 mm" required>
-                </div>
-
-                <div class="form-group">
-                    <label>คำสั่งผลการตรวจสอบ (QC Result):</label>
-                    <select id="qc_command_status" required>
-                        <option value="" disabled selected>-- เลือกคำสั่ง QC --</option>
-                        <option value="QC Pass">QC Pass (ผ่าน - อนุญาตเดินเครื่องผลิต)</option>
-                        <option value="QC Not Pass">QC Not Pass (ไม่ผ่าน - ห้ามผลิต ต้องแก้ไข)</option>
-                    </select>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>จุด SC (Actual Data - ค่าที่วัดได้จริง):</label>
+                        <input type="text" id="qc_actual_data" placeholder="เช่น ความหนา 1.18 mm, รูเจาะ Dia 10.02 mm" required>
+                    </div>
+                    <div class="form-group">
+                        <label>คำสั่งผลการตรวจสอบ (QC Result):</label>
+                        <select id="qc_command_status" required>
+                            <option value="" disabled selected>-- เลือกคำสั่ง QC --</option>
+                            <option value="QC Pass">QC Pass (ผ่าน - อนุญาตเดินเครื่องผลิต)</option>
+                            <option value="QC Not Pass">QC Not Pass (ไม่ผ่าน - ห้ามผลิต ต้องแก้ไข)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -261,14 +406,17 @@
                     <input type="text" id="qc_inspector_name" placeholder="เช่น นายตรวจสอบ ดีมาก (EMP-5502)" required>
                 </div>
 
-                <button type="submit" class="btn-submit" style="background-color: #2980b9;">บันทึกผล QC Check</button>
-                <div id="qc-loading" class="loading">กำลังบันทึกผล QC...</div>
+                <button type="submit" class="btn-submit" id="btnQcSubmit" style="background-color: var(--secondary-color);">บันทึกผล QC Check</button>
+                <div id="qc-loading" class="loading">กำลังส่งผล QC ไปยัง Google Sheets...</div>
             </form>
         </div>
 
     </div>
 
     <script>
+        // URL Web App ของ Google Apps Script ที่คุณให้มา
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
+
         // ฟังก์ชันสลับหน้า Tab
         function openTab(evt, tabName) {
             let contents = document.getElementsByClassName("tab-content");
@@ -294,10 +442,8 @@
             document.getElementById('qc_datetime').value = localIsoTime;
         });
 
-        // เก็บรวบรวมข้อมูลประวัติ Setup
         let setupHistoryData = [];
 
-        // อัปเดตตัวเลข Dashboard และช่องตารางสรุป
         function updateDashboardStats() {
             const setupVal = document.getElementById('stat-setup').innerText;
             const passVal = document.getElementById('stat-pass').innerText;
@@ -308,12 +454,12 @@
             document.getElementById('sum-fail').innerText = failVal;
         }
 
-        // บันทึกข้อมูล Set-Up (Tab 2)
+        // บันทึกข้อมูล Set-Up (Tab 2) ส่งเข้า Google Sheets
         document.getElementById('setupForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const newRecord = {
-                id: Date.now(),
+            const formData = {
+                type: "Setup",
                 line: document.getElementById('production_line').value,
                 lot: document.getElementById('lot_no').value,
                 part: document.getElementById('part_no').value,
@@ -325,39 +471,62 @@
                 material: document.getElementById('material_size').value,
                 dh: document.getElementById('mold_dh').value,
                 start: document.getElementById('setup_start').value.replace('T', ' '),
-                end: document.getElementById('setup_end').value.replace('T', ' ')
+                end: document.getElementById('setup_end').value.replace('T', ' '),
+                qc_result: "-",
+                inspector: "-"
             };
 
-            setupHistoryData.push(newRecord);
-            renderSetupHistory();
+            document.getElementById('setup-loading').style.display = 'block';
+            document.getElementById('btnSetupSubmit').disabled = true;
 
-            // อัปเดตตัวเลขจำนวน Setup ใน Dashboard
-            let setupCount = parseInt(document.getElementById('stat-setup').innerText);
-            document.getElementById('stat-setup').innerText = setupCount + 1;
-            updateDashboardStats();
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(() => {
+                document.getElementById('setup-loading').style.display = 'none';
+                document.getElementById('btnSetupSubmit').disabled = false;
 
-            alert('บันทึกข้อมูล Set-Up แม่พิมพ์สำเร็จเรียบร้อย!');
-            document.getElementById('setupForm').reset();
-            
-            // รีเซ็ตค่าเวลาเริ่มต้น-สิ้นสุด
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            const localIsoTime = now.toISOString().slice(0,16);
-            document.getElementById('setup_start').value = localIsoTime;
-            document.getElementById('setup_end').value = localIsoTime;
+                const newRecord = {
+                    id: Date.now(),
+                    ...formData
+                };
+
+                setupHistoryData.push(newRecord);
+                renderSetupHistory();
+
+                let setupCount = parseInt(document.getElementById('stat-setup').innerText);
+                document.getElementById('stat-setup').innerText = setupCount + 1;
+                updateDashboardStats();
+
+                alert('บันทึกข้อมูล Set-Up แม่พิมพ์ และส่งเข้า Google Sheets สำเร็จ!');
+                document.getElementById('setupForm').reset();
+                
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                const localIsoTime = now.toISOString().slice(0,16);
+                document.getElementById('setup_start').value = localIsoTime;
+                document.getElementById('setup_end').value = localIsoTime;
+            })
+            .catch(error => {
+                document.getElementById('setup-loading').style.display = 'none';
+                document.getElementById('btnSetupSubmit').disabled = false;
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error);
+            });
         });
 
-        // ฟังก์ชันแสดงตารางประวัติ
         function renderSetupHistory() {
             const tbody = document.querySelector('#setupHistoryTable tbody');
             tbody.innerHTML = '';
 
             if (setupHistoryData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="color: #7f8c8d;">ยังไม่มีประวัติการ Set-Up</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการ Set-Up ในระบบ</td></tr>`;
                 return;
             }
 
-            setupHistoryData.forEach((item, index) => {
+            setupHistoryData.forEach((item) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>${item.line}</b></td>
@@ -374,13 +543,11 @@
             });
         }
 
-        // ฟังก์ชันลบประวัติ Set-Up
         function deleteSetupRecord(id) {
             if (confirm('คุณต้องการลบประวัติการ Set-Up นี้ใช่หรือไม่?')) {
                 setupHistoryData = setupHistoryData.filter(item => item.id !== id);
                 renderSetupHistory();
 
-                // ลดจำนวนใน Dashboard ลง 1
                 let setupCount = parseInt(document.getElementById('stat-setup').innerText);
                 if (setupCount > 0) {
                     document.getElementById('stat-setup').innerText = setupCount - 1;
@@ -389,63 +556,96 @@
             }
         }
 
-        // บันทึกผล QC (Tab 3)
+        // บันทึกผล QC (Tab 3) ส่งเข้า Google Sheets
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const qcStatus = document.getElementById('qc_command_status').value;
             const lineName = document.getElementById('qc_production_line').value;
+            const inspectorName = document.getElementById('qc_inspector_name').value;
             
             if(!qcStatus) {
                 alert('กรุณาเลือกคำสั่ง QC Pass หรือ QC Not Pass');
                 return;
             }
 
-            alert(`บันทึกผล QC Check (${lineName}) สำเร็จเรียบร้อย!`);
+            const qcFormData = {
+                type: qcStatus,
+                line: lineName,
+                lot: "-",
+                part: document.getElementById('qc_part_no').value,
+                process: "QC Check (" + document.getElementById('qc_actual_data').value + ")",
+                machine: "-",
+                air: "-",
+                cushion: "-",
+                spm: "-",
+                material: "-",
+                dh: "-",
+                start: document.getElementById('qc_datetime').value.replace('T', ' '),
+                end: document.getElementById('qc_ng_remark').value, // เก็บช่องหมายเหตุ NG ในคอลัมน์ End Time
+                qc_result: qcStatus,
+                inspector: inspectorName
+            };
 
-            // อัปเดตสถิติใน Dashboard ตามผลลัพธ์
-            if(qcStatus === 'QC Pass') {
-                let passCount = parseInt(document.getElementById('stat-pass').innerText);
-                document.getElementById('stat-pass').innerText = passCount + 1;
-            } else {
-                let failCount = parseInt(document.getElementById('stat-fail').innerText);
-                document.getElementById('stat-fail').innerText = failCount + 1;
-            }
-            updateDashboardStats();
+            document.getElementById('qc-loading').style.display = 'block';
+            document.getElementById('btnQcSubmit').disabled = true;
 
-            document.getElementById('qcForm').reset();
-            
-            // รีเซ็ตเวลาปัจจุบันของช่อง QC
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('qc_datetime').value = now.toISOString().slice(0,16);
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(qcFormData)
+            })
+            .then(() => {
+                document.getElementById('qc-loading').style.display = 'none';
+                document.getElementById('btnQcSubmit').disabled = false;
+
+                alert(`บันทึกผล QC Check (${lineName}) และส่งเข้า Google Sheets สำเร็จ!`);
+
+                if(qcStatus === 'QC Pass') {
+                    let passCount = parseInt(document.getElementById('stat-pass').innerText);
+                    document.getElementById('stat-pass').innerText = passCount + 1;
+                } else {
+                    let failCount = parseInt(document.getElementById('stat-fail').innerText);
+                    document.getElementById('stat-fail').innerText = failCount + 1;
+                }
+                updateDashboardStats();
+
+                document.getElementById('qcForm').reset();
+                
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('qc_datetime').value = now.toISOString().slice(0,16);
+            })
+            .catch(error => {
+                document.getElementById('qc-loading').style.display = 'none';
+                document.getElementById('btnQcSubmit').disabled = false;
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error);
+            });
         });
 
-        // ฟังก์ชันสำหรับแปลงและดาวน์โหลดตารางเป็นไฟล์ Excel (.xls)
+        // ฟังก์ชัน Export Excel
         function exportTableToExcel(tableID, filename = '') {
             let downloadLink;
             let dataType = 'application/vnd.ms-excel;charset=utf-8;';
             let tableSelect = document.getElementById(tableID);
             
-            // ตรวจสอบว่ามีข้อมูลในตารางหรือไม่
             if(setupHistoryData.length === 0 && tableID === 'setupHistoryTable') {
-                alert('ยังไม่มีข้อมูลประวัติสำหรับการ Export');
+                alert('ยังไม่มีข้อมูลประวัติสำหรับการ Export เป็นไฟล์ Excel');
                 return;
             }
 
-            // คัดลอกตารางเพื่อซ่อนคอลัมน์ "จัดการ" (ปุ่มลบ) ไม่ให้ติดไปใน Excel
             let cloneTable = tableSelect.cloneNode(true);
             let rows = cloneTable.rows;
             for (let i = 0; i < rows.length; i++) {
                 if(rows[i].cells.length > 8) {
-                    rows[i].deleteCell(8); // ลบคอลัมน์ปุ่มจัดการออก
+                    rows[i].deleteCell(8);
                 }
             }
 
             let tableHTML = cloneTable.outerHTML;
             filename = filename ? filename : 'excel_data.xls';
 
-            // สร้าง Element สำหรับ Download
             downloadLink = document.createElement("a");
             document.body.appendChild(downloadLink);
 
@@ -453,14 +653,12 @@
                 let blob = new Blob(['\ufeff', tableHTML], { type: dataType });
                 navigator.msSaveOrOpenBlob(blob, filename);
             } else {
-                // สร้างลิงก์ไฟล์ผ่าน Data URI
                 downloadLink.href = 'data:' + dataType + ', ' + encodeURIComponent(tableHTML);
                 downloadLink.download = filename;
                 downloadLink.click();
             }
         }
 
-        // ฟังก์ชัน Export หน้า Dashboard (หน้า 1)
         function exportDashboardToExcel() {
             exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary_Report.xls');
         }
