@@ -742,7 +742,6 @@
         let spotHistoryData = [];
         let dtHistoryData = [];
         
-        // เก็บรายการแจ้งเตือนแยกตาม Line
         let qcLineAlerts = {};  
         let setupLineAlerts = {}; 
 
@@ -869,12 +868,20 @@
             const currentSelected = qcPartSelect.value;
             qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
             
+            // กรอง Part No. ที่เคยผ่าน QC (QC Pass) ไปแล้วออก
+            const passedParts = qcHistoryData
+                .filter(item => item.status === 'QC Pass')
+                .map(item => item.part);
+
             setupHistoryData.forEach(item => {
-                let opt = document.createElement('option');
-                opt.value = item.part;
-                opt.setAttribute('data-line', item.line);
-                opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-                qcPartSelect.appendChild(opt);
+                // เงื่อนไข: ถ้า Part No. นี้ยังไม่เคยผ่าน QC ให้แสดงในลิสต์
+                if (!passedParts.includes(item.part)) {
+                    let opt = document.createElement('option');
+                    opt.value = item.part;
+                    opt.setAttribute('data-line', item.line);
+                    opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+                    qcPartSelect.appendChild(opt);
+                }
             });
 
             if(currentSelected) {
@@ -1043,7 +1050,7 @@
             });
         });
 
-        // บันทึก QC Check (แก้ไขตัวแปร Line ให้ถูกต้อง)
+        // บันทึก QC Check
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const lineVal = document.getElementById('qc_production_line').value;
@@ -1078,14 +1085,12 @@
                 document.getElementById('qc-loading').style.display = 'none';
                 document.getElementById('btnQcSubmit').disabled = false;
                 
-                // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
                 if (qcLineAlerts[lineVal]) {
                     qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
                     if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
                 }
                 renderQcAlertsUI();
                 
-                // ส่งสัญญาณแจ้งเตือนกลับเฉพาะหน้า Set-Up ของ Line นั้นๆ
                 triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
 
                 alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
