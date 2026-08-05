@@ -416,10 +416,16 @@
             <p style="color: #7f8c8d; font-size: 14px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิตจริง</p>
             
             <form id="qcForm">
-                <h3>1. ข้อมูลชิ้นงานที่ตรวจสอบ</h3>
+                <h3>1. ข้อมูลชิ้นงานที่ตรวจสอบ (อ้างอิงจากแผน Set-Up Die)</h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>เลือก Line การผลิต:</label>
+                        <label>เลือก Part No. จากแผน Set-Up Die:</label>
+                        <select id="qc_part_no" required onchange="onSelectQcPart(this)">
+                            <option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Line การผลิต (อ้างอิงอัตโนมัติ):</label>
                         <select id="qc_production_line" required>
                             <option value="" disabled selected>-- เลือก Line --</option>
                             <option value="Line A">Line A</option>
@@ -427,10 +433,6 @@
                             <option value="Line C1">Line C1</option>
                             <option value="Line C2">Line C2</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Part No.:</label>
-                        <input type="text" id="qc_part_no" placeholder="เช่น P-AB1234-5" required>
                     </div>
                     <div class="form-group">
                         <label>วันที่ - เวลาที่ตรวจ:</label>
@@ -728,7 +730,7 @@
                         line: row[2] || '-',
                         lot: row[3] || '-',
                         part: row[4] || '-',
-                        operator: row[15] || '-', // พนักงาน Setup เก็บไว้ที่คอลัมน์ inspector เดิมหรือปรับตามสะดวก
+                        operator: row[15] || '-',
                         process: row[5] || '-',
                         machine: row[6] || '-',
                         air: row[7] || '-',
@@ -790,10 +792,39 @@
                 renderQcHistory();
                 renderSpotHistory();
                 renderDtHistory();
+                populateQcPartDropdown();
             })
             .catch(error => {
                 console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
             });
+        }
+
+        // เติมรายการ Part No. ในหน้า QC Check จากข้อมูล Set-Up ที่บันทึกไว้
+        function populateQcPartDropdown() {
+            const qcPartSelect = document.getElementById('qc_part_no');
+            const currentSelected = qcPartSelect.value;
+            qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
+            
+            setupHistoryData.forEach(item => {
+                let opt = document.createElement('option');
+                opt.value = item.part;
+                opt.setAttribute('data-line', item.line);
+                opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+                qcPartSelect.appendChild(opt);
+            });
+
+            if(currentSelected) {
+                qcPartSelect.value = currentSelected;
+            }
+        }
+
+        // เมื่อเลือก Part No. ใน QC Check ให้เลือก Line ให้อัตโนมัติทันที
+        function onSelectQcPart(selectElem) {
+            const selectedOption = selectElem.options[selectElem.selectedIndex];
+            const lineValue = selectedOption.getAttribute('data-line');
+            if(lineValue) {
+                document.getElementById('qc_production_line').value = lineValue;
+            }
         }
 
         // บันทึก Set-Up Die
@@ -969,6 +1000,7 @@
                 renderQcHistory();
                 renderSpotHistory();
                 renderDtHistory();
+                populateQcPartDropdown();
             }
         }
 
