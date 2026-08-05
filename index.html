@@ -48,6 +48,7 @@
             border-radius: 6px; 
             margin: 4px; 
             font-weight: 600; 
+            position: relative;
         }
         .navbar button:hover { 
             background-color: rgba(255, 255, 255, 0.1); 
@@ -57,6 +58,20 @@
             background-color: var(--secondary-color); 
             color: #ffffff; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        }
+
+        /* Badge แจ้งเตือนที่ปุ่มเมนู QC */
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background-color: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            display: none;
         }
 
         /* Container Layout */
@@ -158,6 +173,22 @@
             gap: 5px;
         }
 
+        /* กล่องแจ้งเตือนฝั่ง QC Alert Box */
+        .qc-alert-banner {
+            background: #fff8e1;
+            border-left: 5px solid var(--warning-color);
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .qc-alert-banner.empty {
+            display: none;
+        }
+
         /* Action Buttons */
         .btn-submit { 
             background-color: var(--success-color); 
@@ -222,7 +253,7 @@
     <div class="navbar">
         <button class="tab-btn active" onclick="openTab(event, 'tab1')">1. Dashboard</button>
         <button class="tab-btn" onclick="openTab(event, 'tab2')">2. Set-Up Die</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab3')">3. QC Check</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab3')" id="navQcBtn">3. QC Check <span id="qcNotificationBadge" class="notification-badge">0</span></button>
         <button class="tab-btn" onclick="openTab(event, 'tab4')">4. Spot Welding</button>
         <button class="tab-btn" onclick="openTab(event, 'tab5')">5. Destructive Test</button>
     </div>
@@ -379,8 +410,8 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-submit" id="btnSetupSubmit">บันทึกข้อมูล Set-Up</button>
-                <div id="setup-loading" class="loading">กำลังส่งข้อมูลไปยัง Google Sheets...</div>
+                <button type="submit" class="btn-submit" id="btnSetupSubmit">บันทึกข้อมูล Set-Up และแจ้งเตือน QC</button>
+                <div id="setup-loading" class="loading">กำลังส่งข้อมูลไปยัง Google Sheets และแจ้งเตือน QC...</div>
             </form>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 35px; margin-bottom: 10px;">
@@ -426,8 +457,17 @@
                 <span>🔍 หน้าที่ 3: QC Check (ตรวจสอบชิ้นงานแรก / First Article)</span>
                 <button class="btn-export" onclick="exportTableToExcel('qcHistoryTable', 'QC_History_Report.xls', 6)">📥 Export Excel</button>
             </h2>
-            <p style="color: #7f8c8d; font-size: 14px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิตจริง</p>
+            <p style="color: #7f8c8d; font-size: 14px; margin-top: 0; margin-bottom: 20px;">ตรวจสอบความถูกต้องของชิ้นงานหลัง Set-Up เสร็จสิ้น ก่อนอนุมัติให้เดินเครื่องผลิตจริง</p>
             
+            <!-- กล่องแจ้งเตือนเตือน QC ให้ตรวจสอบชิ้นงาน -->
+            <div id="qcAlertBanner" class="qc-alert-banner empty">
+                <div>
+                    <strong style="color: #b7950b; font-size: 15px;">🔔 แจ้งเตือนด่วนถึงทีม QC:</strong>
+                    <span id="qcAlertText" style="margin-left: 8px; font-weight: 500;">มีรายการ Set-Up ใหม่รอตรวจสอบชิ้นงาน</span>
+                </div>
+                <button onclick="clearQcAlert()" style="background: var(--warning-color); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ / ล้างแจ้งเตือน</button>
+            </div>
+
             <form id="qcForm">
                 <h3>1. ข้อมูลชิ้นงานที่ตรวจสอบ (อ้างอิงจากแผน Set-Up Die)</h3>
                 <div class="form-grid">
@@ -693,6 +733,7 @@
         let qcHistoryData = [];
         let spotHistoryData = [];
         let dtHistoryData = [];
+        let pendingQcAlertsCount = 0;
 
         function openTab(evt, tabName) {
             let contents = document.getElementsByClassName("tab-content");
@@ -840,15 +881,43 @@
             }
         }
 
+        // ฟังก์ชันสั่งการแจ้งเตือนทีม QC
+        function triggerQcAlert(lineName, partNo, lotNo) {
+            pendingQcAlertsCount++;
+            
+            // อัปเดตข้อความบนแบนเนอร์แจ้งเตือนหน้า QC Check
+            const banner = document.getElementById('qcAlertBanner');
+            const alertText = document.getElementById('qcAlertText');
+            alertText.innerHTML = `มีรายการ Set-Up ใหม่ใน <b>${lineName}</b> (Part No: <b>${partNo}</b>, Lot: <b>${lotNo}</b>) ส่งเข้ามาใหม่ กรุณาตรวจสอบชิ้นงานด่วน!`;
+            banner.classList.remove('empty');
+
+            // อัปเดตปุ่ม Notification Badge บนเมนูด้านบน
+            const badge = document.getElementById('qcNotificationBadge');
+            badge.innerText = pendingQcAlertsCount;
+            badge.style.display = 'inline-block';
+        }
+
+        function clearQcAlert() {
+            const banner = document.getElementById('qcAlertBanner');
+            banner.classList.add('empty');
+            pendingQcAlertsCount = 0;
+            const badge = document.getElementById('qcNotificationBadge');
+            badge.style.display = 'none';
+        }
+
         // บันทึก Set-Up Die
         document.getElementById('setupForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const lineVal = document.getElementById('production_line').value;
+            const partVal = document.getElementById('part_no').value;
+            const lotVal = document.getElementById('lot_no').value;
             const operatorName = document.getElementById('setup_operator').value;
+
             const formData = {
                 type: "Setup",
-                line: document.getElementById('production_line').value,
-                lot: document.getElementById('lot_no').value,
-                part: document.getElementById('part_no').value,
+                line: lineVal,
+                lot: lotVal,
+                part: partVal,
                 process: document.getElementById('process_name').value,
                 machine: document.getElementById('machine_no').value,
                 air: document.getElementById('cond_air').value,
@@ -869,7 +938,11 @@
             .then(() => {
                 document.getElementById('setup-loading').style.display = 'none';
                 document.getElementById('btnSetupSubmit').disabled = false;
-                alert('บันทึกข้อมูล Set-Up แม่พิมพ์ สำเร็จ!');
+                
+                // แจ้งเตือนระบบ QC ทันทีเมื่อบันทึกสำเร็จ
+                triggerQcAlert(lineVal, partVal, lotVal);
+
+                alert('บันทึกข้อมูล Set-Up แม่พิมพ์ สำเร็จ และระบบได้ส่งสัญญาณแจ้งเตือนทีม QC เรียบร้อยแล้ว!');
                 document.getElementById('setupForm').reset();
                 loadDataFromGoogleSheet();
             });
@@ -906,6 +979,10 @@
             .then(() => {
                 document.getElementById('qc-loading').style.display = 'none';
                 document.getElementById('btnQcSubmit').disabled = false;
+                
+                // เมื่อ QC ตรวจสอบเสร็จและบันทึกแล้ว สามารถล้างสถานะแจ้งเตือนได้อัตโนมัติ
+                clearQcAlert();
+
                 alert('บันทึกผล QC Check สำเร็จ!');
                 document.getElementById('qcForm').reset();
                 loadDataFromGoogleSheet();
