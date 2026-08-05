@@ -383,7 +383,20 @@
                 <div id="setup-loading" class="loading">กำลังส่งข้อมูลไปยัง Google Sheets...</div>
             </form>
 
-            <h3 style="margin-top: 35px;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 35px; margin-bottom: 10px;">
+                <h3 style="margin: 0; border: none; background: transparent; padding: 0;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="filter_line" style="margin: 0; font-weight: 600;">เลือก Line เพื่อดูประวัติ:</label>
+                    <select id="filter_line" onchange="renderSetupHistory()" style="padding: 6px 12px; width: 160px; font-size: 13px;">
+                        <option value="ALL">-- แสดงทั้งหมด (All) --</option>
+                        <option value="Line A">Line A</option>
+                        <option value="Line Q">Line Q</option>
+                        <option value="Line C1">Line C1</option>
+                        <option value="Line C2">Line C2</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="history-table" id="setupHistoryTable">
                     <thead>
@@ -958,9 +971,17 @@
         });
 
         function renderSetupHistory() {
+            const selectedFilterLine = document.getElementById('filter_line').value;
             const tbody = document.querySelector('#setupHistoryTable tbody');
-            tbody.innerHTML = setupHistoryData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการ Set-Up</td></tr>` : '';
-            setupHistoryData.forEach((item) => {
+            
+            let filteredData = setupHistoryData;
+            if (selectedFilterLine !== "ALL") {
+                filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
+            }
+
+            tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+            
+            filteredData.forEach((item) => {
                 tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.lot}</td><td>${item.part}</td><td><b>${item.machine}</b></td><td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td><td>${item.process}</td><td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td><td>Mat: ${item.material}<br>DH: ${item.dh}</td><td>${item.start}<br>ถึง<br>${item.end}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
             });
         }
@@ -1006,7 +1027,7 @@
 
         function exportTableToExcel(tableID, filename = '', actionColumnIndex = -1) {
             let tableSelect = document.getElementById(tableID);
-            let cloneTable = tableSelect.cloneNode(true);
+            let cloneTable = tableSelect.cloneNode.length ? tableSelect.cloneNode(true) : tableSelect.cloneNode(true);
             let rows = cloneTable.rows;
             for (let i = 0; i < rows.length; i++) {
                 if(actionColumnIndex !== -1 && rows[i].cells.length > actionColumnIndex) {
