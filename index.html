@@ -743,8 +743,8 @@
         let dtHistoryData = [];
         
         // เก็บรายการแจ้งเตือนแยกตาม Line
-        let qcLineAlerts = {};  // ตัวอย่าง: { "Line A": [ {part, lot} ], "Line Q": [...] }
-        let setupLineAlerts = {}; // ตัวอย่าง: { "Line A": [ {part, status, remark} ] }
+        let qcLineAlerts = {};  
+        let setupLineAlerts = {}; 
 
         function openTab(evt, tabName) {
             let contents = document.getElementsByClassName("tab-content");
@@ -890,7 +890,6 @@
             }
         }
 
-        // 1. ฟังก์ชันส่งสัญญาณเตือนไปหาทีม QC แยกตาม Line
         function triggerQcAlert(lineName, partNo, lotNo) {
             if (!qcLineAlerts[lineName]) {
                 qcLineAlerts[lineName] = [];
@@ -940,7 +939,6 @@
             renderQcAlertsUI();
         }
 
-        // 2. ฟังก์ชันส่งสัญญาณเตือนกลับไปยัง Set-Up Die และฝ่ายผลิต แยกตาม Line
         function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
             if (!setupLineAlerts[lineName]) {
                 setupLineAlerts[lineName] = [];
@@ -1045,7 +1043,7 @@
             });
         });
 
-        // บันทึก QC Check
+        // บันทึก QC Check (แก้ไขตัวแปร Line ให้ถูกต้อง)
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const lineVal = document.getElementById('qc_production_line').value;
@@ -1081,9 +1079,9 @@
                 document.getElementById('btnQcSubmit').disabled = false;
                 
                 // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
-                if (qcLineAlerts[lineName]) {
-                    qcLineAlerts[lineName] = qcLineAlerts[lineName].filter(item => item.part !== partVal);
-                    if (qcLineAlerts[lineName].length === 0) delete qcLineAlerts[lineName];
+                if (qcLineAlerts[lineVal]) {
+                    qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
+                    if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
                 }
                 renderQcAlertsUI();
                 
@@ -1093,6 +1091,12 @@
                 alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
                 document.getElementById('qcForm').reset();
                 loadDataFromGoogleSheet();
+            })
+            .catch(error => {
+                document.getElementById('qc-loading').style.display = 'none';
+                document.getElementById('btnQcSubmit').disabled = false;
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             });
         });
 
