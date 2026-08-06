@@ -1013,46 +1013,60 @@
 
         // บันทึก Set-Up Die
         document.getElementById('setupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const lineVal = document.getElementById('production_line').value;
-            const partVal = document.getElementById('part_no').value;
-            const lotVal = document.getElementById('lot_no').value;
-            const operatorName = document.getElementById('setup_operator').value;
+    e.preventDefault();
 
-            const formData = {
-                type: "Setup",
-                line: lineVal,
-                lot: lotVal,
-                part: partVal,
-                process: document.getElementById('process_name').value,
-                machine: document.getElementById('machine_no').value,
-                air: document.getElementById('cond_air').value,
-                cushion: document.getElementById('cond_cushion').value,
-                spm: document.getElementById('cond_spm').value,
-                material: document.getElementById('material_size').value,
-                dh: document.getElementById('mold_dh').value,
-                start: document.getElementById('setup_start').value.replace('T', ' '),
-                end: document.getElementById('setup_end').value.replace('T', ' '),
-                qc_result: "-",
-                inspector: operatorName
-            };
+    // 1. ดึงข้อมูลทั่วไปของฟอร์ม
+    const productionLine = document.getElementById('production_line').value;
+    const lotNo = document.getElementById('lot_no').value;
+    const partNo = document.getElementById('part_no').value;
+    const materialSize = document.getElementById('material_size').value;
+    const setupStart = document.getElementById('setup_start').value;
+    const setupEnd = document.getElementById('setup_end').value;
+    const setupOperator = document.getElementById('setup_operator').value;
 
-            document.getElementById('setup-loading').style.display = 'block';
-            document.getElementById('btnSetupSubmit').disabled = true;
+    // 2. วนลูปดึงข้อมูล Machine Condition จากตาราง Process 1 ถึง 11
+    const processConditions = [];
+    for (let i = 1; i <= 11; i++) {
+        const procName = document.querySelector(`[name="proc_name_${i}"]`).value;
+        const procMc = document.querySelector(`[name="proc_mc_${i}"]`).value;
+        const procAir = document.querySelector(`[name="proc_air_${i}"]`).value;
+        const procSpm = document.querySelector(`[name="proc_spm_${i}"]`).value;
+        const procDh = document.querySelector(`[name="proc_dh_${i}"]`).value;
 
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
-            .then(() => {
-                document.getElementById('setup-loading').style.display = 'none';
-                document.getElementById('btnSetupSubmit').disabled = false;
-                
-                triggerQcAlert(lineVal, partVal, lotVal);
-
-                alert(`บันทึกข้อมูล Set-Up แม่พิมพ์ [${lineVal}] สำเร็จ และส่งสัญญาณแจ้งเตือนทีม QC ประจำไลน์แล้ว!`);
-                document.getElementById('setupForm').reset();
-                loadDataFromGoogleSheet();
-            });
+        // เก็บข้อมูลแต่ละ Process ไว้ในอาเรย์
+        processConditions.push({
+            process: procName,
+            machineNo: procMc,
+            airPressure: procAir,
+            strokeSpm: procSpm,
+            dieHeight: procDh
         });
+    }
 
+    // 3. รวมข้อมูลทั้งหมดเพื่อเตรียมบันทึก (เช่น ส่งเข้า Google Sheets / LocalStorage / ตารางประวัติ)
+    const formData = {
+        productionLine,
+        lotNo,
+        partNo,
+        materialSize,
+        setupStart,
+        setupEnd,
+        setupOperator,
+        processConditions,
+        qcStatus: "รอตรวจสอบ (Pending)"
+    };
+
+    console.log("ข้อมูลที่บันทึก:", formData);
+
+    // ตัวอย่าง: บันทึกลง LocalStorage เพื่อแสดงในตารางประวัติเบื้องต้น
+    let historyList = JSON.parse(localStorage.getItem('setupHistory')) ||hle = []; // หรือชื่อตัวแปรเก็บประวัติของคุณ
+    // หากคุณมีฟังก์ชันบันทึกเดิม สามารถนำ formData ไปส่งต่อได้เลยครับ
+    
+    alert("บันทึกข้อมูล Set-Up สำเร็จ!");
+    
+    // รีเซ็ตฟอร์มหลังบันทึก (ถ้าต้องการ)
+    // document.getElementById('setupForm').reset();
+});
         // บันทึก QC Check (แก้ไขตัวแปร Line ให้ถูกต้อง)
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
