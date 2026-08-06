@@ -721,192 +721,203 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
 
-        let setupHistoryData = [];
-        let qcHistoryData = [];
-        let spotHistoryData = [];
-        let dtHistoryData = [];
+    let setupHistoryData = [];
+    let qcHistoryData = [];
+    let spotHistoryData = [];
+    let dtHistoryData = [];
+    
+    // เก็บรายการแจ้งเตือนแยกตาม Line
+    let qcLineAlerts = {};  
+    let setupLineAlerts = {}; 
+
+    function openTab(evt, tabName) {
+        let contents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < contents.length; i++) {
+            contents[i].classList.remove("active");
+        }
+        let btns = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < btns.length; i++) {
+            btns[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const localIsoTime = now.toISOString().slice(0,16);
         
-        // เก็บรายการแจ้งเตือนแยกตาม Line
-        let qcLineAlerts = {};  
-        let setupLineAlerts = {}; 
+        if(document.getElementById('setup_start')) document.getElementById('setup_start').value = localIsoTime;
+        if(document.getElementById('setup_end')) document.getElementById('setup_end').value = localIsoTime;
+        if(document.getElementById('qc_datetime')) document.getElementById('qc_datetime').value = localIsoTime;
+        if(document.getElementById('sw_datetime')) document.getElementById('sw_datetime').value = localIsoTime;
+        if(document.getElementById('dt_datetime')) document.getElementById('dt_datetime').value = localIsoTime;
 
-        function openTab(evt, tabName) {
-            let contents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < contents.length; i++) {
-                contents[i].classList.remove("active");
-            }
-            let btns = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < btns.length; i++) {
-                btns[i].classList.remove("active");
-            }
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
+        loadDataFromGoogleSheet();
+    });
 
-        window.addEventListener('DOMContentLoaded', (event) => {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            const localIsoTime = now.toISOString().slice(0,16);
+    function loadDataFromGoogleSheet() {
+        fetch(SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            setupHistoryData = [];
+            qcHistoryData = [];
+            spotHistoryData = [];
+            dtHistoryData = [];
             
-            document.getElementById('setup_start').value = localIsoTime;
-            document.getElementById('setup_end').value = localIsoTime;
-            document.getElementById('qc_datetime').value = localIsoTime;
-            document.getElementById('sw_datetime').value = localIsoTime;
-            document.getElementById('dt_datetime').value = localIsoTime;
+            let setupCount = 0;
+            let passCount = 0;
+            let failCount = 0;
 
-            loadDataFromGoogleSheet();
-        });
+            data.forEach((row, index) => {
+                if(index === 0) return;
 
-        function loadDataFromGoogleSheet() {
-            fetch(SCRIPT_URL)
-            .then(response => response.json())
-            .then(data => {
-                setupHistoryData = [];
-                qcHistoryData = [];
-                spotHistoryData = [];
-                dtHistoryData = [];
-                
-                let setupCount = 0;
-                let passCount = 0;
-                let failCount = 0;
+                const type = row[1];
+                const record = {
+                    id: index,
+                    line: row[2] || '-',
+                    lot: row[3] || '-',
+                    part: row[4] || '-',
+                    operator: row[15] || '-',
+                    process: row[5] || '-',
+                    machine: row[6] || '-',
+                    air: row[7] || '-',
+                    cushion: row[8] || '-',
+                    spm: row[9] || '-',
+                    material: row[10] || '-',
+                    dh: row[11] || '-',
+                    start: row[12] || '-',
+                    end: row[13] || '-',
+                    status: row[14] || '-',
+                    actual: row[5] ? row[5].replace('QC Check (', '').replace(')', '') : '-',
+                    remark: row[13] || '-',
+                    datetime: row[12] || '-',
+                    inspector: row[15] || '-'
+                };
 
-                data.forEach((row, index) => {
-                    if(index === 0) return;
-
-                    const type = row[1];
-                    const record = {
+                if (type === 'Setup') {
+                    setupHistoryData.push(record);
+                    setupCount++;
+                } else if (type === 'QC Pass') {
+                    qcHistoryData.push(record);
+                    passCount++;
+                } else if (type === 'QC Not Pass') {
+                    qcHistoryData.push(record);
+                    failCount++;
+                } else if (type === 'SpotWelding') {
+                    spotHistoryData.push({
                         id: index,
-                        line: row[2] || '-',
-                        lot: row[3] || '-',
+                        datetime: row[1] || '-',
                         part: row[4] || '-',
-                        operator: row[15] || '-',
-                        process: row[5] || '-',
-                        machine: row[6] || '-',
-                        air: row[7] || '-',
-                        cushion: row[8] || '-',
-                        spm: row[9] || '-',
-                        material: row[10] || '-',
-                        dh: row[11] || '-',
-                        start: row[12] || '-',
-                        end: row[13] || '-',
-                        status: row[14] || '-',
-                        actual: row[5] ? row[5].replace('QC Check (', '').replace(')', '') : '-',
-                        remark: row[13] || '-',
-                        datetime: row[12] || '-',
+                        jobno: row[5] || '-',
+                        welcurr: row[7] || '-',
+                        pressure: row[8] || '-',
+                        tipbalance: row[9] || '-',
+                        water: row[10] || '-',
                         inspector: row[15] || '-'
-                    };
-
-                    if (type === 'Setup') {
-                        setupHistoryData.push(record);
-                        setupCount++;
-                    } else if (type === 'QC Pass') {
-                        qcHistoryData.push(record);
-                        passCount++;
-                    } else if (type === 'QC Not Pass') {
-                        qcHistoryData.push(record);
-                        failCount++;
-                    } else if (type === 'SpotWelding') {
-                        spotHistoryData.push({
-                            id: index,
-                            datetime: row[1] || '-',
-                            part: row[4] || '-',
-                            jobno: row[5] || '-',
-                            welcurr: row[7] || '-',
-                            pressure: row[8] || '-',
-                            tipbalance: row[9] || '-',
-                            water: row[10] || '-',
-                            inspector: row[15] || '-'
-                        });
-                    } else if (type === 'DestructiveTest') {
-                        dtHistoryData.push({
-                            id: index,
-                            part: row[4] || '-',
-                            datetime: row[12] || '-',
-                            resultFirst: row[13] || '-',
-                            resultFinish: row[14] || '-',
-                            inspector: row[15] || '-'
-                        });
-                    }
-                });
-
-                document.getElementById('stat-setup').innerText = setupCount;
-                document.getElementById('stat-pass').innerText = passCount;
-                document.getElementById('stat-fail').innerText = failCount;
-                document.getElementById('sum-setup').innerText = setupCount;
-                document.getElementById('sum-pass').innerText = passCount;
-                document.getElementById('sum-fail').innerText = failCount;
-                document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
-
-                renderSetupHistory();
-                renderQcHistory();
-                renderSpotHistory();
-                renderDtHistory();
-                populateQcPartDropdown();
-            })
-            .catch(error => {
-                console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
-            });
-        }
-
-        function populateQcPartDropdown() {
-            const qcPartSelect = document.getElementById('qc_part_no');
-            const currentSelected = qcPartSelect.value;
-            qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
-            
-            setupHistoryData.forEach(item => {
-                let opt = document.createElement('option');
-                opt.value = item.part;
-                opt.setAttribute('data-line', item.line);
-                opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-                qcPartSelect.appendChild(opt);
-            });
-
-            if(currentSelected) {
-                qcPartSelect.value = currentSelected;
-            }
-        }
-
-        function onSelectQcPart(selectElem) {
-            const selectedOption = selectElem.options[selectElem.selectedIndex];
-            const lineValue = selectedOption.getAttribute('data-line');
-            if(lineValue) {
-                document.getElementById('qc_production_line').value = lineValue;
-            }
-        }
-
-        function triggerQcAlert(lineName, partNo, lotNo) {
-            if (!qcLineAlerts[lineName]) {
-                qcLineAlerts[lineName] = [];
-            }
-            qcLineAlerts[lineName].push({ part: partNo, lot: lotNo });
-            renderQcAlertsUI();
-        }
-
-        function renderQcAlertsUI() {
-            const container = document.getElementById('qcAlertContainer');
-            container.innerHTML = '';
-            let totalAlerts = 0;
-
-            for (const [line, alerts] of Object.entries(qcLineAlerts)) {
-                if (alerts.length > 0) {
-                    totalAlerts += alerts.length;
-                    alerts.forEach((alertItem, idx) => {
-                        container.innerHTML += `
-                            <div class="alert-banner">
-                                <div>
-                                    <strong style="color: #b7950b; font-size: 15px;">🔔 แจ้งเตือนด่วนถึงทีม QC [${line}]:</strong>
-                                    <span style="margin-left: 8px; font-weight: 500;">มีรายการ Set-Up ใหม่ (Part No: <b>${alertItem.part}</b>, Lot: <b>${alertItem.lot}</b>) รอตรวจสอบชิ้นงาน</span>
-                                </div>
-                                <button onclick="clearQcLineAlert('${line}', ${idx})" style="background: var(--warning-color); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
-                            </div>
-                        `;
+                    });
+                } else if (type === 'DestructiveTest') {
+                    dtHistoryData.push({
+                        id: index,
+                        part: row[4] || '-',
+                        datetime: row[12] || '-',
+                        resultFirst: row[13] || '-',
+                        resultFinish: row[14] || '-',
+                        inspector: row[15] || '-'
                     });
                 }
-            }
+            });
 
-            const badge = document.getElementById('qcNotificationBadge');
+            if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
+            if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
+            if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
+            if(document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
+            if(document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
+            if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+            if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
+
+            renderSetupHistory();
+            renderQcHistory();
+            renderSpotHistory();
+            renderDtHistory();
+            populateQcPartDropdown();
+        })
+        .catch(error => {
+            console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+        });
+    }
+
+    function populateQcPartDropdown() {
+        const qcPartSelect = document.getElementById('qc_part_no');
+        if (!qcPartSelect) return;
+        
+        const currentSelected = qcPartSelect.value;
+        qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
+        
+        setupHistoryData.forEach(item => {
+            let opt = document.createElement('option');
+            opt.value = item.part;
+            opt.setAttribute('data-line', item.line);
+            opt.setAttribute('data-lot', item.lot);
+            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+            qcPartSelect.appendChild(opt);
+        });
+
+        if(currentSelected) {
+            qcPartSelect.value = currentSelected;
+        }
+    }
+
+    function onSelectQcPart(selectElem) {
+        const selectedOption = selectElem.options[selectElem.selectedIndex];
+        const lineValue = selectedOption.getAttribute('data-line');
+        const lotValue = selectedOption.getAttribute('data-lot');
+        
+        if(lineValue && document.getElementById('qc_production_line')) {
+            document.getElementById('qc_production_line').value = lineValue;
+        }
+        if(lotValue && document.getElementById('qc_lot_no')) {
+            document.getElementById('qc_lot_no').value = lotValue;
+        }
+    }
+
+    function triggerQcAlert(lineName, partNo, lotNo) {
+        if (!qcLineAlerts[lineName]) {
+            qcLineAlerts[lineName] = [];
+        }
+        qcLineAlerts[lineName].push({ part: partNo, lot: lotNo });
+        renderQcAlertsUI();
+    }
+
+    function renderQcAlertsUI() {
+        const container = document.getElementById('qcAlertContainer');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        let totalAlerts = 0;
+
+        for (const [line, alerts] of Object.entries(qcLineAlerts)) {
+            if (alerts.length > 0) {
+                totalAlerts += alerts.length;
+                alerts.forEach((alertItem, idx) => {
+                    container.innerHTML += `
+                        <div class="alert-banner">
+                            <div>
+                                <strong style="color: #b7950b; font-size: 15px;">🔔 แจ้งเตือนด่วนถึงทีม QC [${line}]:</strong>
+                                <span style="margin-left: 8px; font-weight: 500;">มีรายการ Set-Up ใหม่ (Part No: <b>${alertItem.part}</b>, Lot: <b>${alertItem.lot}</b>) รอตรวจสอบชิ้นงาน</span>
+                            </div>
+                            <button onclick="clearQcLineAlert('${line}', ${idx})" style="background: var(--warning-color); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        const badge = document.getElementById('qcNotificationBadge');
+        if (badge) {
             if (totalAlerts > 0) {
                 badge.innerText = totalAlerts;
                 badge.style.display = 'inline-block';
@@ -914,60 +925,64 @@
                 badge.style.display = 'none';
             }
         }
+    }
 
-        function clearQcLineAlert(lineName, index) {
-            if (qcLineAlerts[lineName]) {
-                qcLineAlerts[lineName].splice(index, 1);
-                if (qcLineAlerts[lineName].length === 0) {
-                    delete qcLineAlerts[lineName];
-                }
+    function clearQcLineAlert(lineName, index) {
+        if (qcLineAlerts[lineName]) {
+            qcLineAlerts[lineName].splice(index, 1);
+            if (qcLineAlerts[lineName].length === 0) {
+                delete qcLineAlerts[lineName];
             }
-            renderQcAlertsUI();
         }
+        renderQcAlertsUI();
+    }
 
-        function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
-            if (!setupLineAlerts[lineName]) {
-                setupLineAlerts[lineName] = [];
-            }
-            setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
-            renderSetupAlertsUI();
+    function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
+        if (!setupLineAlerts[lineName]) {
+            setupLineAlerts[lineName] = [];
         }
+        setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
+        renderSetupAlertsUI();
+    }
 
-        function renderSetupAlertsUI() {
-            const container = document.getElementById('setupAlertContainer');
-            container.innerHTML = '';
-            let totalAlerts = 0;
-            let hasPass = false;
+    function renderSetupAlertsUI() {
+        const container = document.getElementById('setupAlertContainer');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        let totalAlerts = 0;
+        let hasPass = false;
 
-            for (const [line, alerts] of Object.entries(setupLineAlerts)) {
-                if (alerts.length > 0) {
-                    totalAlerts += alerts.length;
-                    alerts.forEach((alertItem, idx) => {
-                        let bannerClass = alertItem.status === 'QC Pass' ? 'alert-banner pass-banner' : 'alert-banner fail-banner';
-                        if (alertItem.status === 'QC Pass') hasPass = true;
+        for (const [line, alerts] of Object.entries(setupLineAlerts)) {
+            if (alerts.length > 0) {
+                totalAlerts += alerts.length;
+                alerts.forEach((alertItem, idx) => {
+                    let bannerClass = alertItem.status === 'QC Pass' ? 'alert-banner pass-banner' : 'alert-banner fail-banner';
+                    if (alertItem.status === 'QC Pass') hasPass = true;
 
-                        let titleText = alertItem.status === 'QC Pass' 
-                            ? `✨ QC ตรวจสอบผ่านแล้ว [${line}]:` 
-                            : `⚠️ QC ตรวจสอบไม่ผ่าน [${line}]:`;
+                    let titleText = alertItem.status === 'QC Pass' 
+                        ? `✨ QC ตรวจสอบผ่านแล้ว [${line}]:` 
+                        : `⚠️ QC ตรวจสอบไม่ผ่าน [${line}]:`;
 
-                        let descText = alertItem.status === 'QC Pass'
-                            ? `Part No: <b>${alertItem.part}</b> ผ่านการตรวจสอบ QC แล้ว สามารถเริ่มเดินเครื่องผลิตจริงได้ทันที!`
-                            : `Part No: <b>${alertItem.part}</b> <b>ไม่ผ่าน QC!</b> จุดที่ต้องแก้ไข: ${alertItem.remark}`;
+                    let descText = alertItem.status === 'QC Pass'
+                        ? `Part No: <b>${alertItem.part}</b> ผ่านการตรวจสอบ QC แล้ว สามารถเริ่มเดินเครื่องผลิตจริงได้ทันที!`
+                        : `Part No: <b>${alertItem.part}</b> <b>ไม่ผ่าน QC!</b> จุดที่ต้องแก้ไข: ${alertItem.remark}`;
 
-                        container.innerHTML += `
-                            <div class="${bannerClass}">
-                                <div>
-                                    <strong style="font-size: 15px;">${titleText}</strong>
-                                    <span style="margin-left: 8px; font-weight: 500;">${descText}</span>
-                                </div>
-                                <button onclick="clearSetupLineAlert('${line}', ${idx})" style="background: rgba(0,0,0,0.1); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
+                    container.innerHTML += `
+                        <div class="${bannerClass}">
+                            <div>
+                                <strong style="font-size: 15px;">${titleText}</strong>
+                                <span style="margin-left: 8px; font-weight: 500;">${descText}</span>
                             </div>
-                        `;
-                    });
-                }
+                            <button onclick="clearSetupLineAlert('${line}', ${idx})" style="background: rgba(0,0,0,0.1); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
+                        </div>
+                    `;
+                });
             }
+        }
 
-            const badge = document.getElementById('setupNotificationBadge');
+        const badge = document.getElementById('setupNotificationBadge');
+        if (badge) {
             if (totalAlerts > 0) {
                 badge.innerText = totalAlerts;
                 badge.style.display = 'inline-block';
@@ -976,70 +991,61 @@
                 badge.style.display = 'none';
             }
         }
+    }
 
-        function clearSetupLineAlert(lineName, index) {
-            if (setupLineAlerts[lineName]) {
-                setupLineAlerts[lineName].splice(index, 1);
-                if (setupLineAlerts[lineName].length === 0) {
-                    delete setupLineAlerts[lineName];
-                }
+    function clearSetupLineAlert(lineName, index) {
+        if (setupLineAlerts[lineName]) {
+            setupLineAlerts[lineName].splice(index, 1);
+            if (setupLineAlerts[lineName].length === 0) {
+                delete setupLineAlerts[lineName];
             }
-            renderSetupAlertsUI();
         }
+        renderSetupAlertsUI();
+    }
 
-        // บันทึก Set-Up Die
-       function openTab(evt, tabName) {
-            const tabContents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove("active");
-            }
-            const tabBtns = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < tabBtns.length; i++) {
-                tabBtns[i].classList.remove("active");
-            }
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
+    // เพิ่มแถว Process ใหม่ในหน้า Set-Up
+    function addProcessRow() {
+        const tbody = document.getElementById('processTableBody');
+        if (!tbody) return;
+        const rowCount = tbody.rows.length + 1;
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td class="row-num">${rowCount}</td>
+            <td><input type="text" class="p-name" value="Process ${rowCount}" required></td>
+            <td><input type="text" class="p-mc" placeholder="MC No." required></td>
+            <td><input type="text" class="p-air" placeholder="Air Press" required></td>
+            <td><input type="text" class="p-cushion" placeholder="Cushion" required></td>
+            <td><input type="text" class="p-spm" placeholder="SPM" required></td>
+            <td><input type="text" class="p-dh" placeholder="DH" required></td>
+            <td><button type="button" class="btn-delete" onclick="removeProcessRow(this)">X</button></td>
+        `;
+        tbody.appendChild(newRow);
+        updateRowNumbers();
+    }
 
-        // เพิ่มแถว Process ใหม่
-        function addProcessRow() {
-            const tbody = document.getElementById('processTableBody');
-            const rowCount = tbody.rows.length + 1;
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td class="row-num">${rowCount}</td>
-                <td><input type="text" class="p-name" value="Process ${rowCount}" required></td>
-                <td><input type="text" class="p-mc" placeholder="MC No." required></td>
-                <td><input type="text" class="p-air" placeholder="Air Press" required></td>
-                <td><input type="text" class="p-cushion" placeholder="Cushion" required></td>
-                <td><input type="text" class="p-spm" placeholder="SPM" required></td>
-                <td><input type="text" class="p-dh" placeholder="DH" required></td>
-                <td><button type="button" class="btn-delete" onclick="removeProcessRow(this)">X</button></td>
-            `;
-            tbody.appendChild(newRow);
+    function removeProcessRow(btn) {
+        const row = btn.closest('tr');
+        const tbody = document.getElementById('processTableBody');
+        if (tbody && tbody.rows.length > 1) {
+            row.remove();
             updateRowNumbers();
+        } else {
+            alert("ต้องมีอย่างน้อย 1 Process ครับ");
         }
+    }
 
-        // ลบแถว Process และอัปเดตหมายเลข
-        function removeProcessRow(btn) {
-            const row = btn.closest('tr');
-            if (document.getElementById('processTableBody').rows.length > 1) {
-                row.remove();
-                updateRowNumbers();
-            } else {
-                alert("ต้องมีอย่างน้อย 1 Process ครับ");
-            }
-        }
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('#processTableBody tr');
+        rows.forEach((row, index) => {
+            const numElem = row.querySelector('.row-num');
+            if (numElem) numElem.innerText = index + 1;
+        });
+    }
 
-        function updateRowNumbers() {
-            const rows = document.querySelectorAll('#processTableBody tr');
-            rows.forEach((row, index) => {
-                row.querySelector('.row-num').innerText = index + 1;
-            });
-        }
-
-        // จัดการเมื่อกดปุ่มบันทึก (ตรวจสอบว่ากรอกข้อมูลครบทุก Process ก่อน)
-        document.getElementById('setupForm').addEventListener('submit', function(e) {
+    // บันทึก Set-Up Die (ส่งไป Google Sheets และเด้งไปหน้า QC พร้อมเปิดแจ้งเตือน)
+    const setupFormElem = document.getElementById('setupForm');
+    if (setupFormElem) {
+        setupFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
 
             const line = document.getElementById('production_line').value;
@@ -1050,7 +1056,6 @@
             const end = document.getElementById('setup_end').value;
             const operator = document.getElementById('setup_operator').value;
 
-            // รวบรวมข้อมูลทุก Process ในตาราง
             const processRows = document.querySelectorAll('#processTableBody tr');
             let processesData = [];
             let isValid = true;
@@ -1068,68 +1073,113 @@
                 }
 
                 processesData.push({
-                    name: pName,
-                    machine: pMc,
-                    air: pAir,
-                    cushion: pCushion,
-                    spm: pSpm,
-                    dh: pDh
+                    name: pName, machine: pMc, air: pAir, cushion: pCushion, spm: pSpm, dh: pDh
                 });
             });
 
             const alertBox = document.getElementById('alertBox');
 
             if (!isValid) {
-                alertBox.className = "alert-box alert-error";
-                alertBox.style.display = "block";
-                alertBox.innerText = "❌ กรุณากรอกข้อมูลเงื่อนไขเครื่องจักรให้ครบทุก Process ของ Part No. นี้ก่อนทำการบันทึก!";
+                if (alertBox) {
+                    alertBox.className = "alert-box alert-error";
+                    alertBox.style.display = "block";
+                    alertBox.innerText = "❌ กรุณากรอกข้อมูลเงื่อนไขเครื่องจักรให้ครบทุก Process ก่อนทำการบันทึก!";
+                }
                 return;
             }
 
-            // จำลองการบันทึกสำเร็จและจำลองผล QC (Pass/Not Pass)
-            const qcResult = Math.random() > 0.2 ? "Pass (ผ่าน)" : "Not Pass (ไม่ผ่าน)";
-            const qcClass = qcResult.includes("Pass") ? "color: green; font-weight: bold;" : "color: red; font-weight: bold;";
+            const setupPayload = {
+                type: "Setup",
+                line: line,
+                lot: lot,
+                part: part,
+                process: JSON.stringify(processesData),
+                machine: processesData[0] ? processesData[0].machine : "-",
+                air: processesData[0] ? processesData[0].air : "-",
+                cushion: processesData[0] ? processesData[0].cushion : "-",
+                spm: processesData[0] ? processesData[0].spm : "-",
+                material: material,
+                dh: processesData[0] ? processesData[0].dh : "-",
+                start: start.replace('T', ' '),
+                end: end.replace('T', ' '),
+                qc_result: "Waiting QC",
+                inspector: operator
+            };
 
-            alertBox.className = "alert-box alert-success";
-            alertBox.style.display = "block";
-            alertBox.innerHTML = `✅ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ (${processesData.length} Process) | ผลการตรวจสอบจาก QC: <span style="${qcClass}">${qcResult}</span>`;
-
-            // เพิ่มข้อมูลลงในตารางประวัติ
-            const historyBody = document.getElementById('setupHistoryBody');
-            if(historyBody.querySelector('td[colspan]')) {
-                historyBody.innerHTML = ''; // ลบข้อความ "ยังไม่มีประวัติ" ออก
+            if (alertBox) {
+                alertBox.className = "alert-box alert-success";
+                alertBox.style.display = "block";
+                alertBox.innerHTML = `⏳ กำลังบันทึกข้อมูล Set-Up และส่งไปยังระบบ...`;
             }
 
-            const newTr = document.createElement('tr');
-            newTr.innerHTML = `
-                <td>${line}</td>
-                <td>${lot}</td>
-                <td><b>${part}</b></td>
-                <td>${processesData.length} Process</td>
-                <td>${operator}</td>
-                <td>${start.replace('T', ' ')} ถึง ${end.replace('T', ' ')}</td>
-                <td style="${qcClass}">${qcResult}</td>
-            `;
-            historyBody.prepend(newTr);
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(setupPayload)
+            }).then(() => {
+                if (alertBox) {
+                    alertBox.innerHTML = `✅ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ! <button type="button" onclick="goToQcPageFromSetup('${line}', '${part}', '${lot}')" style="margin-left: 10px; background: #2980b9; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight:bold;">👉 ไปหน้า QC Check</button>`;
+                }
 
-            // รีเซ็ตฟอร์มบางส่วน
-            document.getElementById('setupForm').reset();
+                // สั่งแจ้งเตือนไปที่หน้า QC ของ Line นั้นๆ
+                triggerQcAlert(line, part, lot);
+
+                // บันทึกลง Local array ชั่วคราวเพื่ออัปเดตหน้าจอทันที
+                setupHistoryData.unshift({
+                    id: Date.now(),
+                    line: line, lot: lot, part: part, machine: processesData[0]?.machine || '-',
+                    inspector: operator, process: `${processesData.length} Process`,
+                    air: processesData[0]?.air || '-', cushion: processesData[0]?.cushion || '-', spm: processesData[0]?.spm || '-',
+                    material: material, dh: processesData[0]?.dh || '-',
+                    start: start.replace('T', ' '), end: end.replace('T', ' '), status: 'Waiting QC'
+                });
+                renderSetupHistory();
+                populateQcPartDropdown();
+            }).catch(error => {
+                console.error("Error:", error);
+                if (alertBox) {
+                    alertBox.className = "alert-box alert-error";
+                    alertBox.innerText = "❌ เกิดข้อผิดพลาดในการบันทึกข้อมูลไปยัง Google Sheets";
+                }
+            });
         });
+    }
 
-        function exportTableToExcel() {
-            alert("ฟังก์ชัน Export Excel พร้อมใช้งาน");
+    // ฟังก์ชันกดสลับไปหน้า QC อัตโนมัติจากหน้า Set-Up พร้อมส่งค่าพารามิเตอร์ไป
+    function goToQcPageFromSetup(line, part, lot) {
+        const tabBtns = document.querySelectorAll('.navbar button');
+        if(tabBtns[2]) tabBtns[2].click(); // ไปแท็บที่ 3 (QC Check)
+        
+        if(document.getElementById('qc_production_line')) document.getElementById('qc_production_line').value = line;
+        if(document.getElementById('qc_part_no')) {
+            document.getElementById('qc_part_no').value = part;
+            // กระตุ้นให้เลือกค่า
         }
+    }
 
-        // บันทึก QC Check (แก้ไขตัวแปร Line ให้ถูกต้อง)
-        document.getElementById('qcForm').addEventListener('submit', function(e) {
+    // บันทึก QC Check (หน้า 3)
+    const qcFormElem = document.getElementById('qcForm');
+    if (qcFormElem) {
+        qcFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
             const lineVal = document.getElementById('qc_production_line').value;
             const partVal = document.getElementById('qc_part_no').value;
-            const chkDim = document.querySelector('input[name="chk_dim"]:checked').value;
-            const chkBurr = document.querySelector('input[name="chk_burr"]:checked').value;
-            const chkHole = document.querySelector('input[name="chk_hole"]:checked').value;
-            const qcStatus = document.getElementById('qc_command_status').value;
-            const remarkVal = document.getElementById('qc_ng_remark').value || '-';
+            
+            // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
+            const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
+            const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
+            const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
+            
+            const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
+            const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
+            const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
+            
+            const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
+            const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
+            const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
+            const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
+            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
 
             const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
             
@@ -1138,22 +1188,24 @@
                 line: lineVal,
                 lot: "-",
                 part: partVal,
-                process: "QC Check (" + document.getElementById('qc_actual_data').value + ") " + checklistSummary,
+                process: "QC Check (" + actualData + ") " + checklistSummary,
                 machine: "-",
                 air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
-                start: document.getElementById('qc_datetime').value.replace('T', ' '),
+                start: datetimeVal,
                 end: remarkVal,
                 qc_result: qcStatus,
-                inspector: document.getElementById('qc_inspector_name').value
+                inspector: inspectorName
             };
 
-            document.getElementById('qc-loading').style.display = 'block';
-            document.getElementById('btnQcSubmit').disabled = true;
+            const qcLoading = document.getElementById('qc-loading');
+            const btnQcSubmit = document.getElementById('btnQcSubmit');
+            if(qcLoading) qcLoading.style.display = 'block';
+            if(btnQcSubmit) btnQcSubmit.disabled = true;
 
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
             .then(() => {
-                document.getElementById('qc-loading').style.display = 'none';
-                document.getElementById('btnQcSubmit').disabled = false;
+                if(qcLoading) qcLoading.style.display = 'none';
+                if(btnQcSubmit) btnQcSubmit.disabled = false;
                 
                 // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
                 if (qcLineAlerts[lineVal]) {
@@ -1162,23 +1214,26 @@
                 }
                 renderQcAlertsUI();
                 
-                // ส่งสัญญาณแจ้งเตือนกลับเฉพาะหน้า Set-Up ของ Line นั้นๆ
+                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
                 triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
 
                 alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
-                document.getElementById('qcForm').reset();
+                qcFormElem.reset();
                 loadDataFromGoogleSheet();
             })
             .catch(error => {
-                document.getElementById('qc-loading').style.display = 'none';
-                document.getElementById('btnQcSubmit').disabled = false;
+                if(qcLoading) qcLoading.style.display = 'none';
+                if(btnQcSubmit) btnQcSubmit.disabled = false;
                 console.error('Error:', error);
                 alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             });
         });
+    }
 
-        // บันทึก Spot Welding (หน้า 4)
-        document.getElementById('spotWeldingForm').addEventListener('submit', function(e) {
+    // บันทึก Spot Welding (หน้า 4)
+    const spotFormElem = document.getElementById('spotWeldingForm');
+    if (spotFormElem) {
+        spotFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
             const spotData = {
                 type: "SpotWelding",
@@ -1195,21 +1250,26 @@
                 inspector: document.getElementById('sw_inspector').value
             };
 
-            document.getElementById('spot-loading').style.display = 'block';
-            document.getElementById('btnSpotSubmit').disabled = true;
+            const spotLoading = document.getElementById('spot-loading');
+            const btnSpotSubmit = document.getElementById('btnSpotSubmit');
+            if(spotLoading) spotLoading.style.display = 'block';
+            if(btnSpotSubmit) btnSpotSubmit.disabled = true;
 
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spotData) })
             .then(() => {
-                document.getElementById('spot-loading').style.display = 'none';
-                document.getElementById('btnSpotSubmit').disabled = false;
+                if(spotLoading) spotLoading.style.display = 'none';
+                if(btnSpotSubmit) btnSpotSubmit.disabled = false;
                 alert('บันทึก Set-Up Spot Welding สำเร็จ!');
-                document.getElementById('spotWeldingForm').reset();
+                spotFormElem.reset();
                 loadDataFromGoogleSheet();
             });
         });
+    }
 
-        // บันทึก Destructive Testing (หน้า 5)
-        document.getElementById('destructiveForm').addEventListener('submit', function(e) {
+    // บันทึก Destructive Testing (หน้า 5)
+    const dtFormElem = document.getElementById('destructiveForm');
+    if (dtFormElem) {
+        dtFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
             const dtData = {
                 type: "DestructiveTest",
@@ -1222,94 +1282,103 @@
                 inspector: document.getElementById('dt_inspector').value
             };
 
-            document.getElementById('dt-loading').style.display = 'block';
-            document.getElementById('btnDtSubmit').disabled = true;
+            const dtLoading = document.getElementById('dt-loading');
+            const btnDtSubmit = document.getElementById('btnDtSubmit');
+            if(dtLoading) dtLoading.style.display = 'block';
+            if(btnDtSubmit) btnDtSubmit.disabled = true;
 
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dtData) })
             .then(() => {
-                document.getElementById('dt-loading').style.display = 'none';
-                document.getElementById('btnDtSubmit').disabled = false;
+                if(dtLoading) dtLoading.style.display = 'none';
+                if(btnDtSubmit) btnDtSubmit.disabled = false;
                 alert('บันทึก Destructive Testing สำเร็จ!');
-                document.getElementById('destructiveForm').reset();
+                dtFormElem.reset();
                 loadDataFromGoogleSheet();
             });
         });
+    }
 
-        function renderSetupHistory() {
-            const selectedFilterLine = document.getElementById('filter_line').value;
-            const tbody = document.querySelector('#setupHistoryTable tbody');
-            
-            let filteredData = setupHistoryData;
-            if (selectedFilterLine !== "ALL") {
-                filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
+    function renderSetupHistory() {
+        const filterElem = document.getElementById('filter_line');
+        const selectedFilterLine = filterElem ? filterElem.value : "ALL";
+        const tbody = document.querySelector('#setupHistoryTable tbody');
+        if (!tbody) return;
+        
+        let filteredData = setupHistoryData;
+        if (selectedFilterLine !== "ALL") {
+            filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
+        }
+
+        tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+        
+        filteredData.forEach((item) => {
+            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.lot}</td><td>${item.part}</td><td><b>${item.machine}</b></td><td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td><td>${item.process}</td><td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td><td>Mat: ${item.material}<br>DH: ${item.dh}</td><td>${item.start}<br>ถึง<br>${item.end}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
+
+    function renderQcHistory() {
+        const tbody = document.querySelector('#qcHistoryTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติ QC</td></tr>` : '';
+        qcHistoryData.forEach((item) => {
+            const color = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
+            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.part}</td><td>${item.actual}</td><td style="${color}">${item.status}</td><td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
+
+    function renderSpotHistory() {
+        const tbody = document.querySelector('#spotWeldingTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = spotHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีข้อมูล Spot Welding</td></tr>` : '';
+        spotHistoryData.forEach((item) => {
+            tbody.innerHTML += `<tr><td>${item.datetime}</td><td><b>${item.part}</b></td><td>${item.jobno}</td><td>Wel Curr: ${item.welcurr}<br>Pressure: ${item.pressure}</td><td>Tip Balance: ${item.tipbalance}<br>Water: ${item.water}</td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
+
+    function renderDtHistory() {
+        const tbody = document.querySelector('#destructiveTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = dtHistoryData.length === 0 ? `<tr><td colspan="6" style="color: #7f8c8d; padding: 20px;">ยังไม่มีข้อมูล Destructive Testing</td></tr>` : '';
+        dtHistoryData.forEach((item) => {
+            tbody.innerHTML += `<tr><td><b>${item.part}</b></td><td>${item.datetime}</td><td>${item.resultFirst}</td><td style="font-weight:bold; color:var(--secondary-color);">${item.resultFinish}</td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
+
+    function deleteLocal(id) {
+        if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+            setupHistoryData = setupHistoryData.filter(i => i.id !== id);
+            qcHistoryData = qcHistoryData.filter(i => i.id !== id);
+            spotHistoryData = spotHistoryData.filter(i => i.id !== id);
+            dtHistoryData = dtHistoryData.filter(i => i.id !== id);
+            renderSetupHistory();
+            renderQcHistory();
+            renderSpotHistory();
+            renderDtHistory();
+            populateQcPartDropdown();
+        }
+    }
+
+    function exportTableToExcel(tableID, filename = '', actionColumnIndex = -1) {
+        let tableSelect = document.getElementById(tableID);
+        if (!tableSelect) return;
+        let cloneTable = tableSelect.cloneNode(true);
+        let rows = cloneTable.rows;
+        for (let i = 0; i < rows.length; i++) {
+            if(actionColumnIndex !== -1 && rows[i].cells.length > actionColumnIndex) {
+                rows[i].deleteCell(actionColumnIndex);
             }
-
-            tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
-            
-            filteredData.forEach((item) => {
-                tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.lot}</td><td>${item.part}</td><td><b>${item.machine}</b></td><td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td><td>${item.process}</td><td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td><td>Mat: ${item.material}<br>DH: ${item.dh}</td><td>${item.start}<br>ถึง<br>${item.end}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-            });
         }
+        let tableHTML = cloneTable.outerHTML;
+        let downloadLink = document.createElement("a");
+        document.body.appendChild(downloadLink);
+        downloadLink.href = 'data:application/vnd.ms-excel;charset=utf-8;,' + encodeURIComponent(tableHTML);
+        downloadLink.download = filename || 'report.xls';
+        downloadLink.click();
+    }
 
-        function renderQcHistory() {
-            const tbody = document.querySelector('#qcHistoryTable tbody');
-            tbody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติ QC</td></tr>` : '';
-            qcHistoryData.forEach((item) => {
-                const color = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
-                tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.part}</td><td>${item.actual}</td><td style="${color}">${item.status}</td><td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-            });
-        }
-
-        function renderSpotHistory() {
-            const tbody = document.querySelector('#spotWeldingTable tbody');
-            tbody.innerHTML = spotHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีข้อมูล Spot Welding</td></tr>` : '';
-            spotHistoryData.forEach((item) => {
-                tbody.innerHTML += `<tr><td>${item.datetime}</td><td><b>${item.part}</b></td><td>${item.jobno}</td><td>Wel Curr: ${item.welcurr}<br>Pressure: ${item.pressure}</td><td>Tip Balance: ${item.tipbalance}<br>Water: ${item.water}</td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-            });
-        }
-
-        function renderDtHistory() {
-            const tbody = document.querySelector('#destructiveTable tbody');
-            tbody.innerHTML = dtHistoryData.length === 0 ? `<tr><td colspan="6" style="color: #7f8c8d; padding: 20px;">ยังไม่มีข้อมูล Destructive Testing</td></tr>` : '';
-            dtHistoryData.forEach((item) => {
-                tbody.innerHTML += `<tr><td><b>${item.part}</b></td><td>${item.datetime}</td><td>${item.resultFirst}</td><td style="font-weight:bold; color:var(--secondary-color);">${item.resultFinish}</td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-            });
-        }
-
-        function deleteLocal(id) {
-            if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
-                setupHistoryData = setupHistoryData.filter(i => i.id !== id);
-                qcHistoryData = qcHistoryData.filter(i => i.id !== id);
-                spotHistoryData = spotHistoryData.filter(i => i.id !== id);
-                dtHistoryData = dtHistoryData.filter(i => i.id !== id);
-                renderSetupHistory();
-                renderQcHistory();
-                renderSpotHistory();
-                renderDtHistory();
-                populateQcPartDropdown();
-            }
-        }
-
-        function exportTableToExcel(tableID, filename = '', actionColumnIndex = -1) {
-            let tableSelect = document.getElementById(tableID);
-            let cloneTable = tableSelect.cloneNode(true);
-            let rows = cloneTable.rows;
-            for (let i = 0; i < rows.length; i++) {
-                if(actionColumnIndex !== -1 && rows[i].cells.length > actionColumnIndex) {
-                    rows[i].deleteCell(actionColumnIndex);
-                }
-            }
-            let tableHTML = cloneTable.outerHTML;
-            let downloadLink = document.createElement("a");
-            document.body.appendChild(downloadLink);
-            downloadLink.href = 'data:application/vnd.ms-excel;charset=utf-8;,' + encodeURIComponent(tableHTML);
-            downloadLink.download = filename || 'report.xls';
-            downloadLink.click();
-        }
-
-        function exportDashboardToExcel() {
-            exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary.xls', -1);
-        }
-    </script>
+    function exportDashboardToExcel() {
+        exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary.xls', -1);
+    }
+</script>
 </body>
 </html>
