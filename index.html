@@ -760,21 +760,53 @@
     });
 
     function loadDataFromGoogleSheet() {
-        fetch(SCRIPT_URL)
-        .then(response => response.json())
-        .then(data => {
-            setupHistoryData = [];
-            qcHistoryData = [];
-            spotHistoryData = [];
-            dtHistoryData = [];
-            
-            let setupCount = 0;
-            let passCount = 0;
-            let failCount = 0;
+    fetch(SCRIPT_URL)
+    .then(response => response.json())
+    .then(data => {
+        setupHistoryData = [];
+        qcHistoryData = [];
+        spotHistoryData = [];
+        dtHistoryData = [];
+        
+        let setupCount = 0;
+        let passCount = 0;
+        let failCount = 0;
 
-            data.forEach((row, index) => {
+        data.forEach((row, index) => {
             if (index === 0) return; // ข้าม Header
 
+            const type = row[1]; // ประเภท (Setup, SpotWelding, DestructiveTest, ฯลฯ)
+            
+            // 1. จัดการข้อมูลประเภท SpotWelding
+            if (type === 'SpotWelding') {
+                spotHistoryData.push({
+                    id: index,
+                    datetime: row[1] || '-',
+                    part: row[4] || '-',
+                    jobno: row[5] || '-',
+                    welcurr: row[7] || '-',
+                    pressure: row[8] || '-',
+                    tipbalance: row[9] || '-',
+                    water: row[10] || '-',
+                    inspector: row[15] || '-'
+                });
+                return;
+            }
+
+            // 2. จัดการข้อมูลประเภท DestructiveTest
+            if (type === 'DestructiveTest') {
+                dtHistoryData.push({
+                    id: index,
+                    part: row[4] || '-',
+                    datetime: row[12] || '-',
+                    resultFirst: row[13] || '-',
+                    resultFinish: row[14] || '-',
+                    inspector: row[15] || '-'
+                });
+                return;
+            }
+
+            // 3. จัดการข้อมูลประเภท Set-Up และ QC (ที่เป็นแกนหลักของระบบแม่พิมพ์)
             const record = {
                 id: index,
                 line: row[2] || '-',
@@ -797,71 +829,44 @@
                 inspector: row[15] || '-'
             };
 
-            // 1. นำทุกแถวมานับเป็น Set-Up ทั้งหมด (เพื่อให้ตัวเลข Dashboard ไม่เป็น 0)
-            setupHistoryData.push(record);
+            // นับจำนวน Set-Up ทั้งหมด
             setupCount++;
+            setupHistoryData.push(record);
 
-            // 2. เช็คว่าแถวนี้มีการตรวจ QC หรือยังเพื่อแยกเก็บประวัติ QC
-            const hasCheckedQC = (record.status && record.status !== '-' && record.status !== 'Waiting QC' && record.status !== '');
+            // เช็คว่าตรวจ QC หรือยังเพื่อแยกนับ Pass / Fail
+            const statusStr = String(record.status).trim();
+            const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
 
             if (hasCheckedQC) {
                 qcHistoryData.push(record);
-                if (record.status.includes('Pass')) passCount++;
-                else failCount++;
+                if (statusStr.includes('Pass')) {
+                    passCount++;
+                } else {
+                    failCount++;
+                }
             }
         });
-                if (type === 'Setup') {
-                    setupHistoryData.push(record);
-                    setupCount++;
-                } else if (type === 'QC Pass') {
-                    qcHistoryData.push(record);
-                    passCount++;
-                } else if (type === 'QC Not Pass') {
-                    qcHistoryData.push(record);
-                    failCount++;
-                } else if (type === 'SpotWelding') {
-                    spotHistoryData.push({
-                        id: index,
-                        datetime: row[1] || '-',
-                        part: row[4] || '-',
-                        jobno: row[5] || '-',
-                        welcurr: row[7] || '-',
-                        pressure: row[8] || '-',
-                        tipbalance: row[9] || '-',
-                        water: row[10] || '-',
-                        inspector: row[15] || '-'
-                    });
-                } else if (type === 'DestructiveTest') {
-                    dtHistoryData.push({
-                        id: index,
-                        part: row[4] || '-',
-                        datetime: row[12] || '-',
-                        resultFirst: row[13] || '-',
-                        resultFinish: row[14] || '-',
-                        inspector: row[15] || '-'
-                    });
-                }
-            });
 
-            if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
-            if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
-            if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
-            if(document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
-            if(document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
-            if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
-            if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
+        // อัปเดตตัวเลขแสดงผลบนหน้า Dashboard
+        if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
+        if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
+        if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
+        if(document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
+        if(document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
+        if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+        if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
 
-            renderSetupHistory();
-            renderQcHistory();
-            renderSpotHistory();
-            renderDtHistory();
-            populateQcPartDropdown();
-        })
-        .catch(error => {
-            console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
-        });
-    }
-
+        // เรียกฟังก์ชันเรนเดอร์หน้าจอทั้งหมด
+        if (typeof renderSetupHistory === 'function') renderSetupHistory();
+        if (typeof renderQcHistory === 'function') renderQcHistory();
+        if (typeof renderSpotHistory === 'function') renderSpotHistory();
+        if (typeof renderDtHistory === 'function') renderDtHistory();
+        if (typeof populateQcPartDropdown === 'function') populateQcPartDropdown();
+    })
+    .catch(error => {
+        console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+    });
+}
     function populateQcPartDropdown() {
     const qcPartSelect = document.getElementById('qc_part_no');
     if (!qcPartSelect) return;
