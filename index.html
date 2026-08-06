@@ -776,27 +776,27 @@
                 if(index === 0) return;
 
                 const type = row[1];
-                const record = {
-                    id: index,
-                    line: row[2] || '-',
-                    lot: row[3] || '-',
-                    part: row[4] || '-',
-                    operator: row[15] || '-',
-                    process: row[5] || '-',
-                    machine: row[6] || '-',
-                    air: row[7] || '-',
-                    cushion: row[8] || '-',
-                    spm: row[9] || '-',
-                    material: row[10] || '-',
-                    dh: row[11] || '-',
-                    start: row[12] || '-',
-                    end: row[13] || '-',
-                    status: row[14] || '-',
-                    actual: row[5] ? row[5].replace('QC Check (', '').replace(')', '') : '-',
-                    remark: row[13] || '-',
-                    datetime: row[12] || '-',
-                    inspector: row[15] || '-'
-                };
+               const record = {
+                id: index,
+                line: row[2] || '-',
+                lot: row[3] || '-',
+                part: row[4] || '-',
+                operator: row[15] || '-',
+                process: row[5] || '-',
+                machine: row[6] || '-',
+                air: row[7] || '-',
+                cushion: row[8] || '-',
+                spm: row[9] || '-',
+                material: row[10] || '-',
+                dh: row[11] || '-',
+                start: row[12] || '-',
+                end: row[13] || '-',
+                status: row[14] || '-', // ผล QC (Column O / Index 14)
+                actual: row[5] || '-',
+                remark: row[13] || '-',
+                datetime: row[12] || '-',
+                inspector: row[15] || '-'
+            };
 
                 if (type === 'Setup') {
                     setupHistoryData.push(record);
