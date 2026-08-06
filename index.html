@@ -357,6 +357,145 @@
 
         <!-- หน้าที่ 3, 4, 5 (โครงสร้างรองรับแท็บอื่น) -->
         <div id="tab3" class="tab-content"><h2>🔍 หน้าที่ 3: QC Check</h2></div>
+        <!-- หน้าที่ 3: QC Check -->
+        <div id="tab3" class="tab-content active">
+            <h2>
+                <span>🔍 หน้าที่ 3: QC Check (บันทึกผลตรวจสอบคุณภาพชิ้นงาน)</span>
+                <button class="btn-export" onclick="exportQCTableToExcel()">📥 Export Excel QC</button>
+            </h2>
+
+            <!-- กล่องแจ้งเตือนผล QC -->
+            <div id="qcAlertBox" class="alert-box"></div>
+
+            <form id="qcForm">
+                <h3>1. ข้อมูลชิ้นงานที่ต้องการตรวจสอบ</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>เลือก Line การผลิต:</label>
+                        <select id="qc_line" required onchange="loadLotOptions()">
+                            <option value="" disabled selected>-- เลือก Line --</option>
+                            <option value="Line A">Line A</option>
+                            <option value="Line Q">Line Q</option>
+                            <option value="Line C1">Line C1</option>
+                            <option value="Line C2">Line C2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Lot No.:</label>
+                        <input type="text" id="qc_lot_no" placeholder="เช่น LOT-2026-0804" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Part No.:</label>
+                        <input type="text" id="qc_part_no" placeholder="เช่น P-AB1234-5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>พนักงาน QC (ผู้ตรวจสอบ):</label>
+                        <select id="qc_inspector" required>
+                            <option value="" disabled selected>-- เลือกพนักงาน QC --</option>
+                            <option value="สมชาย ใจดี">สมชาย ใจดี</option>
+                            <option value="วิชัย มั่นคง">วิชัย มั่นคง</option>
+                            <option value="สุชาดา รัก </div>งาน">สุชาดา รักงาน</option>
+                            <option value="มานพ ศรีสุข">มานพ ศรีสุข</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3>2. รายการตรวจสอบคุณภาพ (Inspection Items)</h3>
+                <div style="overflow-x: auto;">
+                    <table class="matrix-table" id="qcItemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">No.</th>
+                                <th style="width: 32%;">หัวข้อการตรวจสอบ (Inspection Item)</th>
+                                <th style="width: 25%;">ค่ามาตรฐาน / Spec</th>
+                                <th style="width: 20%;">ผลการวัดจริง (Actual)</th>
+                                <th style="width: 15%;">ผลการตัดสิน</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Visual Inspection (รอยขีดข่วน/รอยแตก)</td>
+                                <td>ไม่มีรอยตำหนิ / ปกติ</td>
+                                <td><input type="text" class="qc-actual" value="ปกติ" required></td>
+                                <td>
+                                    <select class="qc-status-item" required>
+                                        <option value="Pass">Pass (ผ่าน)</option>
+                                        <option value="Not Pass">Not Pass</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Dimension Check (1st Process)</td>
+                                <span></span>
+                                <td>ตามDrawing (±0.2 mm)</td>
+                                <td><input type="text" class="qc-actual" placeholder="ระบุค่าที่วัดได้" required></td>
+                                <td>
+                                    <select class="qc-status-item" required>
+                                        <option value="Pass">Pass (ผ่าน)</option>
+                                        <option value="Not Pass">Not Pass</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Burr & Edge Check (ความคม/ครีบ)</td>
+                                <td>&lt; 0.1 mm</td>
+                                <td><input type="text" class="qc-actual" placeholder="ระบุค่าที่วัดได้" required></td>
+                                <td>
+                                    <select class="qc-status-item" required>
+                                        <option value="Pass">Pass (ผ่าน)</option>
+                                        <option value="Not Pass">Not Pass</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Hole Position / Piercing Size</td>
+                                <td>ตาม Drawing</td>
+                                <td><input type="text" class="qc-actual" placeholder="ระบุค่าที่วัดได้" required></td>
+                                <td>
+                                    <select class="qc-status-item" required>
+                                        <option value="Pass">Pass (ผ่าน)</option>
+                                        <option value="Not Pass">Not Pass</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>บันทึกความเห็นเพิ่มเติม / Defect Note:</label>
+                    <textarea id="qc_remark" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติมกรณีพบ Defect..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">💾 บันทึกและยืนยันผลการตรวจสอบ QC</button>
+            </form>
+
+            <h3 style="margin-top: 40px;">📋 ประวัติการตรวจสอบคุณภาพ (QC Inspection History)</h3>
+            <div class="table-container">
+                <table class="history-table" id="qcHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Line</th>
+                            <th>Lot No.</th>
+                            <th>Part No.</th>
+                            <th>ผู้ตรวจสอบ (QC)</th>
+                            <th>เวลาตรวจ</th>
+                            <th>ผลการตัดสินรวม</th>
+                            <th>หมายเหตุ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qcHistoryBody">
+                        <tr>
+                            <td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการตรวจสอบ QC</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div id="tab4" class="tab-content"><h2>⚡ หน้าที่ 4: Set-UP Spot Welding</h2></div>
         <div id="tab5" class="tab-content"><h2>💥 หน้าที่ 5: Destructive Test</h2></div>
 
@@ -493,6 +632,58 @@
 
         function exportTableToExcel() {
             alert("ฟังก์ชัน Export Excel พร้อมใช้งาน");
+        }
+        document.getElementById('qcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const line = document.getElementById('qc_line').value;
+            const lot = document.getElementById('qc_lot_no').value;
+            const part = document.getElementById('qc_part_no').value;
+            const inspector = document.getElementById('qc_inspector').value;
+            const remark = document.getElementById('qc_remark').value || "-";
+            const checkTime = new Date().toLocaleString('th-TH');
+
+            // ตรวจสอบผลแต่ละหัวข้อ
+            const itemStatuses = document.querySelectorAll('.qc-status-item');
+            let overallPass = true;
+            itemStatuses.forEach(select => {
+                if(select.value === "Not Pass") {
+                    overallPass = false;
+                }
+            });
+
+            const finalResultText = overallPass ? "Pass (ผ่านการตรวจสอบ)" : "Not Pass (ไม่ผ่านการตรวจสอบ)";
+            const finalResultStyle = overallPass ? "color: green; font-weight: bold;" : "color: red; font-weight: bold;";
+
+            const alertBox = document.getElementById('qcAlertBox');
+            alertBox.className = overallPass ? "alert-box alert-success" : "alert-box alert-error";
+            alertBox.style.display = "block";
+            alertBox.innerHTML = `ผลการตรวจสอบ QC ของ Part No. <b>${part}</b> (Lot: ${lot}): <span style="${finalResultStyle}">${finalResultText}</span>`;
+
+            // เพิ่มลงตารางประวัติ QC
+            const historyBody = document.getElementById('qcHistoryBody');
+            if(historyBody.querySelector('td[colspan]')) {
+                historyBody.innerHTML = '';
+            }
+
+            const newTr = document.createElement('tr');
+            newTr.innerHTML = `
+                <td>${line}</td>
+                <td>${lot}</td>
+                <td><b>${part}</b></td>
+                <td>${inspector}</td>
+                <td>${checkTime}</td>
+                <td style="${finalResultStyle}">${finalResultText}</td>
+                <td>${remark}</td>
+            `;
+            historyBody.prepend(newTr);
+
+            // รีเซ็ตฟอร์ม
+            document.getElementById('qcForm').reset();
+        });
+
+        function exportQCTableToExcel() {
+            alert("ฟังก์ชัน Export Excel รายงาน QC พร้อมใช้งาน");
         }
     </script>
 </body>
