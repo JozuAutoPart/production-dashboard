@@ -330,21 +330,21 @@
             </div>
         </div>
 
-       <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
-        <div id="tab2" class="tab-content active">
+        <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
+        <div id="tab2" class="tab-content">
             <h2>
                 <span>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition</span>
                 <button class="btn-export" onclick="exportTableToExcel('setupHistoryTable', 'Setup_History_Report.xls', 9)">📥 Export Excel</button>
             </h2>
             
-            <!-- กล่องแจ้งเตือนสถานะ QC หรือการบันทึก -->
+            <!-- กล่องแจ้งเตือนผล QC แยกตาม Line สำหรับฝั่ง Set-Up / ผลิต -->
             <div id="setupAlertContainer" class="alert-container"></div>
 
             <form id="setupForm">
                 <h3>1. ข้อมูลการผลิต</h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>- เลือก Line การผลิต:</label>
+                        <label>เลือก Line การผลิต:</label>
                         <select id="production_line" required>
                             <option value="" disabled selected>-- เลือก Line --</option>
                             <option value="Line A">Line A</option>
@@ -354,73 +354,23 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>- Lot No.:</label>
+                        <label>Lot No.:</label>
                         <input type="text" id="lot_no" placeholder="เช่น LOT-2026-0804" required>
                     </div>
                     <div class="form-group">
-                        <label>- Part No.:</label>
+                        <label>Part No.:</label>
                         <input type="text" id="part_no" placeholder="เช่น P-AB1234-5" required>
                     </div>
                     <div class="form-group">
-                        <label>- Material (ขนาดวัตถุดิบ):</label>
-                        <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm" required>
-                    </div>
-                </div>
-
-                <h3>2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
-                <div style="overflow-x: auto;">
-                    <table class="matrix-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 22%;">Process</th>
-                                <th style="width: 15%;">Machine No.</th>
-                                <th style="width: 21%;">Air Pressure (แรงดันลม)</th>
-                                <th style="width: 22%;">Stroke (SPM - ความเร็วรอบ/นาที)</th>
-                                <th style="width: 20%;">DH (Die Height)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- สร้างแถว -Process 1 ถึง -Process 11 ตามรูปแบบใน Excel -->
-                            <script>
-                                for(let i = 1; i <= 11; i++) {
-                                    document.write(`
-                                        <tr>
-                                            <td>
-                                                <input type="text" name="proc_name_${i}" value="-Process ${i}" list="process_list" placeholder="ชื่อ Process" style="text-align: left;" required>
-                                            </td>
-                                            <td><input type="text" name="proc_mc_${i}" placeholder="MC No."></td>
-                                            <td><input type="text" name="proc_air_${i}" placeholder="แรงดันลม"></td>
-                                            <td><input type="text" name="proc_spm_${i}" placeholder="SPM"></td>
-                                            <td><input type="text" name="proc_dh_${i}" placeholder="Die Height"></td>
-                                        </tr>
-                                    `);
-                                }
-                            </script>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Datalist สำหรับช่วยเลือกชื่อกระบวนการและพิมพ์เพิ่มเองได้ -->
-                <datalist id="process_list">
-                    <option value="-Process 1 (Bending)">
-                    <option value="-Process 2 (Blanking)">
-                    <option value="-Process 3 (Piercing)">
-                    <option value="-Process 4 (Drawing)">
-                    <option value="-Process 5 (Trimming)">
-                </datalist>
-
-                <h3>3. เวลาในการติดตั้งแม่พิมพ์</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>เริ่มติดตั้ง:</label>
-                        <input type="datetime-local" id="setup_start" required>
+                        <label>Process (ขั้นตอนการผลิต):</label>
+                        <input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
                     </div>
                     <div class="form-group">
-                        <label>สิ้นสุดการติดตั้ง:</label>
-                        <input type="datetime-local" id="setup_end" required>
+                        <label>M/C No. (หมายเลขเครื่องจักร):</label>
+                        <input type="text" id="machine_no" placeholder="เช่น MC-01" required>
                     </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>พนักงาน Set-Up:</label>
+                    <div class="form-group">
+                        <label>ชื่อพนักงาน Set-Up:</label>
                         <select id="setup_operator" required>
                             <option value="" disabled selected>-- เลือกพนักงาน Set-Up --</option>
                             <option value="ทอง ใจดี">ทอง ใจดี</option>
@@ -434,23 +384,64 @@
                     </div>
                 </div>
 
+                <h3>2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Air Pressure (แรงดันลม):</label>
+                        <input type="text" id="cond_air" placeholder="เช่น 5.5 bar" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cushion Pressure (แรงดันหมอนรอง):</label>
+                        <input type="text" id="cond_cushion" placeholder="เช่น 30 ton" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stroke (SPM - ความเร็วรอบ/นาที):</label>
+                        <input type="number" id="cond_spm" placeholder="เช่น 45" required>
+                    </div>
+                </div>
+
+                <h3>3. วัสดุ และ แม่พิมพ์</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Material (ขนาดวัตถุดิบ):</label>
+                        <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm x 150 mm" required>
+                    </div>
+                    <div class="form-group">
+                        <label>แม่พิมพ์ - DH (Die Height):</label>
+                        <input type="text" id="mold_dh" placeholder="เช่น 350 mm" required>
+                    </div>
+                </div>
+
+                <h3>4. เวลาในการติดตั้งแม่พิมพ์</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>เวลาเริ่มต้น (Start Time):</label>
+                        <input type="datetime-local" id="setup_start" required>
+                    </div>
+                    <div class="form-group">
+                        <label>เวลาสิ้นสุด (End Time):</label>
+                        <input type="datetime-local" id="setup_end" required>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-submit" id="btnSetupSubmit">บันทึกข้อมูล Set-Up และแจ้งเตือน QC</button>
+                <div id="setup-loading" class="loading">กำลังส่งข้อมูลไปยัง Google Sheets และแจ้งเตือน QC...</div>
             </form>
 
-            <h3 style="margin-top: 35px;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                    เลือก Line เพื่อดูประวัติ:
-                    <select id="filterSetupLine" onchange="filterSetupHistory()" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 35px; margin-bottom: 10px;">
+                <h3 style="margin: 0; border: none; background: transparent; padding: 0;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="filter_line" style="margin: 0; font-weight: 600;">เลือก Line เพื่อดูประวัติ:</label>
+                    <select id="filter_line" onchange="renderSetupHistory()" style="padding: 6px 12px; width: 160px; font-size: 13px;">
                         <option value="ALL">-- แสดงทั้งหมด (All) --</option>
                         <option value="Line A">Line A</option>
                         <option value="Line Q">Line Q</option>
                         <option value="Line C1">Line C1</option>
                         <option value="Line C2">Line C2</option>
                     </select>
-                </label>
+                </div>
             </div>
-            
+
             <div class="table-container">
                 <table class="history-table" id="setupHistoryTable">
                     <thead>
@@ -458,18 +449,17 @@
                             <th>Line</th>
                             <th>Lot No.</th>
                             <th>Part No.</th>
-                            <th>Material</th>
+                            <th>M/C No.</th>
                             <th>พนักงาน Set-Up</th>
-                            <th>เวลาเริ่มต้น</th>
-                            <th>เวลาสิ้นสุด</th>
-                            <th>สถานะ QC</th>
+                            <th>Process</th>
+                            <th>Air / Cushion / SPM</th>
+                            <th>Material / DH</th>
+                            <th>เวลาเริ่ม - สิ้นสุด</th>
                             <th>จัดการ</th>
                         </tr>
                     </thead>
-                    <tbody id="setupHistoryBody">
-                        <tr>
-                            <td colspan="9" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td>
-                        </tr>
+                    <tbody>
+                        <tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1013,60 +1003,46 @@
 
         // บันทึก Set-Up Die
         document.getElementById('setupForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+            e.preventDefault();
+            const lineVal = document.getElementById('production_line').value;
+            const partVal = document.getElementById('part_no').value;
+            const lotVal = document.getElementById('lot_no').value;
+            const operatorName = document.getElementById('setup_operator').value;
 
-    // 1. ดึงข้อมูลทั่วไปของฟอร์ม
-    const productionLine = document.getElementById('production_line').value;
-    const lotNo = document.getElementById('lot_no').value;
-    const partNo = document.getElementById('part_no').value;
-    const materialSize = document.getElementById('material_size').value;
-    const setupStart = document.getElementById('setup_start').value;
-    const setupEnd = document.getElementById('setup_end').value;
-    const setupOperator = document.getElementById('setup_operator').value;
+            const formData = {
+                type: "Setup",
+                line: lineVal,
+                lot: lotVal,
+                part: partVal,
+                process: document.getElementById('process_name').value,
+                machine: document.getElementById('machine_no').value,
+                air: document.getElementById('cond_air').value,
+                cushion: document.getElementById('cond_cushion').value,
+                spm: document.getElementById('cond_spm').value,
+                material: document.getElementById('material_size').value,
+                dh: document.getElementById('mold_dh').value,
+                start: document.getElementById('setup_start').value.replace('T', ' '),
+                end: document.getElementById('setup_end').value.replace('T', ' '),
+                qc_result: "-",
+                inspector: operatorName
+            };
 
-    // 2. วนลูปดึงข้อมูล Machine Condition จากตาราง Process 1 ถึง 11
-    const processConditions = [];
-    for (let i = 1; i <= 11; i++) {
-        const procName = document.querySelector(`[name="proc_name_${i}"]`).value;
-        const procMc = document.querySelector(`[name="proc_mc_${i}"]`).value;
-        const procAir = document.querySelector(`[name="proc_air_${i}"]`).value;
-        const procSpm = document.querySelector(`[name="proc_spm_${i}"]`).value;
-        const procDh = document.querySelector(`[name="proc_dh_${i}"]`).value;
+            document.getElementById('setup-loading').style.display = 'block';
+            document.getElementById('btnSetupSubmit').disabled = true;
 
-        // เก็บข้อมูลแต่ละ Process ไว้ในอาเรย์
-        processConditions.push({
-            process: procName,
-            machineNo: procMc,
-            airPressure: procAir,
-            strokeSpm: procSpm,
-            dieHeight: procDh
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+            .then(() => {
+                document.getElementById('setup-loading').style.display = 'none';
+                document.getElementById('btnSetupSubmit').disabled = false;
+                
+                triggerQcAlert(lineVal, partVal, lotVal);
+
+                alert(`บันทึกข้อมูล Set-Up แม่พิมพ์ [${lineVal}] สำเร็จ และส่งสัญญาณแจ้งเตือนทีม QC ประจำไลน์แล้ว!`);
+                document.getElementById('setupForm').reset();
+                loadDataFromGoogleSheet();
+            });
         });
-    }
 
-    // 3. รวมข้อมูลทั้งหมดเพื่อเตรียมบันทึก (เช่น ส่งเข้า Google Sheets / LocalStorage / ตารางประวัติ)
-    const formData = {
-        productionLine,
-        lotNo,
-        partNo,
-        materialSize,
-        setupStart,
-        setupEnd,
-        setupOperator,
-        processConditions,
-        qcStatus: "รอตรวจสอบ (Pending)"
-    };
-
-    console.log("ข้อมูลที่บันทึก:", formData);
-
-    // ตัวอย่าง: บันทึกลง LocalStorage เพื่อแสดงในตารางประวัติเบื้องต้น
-    let historyList = JSON.parse(localStorage.getItem('setupHistory')) ||hle = []; // หรือชื่อตัวแปรเก็บประวัติของคุณ
-    // หากคุณมีฟังก์ชันบันทึกเดิม สามารถนำ formData ไปส่งต่อได้เลยครับ
-    
-    alert("บันทึกข้อมูล Set-Up สำเร็จ!");
-    
-    // รีเซ็ตฟอร์มหลังบันทึก (ถ้าต้องการ)
-    // document.getElementById('setupForm').reset();
-});
         // บันทึก QC Check (แก้ไขตัวแปร Line ให้ถูกต้อง)
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
