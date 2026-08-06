@@ -857,18 +857,25 @@
     const currentSelected = qcPartSelect.value;
     qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (รอตรวจ QC) --</option>`;
     
-    // กรองเฉพาะรายการที่เป็น Setup และยังไม่มีการบันทึกผล QC (status ว่าง, เป็น "-" หรือ "Waiting QC")
-    const pendingList = setupHistoryData.filter(item => {
-        // เช็คว่าสถานะ QC เป็นค่าว่าง, ขีดกลาง หรือ Waiting QC หรือไม่
-        const isWaiting = (!item.status || item.status === "-" || item.status === "Waiting QC");
-        return isWaiting;
+    // 1. ดึงรายการ Part + Lot ที่เคยบันทึกใน qcHistoryData ไปแล้วมาเก็บไว้ใน Set
+    const checkedSet = new Set();
+    if (typeof qcHistoryData !== 'undefined') {
+        qcHistoryData.forEach(qc => {
+            checkedSet.add(`${qc.part}_${qc.line}_${qc.lot}`);
+        });
+    }
+
+    // 2. กรองเฉพาะ setupHistoryData ตัวที่ยังไม่มีอยู่ใน qcHistoryData
+    const pendingList = setupHistoryData.filter(setup => {
+        const key = `${setup.part}_${setup.line}_${setup.lot}`;
+        return !checkedSet.has(key); // ถ้ายังไม่เคยตรวจ ให้เอามาแสดง
     });
 
-    // นำรายการที่รอตรวจมาใส่ใน Dropdown
+    // 3. เอาใส่ลงใน Dropdown
     if (pendingList.length === 0) {
         let opt = document.createElement('option');
         opt.disabled = true;
-        opt.text = "--ไม่มีรายการรอตรวจ QC--";
+        opt.text = "-- ไม่มีรายการรอตรวจ QC --";
         qcPartSelect.appendChild(opt);
     } else {
         pendingList.forEach(item => {
