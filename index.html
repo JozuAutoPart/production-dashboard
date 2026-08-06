@@ -760,60 +760,96 @@
     });
 
     function loadDataFromGoogleSheet() {
-        fetch(SCRIPT_URL)
-        .then(response => response.json())
-        .then(data => {
-            setupHistoryData = [];
-            qcHistoryData = [];
-            spotHistoryData = [];
-            dtHistoryData = [];
-            
-            let setupCount = 0;
+    fetch(SCRIPT_URL)
+    .then(response => response.json())
+    .then(data => {
+        setupHistoryData = [];
+        qcHistoryData = [];
+        spotHistoryData = [];
+        dtHistoryData = [];
+        
+        let setupCount = 0;
         let passCount = 0;
         let failCount = 0;
 
         data.forEach((row, index) => {
             if (index === 0) return; // ข้าม Header
 
-            const type = row[1]; // Column B (Type)
+            const type = row[1]; // Column B
 
-            if (type === 'Setup') {
-                const record = {
+            // แยกประเภท SpotWelding
+            if (type === 'SpotWelding') {
+                spotHistoryData.push({
                     id: index,
-                    line: row[2] || '-',
-                    lot: row[3] || '-',
+                    datetime: row[1] || '-',
                     part: row[4] || '-',
-                    operator: row[15] || '-',
-                    process: row[5] || '-',
-                    machine: row[6] || '-',
-                    air: row[7] || '-',
-                    cushion: row[8] || '-',
-                    spm: row[9] || '-',
-                    material: row[10] || '-',
-                    dh: row[11] || '-',
-                    start: row[12] || '-',
-                    end: row[13] || '-',
-                    status: row[14] || '-', // ผล QC (Column O)
+                    jobno: row[5] || '-',
+                    welcurr: row[7] || '-',
+                    pressure: row[8] || '-',
+                    tipbalance: row[9] || '-',
+                    water: row[10] || '-',
                     inspector: row[15] || '-'
-                };
+                });
+                return;
+            }
 
-                // นับจำนวน Set-Up ทั้งหมด
+            // แยกประเภท DestructiveTest
+            if (type === 'DestructiveTest') {
+                dtHistoryData.push({
+                    id: index,
+                    part: row[4] || '-',
+                    datetime: row[12] || '-',
+                    resultFirst: row[13] || '-',
+                    resultFinish: row[14] || '-',
+                    inspector: row[15] || '-'
+                });
+                return;
+            }
+
+            // ข้อมูล Set-Up และ QC ทั่วไป
+            const record = {
+                id: index,
+                line: row[2] || '-',
+                lot: row[3] || '-',
+                part: row[4] || '-',
+                operator: row[15] || '-',
+                process: row[5] || '-',
+                machine: row[6] || '-',
+                air: row[7] || '-',
+                cushion: row[8] || '-',
+                spm: row[9] || '-',
+                material: row[10] || '-',
+                dh: row[11] || '-',
+                start: row[12] || '-',
+                end: row[13] || '-',
+                status: row[14] || '-', // ผล QC (Column O)
+                actual: row[5] || '-',
+                remark: row[13] || '-',
+                datetime: row[12] || '-',
+                inspector: row[15] || '-'
+            };
+
+            // ถ้ามี Part No. ถือว่าเป็นรายการ Set-Up ที่ต้องนำมาแสดง
+            if (record.part && record.part !== '-') {
                 setupCount++;
                 setupHistoryData.push(record);
 
-                // เช็คสถานะ QC Pass หรือ Not Pass
+                // ตรวจสอบสถานะว่าผ่านการตรวจ QC หรือยัง
                 const statusStr = String(record.status).trim();
-                if (statusStr.includes('Pass')) {
-                    passCount++;
+                const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
+
+                if (hasCheckedQC) {
                     qcHistoryData.push(record);
-                } else if (statusStr.includes('Not Pass') || statusStr.includes('Fail')) {
-                    failCount++;
-                    qcHistoryData.push(record);
+                    if (statusStr.includes('Pass')) {
+                        passCount++;
+                    } else {
+                        failCount++;
+                    }
                 }
             }
         });
 
-        // อัปเดตตัวเลขแสดงผลบน Dashboard
+        // อัปเดตตัวเลขบนหน้า Dashboard
         if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
         if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
         if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
@@ -822,21 +858,17 @@
         if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
         if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
 
-        // เรียกฟังก์ชันแสดงผลตาราง
+        // เรียกฟังก์ชันเรนเดอร์หน้าจอทั้งหมด
         if (typeof renderSetupHistory === 'function') renderSetupHistory();
         if (typeof renderQcHistory === 'function') renderQcHistory();
+        if (typeof renderSpotHistory === 'function') renderSpotHistory();
+        if (typeof renderDtHistory === 'function') renderDtHistory();
         if (typeof populateQcPartDropdown === 'function') populateQcPartDropdown();
-
-            renderSetupHistory();
-            renderQcHistory();
-            renderSpotHistory();
-            renderDtHistory();
-            populateQcPartDropdown();
-        })
-        .catch(error => {
-            console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
-        });
-    }
+    })
+    .catch(error => {
+        console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+    });
+}
 
     function populateQcPartDropdown() {
         const qcPartSelect = document.getElementById('qc_part_no');
