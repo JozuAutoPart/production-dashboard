@@ -490,8 +490,26 @@
         <button type="submit" class="btn-submit" id="btnSetupSubmit">บันทึกข้อมูล Set-Up และแจ้งเตือน QC</button>
         <div id="setup-loading" class="loading">กำลังส่งข้อมูลไปยัง Google Sheets และแจ้งเตือน QC...</div>
     </form>
-</div>
-
+    <h3 style="margin-top: 35px;">📋 ตารางประวัติการบันทึก Set-Up Die</h3>
+        <div class="table-container">
+            <table class="history-table" id="setupHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Line</th>
+                        <th>Part No.</th>
+                        <th>Lot No.</th>
+                        <th>Material</th>
+                        <th>ผู้ปฏิบัติงาน</th>
+                        <th>เวลา</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" style="color: #7f8c8d; text-align: center;">ยังไม่มีข้อมูลการ Set-Up</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div
         <!-- หน้าที่ 3: QC Check -->
         <div id="tab3" class="tab-content">
             <h2>
