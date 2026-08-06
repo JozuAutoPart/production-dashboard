@@ -330,21 +330,21 @@
             </div>
         </div>
 
-        <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
-        <div id="tab2" class="tab-content">
+       <!-- หน้าที่ 2: Set-Up Die & Condition Machine -->
+        <div id="tab2" class="tab-content active">
             <h2>
                 <span>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition</span>
                 <button class="btn-export" onclick="exportTableToExcel('setupHistoryTable', 'Setup_History_Report.xls', 9)">📥 Export Excel</button>
             </h2>
             
-            <!-- กล่องแจ้งเตือนผล QC แยกตาม Line สำหรับฝั่ง Set-Up / ผลิต -->
+            <!-- กล่องแจ้งเตือนสถานะ QC หรือการบันทึก -->
             <div id="setupAlertContainer" class="alert-container"></div>
 
             <form id="setupForm">
                 <h3>1. ข้อมูลการผลิต</h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>เลือก Line การผลิต:</label>
+                        <label>- เลือก Line การผลิต:</label>
                         <select id="production_line" required>
                             <option value="" disabled selected>-- เลือก Line --</option>
                             <option value="Line A">Line A</option>
@@ -354,30 +354,73 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Lot No.:</label>
+                        <label>- Lot No.:</label>
                         <input type="text" id="lot_no" placeholder="เช่น LOT-2026-0804" required>
                     </div>
                     <div class="form-group">
-                        <label>Part No.:</label>
+                        <label>- Part No.:</label>
                         <input type="text" id="part_no" placeholder="เช่น P-AB1234-5" required>
                     </div>
                     <div class="form-group">
-                        <label>Process (ขั้นตอนการผลิต):</label>
-                        <input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
-                        <input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
-<input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
-<input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
-<input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
-<input type="text" id="process_name" placeholder="เช่น Bending / Blanking" required>
+                        <label>- Material (ขนาดวัตถุดิบ):</label>
+                        <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm" required>
+                    </div>
+                </div>
 
-                        
+                <h3>2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
+                <div style="overflow-x: auto;">
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 22%;">Process</th>
+                                <th style="width: 15%;">Machine No.</th>
+                                <th style="width: 21%;">Air Pressure (แรงดันลม)</th>
+                                <th style="width: 22%;">Stroke (SPM - ความเร็วรอบ/นาที)</th>
+                                <th style="width: 20%;">DH (Die Height)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- สร้างแถว -Process 1 ถึง -Process 11 ตามรูปแบบใน Excel -->
+                            <script>
+                                for(let i = 1; i <= 11; i++) {
+                                    document.write(`
+                                        <tr>
+                                            <td>
+                                                <input type="text" name="proc_name_${i}" value="-Process ${i}" list="process_list" placeholder="ชื่อ Process" style="text-align: left;" required>
+                                            </td>
+                                            <td><input type="text" name="proc_mc_${i}" placeholder="MC No."></td>
+                                            <td><input type="text" name="proc_air_${i}" placeholder="แรงดันลม"></td>
+                                            <td><input type="text" name="proc_spm_${i}" placeholder="SPM"></td>
+                                            <td><input type="text" name="proc_dh_${i}" placeholder="Die Height"></td>
+                                        </tr>
+                                    `);
+                                }
+                            </script>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Datalist สำหรับช่วยเลือกชื่อกระบวนการและพิมพ์เพิ่มเองได้ -->
+                <datalist id="process_list">
+                    <option value="-Process 1 (Bending)">
+                    <option value="-Process 2 (Blanking)">
+                    <option value="-Process 3 (Piercing)">
+                    <option value="-Process 4 (Drawing)">
+                    <option value="-Process 5 (Trimming)">
+                </datalist>
+
+                <h3>3. เวลาในการติดตั้งแม่พิมพ์</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>เริ่มติดตั้ง:</label>
+                        <input type="datetime-local" id="setup_start" required>
                     </div>
                     <div class="form-group">
-                        <label>M/C No. (หมายเลขเครื่องจักร):</label>
-                        <input type="text" id="machine_no" placeholder="เช่น MC-01" required>
+                        <label>สิ้นสุดการติดตั้ง:</label>
+                        <input type="datetime-local" id="setup_end" required>
                     </div>
-                    <div class="form-group">
-                        <label>ชื่อพนักงาน Set-Up:</label>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>พนักงาน Set-Up:</label>
                         <select id="setup_operator" required>
                             <option value="" disabled selected>-- เลือกพนักงาน Set-Up --</option>
                             <option value="ทอง ใจดี">ทอง ใจดี</option>
@@ -391,64 +434,23 @@
                     </div>
                 </div>
 
-                <h3>2. Machine Condition (เงื่อนไขเครื่องจักร)</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Air Pressure (แรงดันลม):</label>
-                        <input type="text" id="cond_air" placeholder="เช่น 5.5 bar" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Cushion Pressure (แรงดันหมอนรอง):</label>
-                        <input type="text" id="cond_cushion" placeholder="เช่น 30 ton" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Stroke (SPM - ความเร็วรอบ/นาที):</label>
-                        <input type="number" id="cond_spm" placeholder="เช่น 45" required>
-                    </div>
-                </div>
-
-                <h3>3. วัสดุ และ แม่พิมพ์</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Material (ขนาดวัตถุดิบ):</label>
-                        <input type="text" id="material_size" placeholder="เช่น SGCC t=1.2 mm x 150 mm" required>
-                    </div>
-                    <div class="form-group">
-                        <label>แม่พิมพ์ - DH (Die Height):</label>
-                        <input type="text" id="mold_dh" placeholder="เช่น 350 mm" required>
-                    </div>
-                </div>
-
-                <h3>4. เวลาในการติดตั้งแม่พิมพ์</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>เวลาเริ่มต้น (Start Time):</label>
-                        <input type="datetime-local" id="setup_start" required>
-                    </div>
-                    <div class="form-group">
-                        <label>เวลาสิ้นสุด (End Time):</label>
-                        <input type="datetime-local" id="setup_end" required>
-                    </div>
-                </div>
-
                 <button type="submit" class="btn-submit" id="btnSetupSubmit">บันทึกข้อมูล Set-Up และแจ้งเตือน QC</button>
-                <div id="setup-loading" class="loading">กำลังส่งข้อมูลไปยัง Google Sheets และแจ้งเตือน QC...</div>
             </form>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 35px; margin-bottom: 10px;">
-                <h3 style="margin: 0; border: none; background: transparent; padding: 0;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <label for="filter_line" style="margin: 0; font-weight: 600;">เลือก Line เพื่อดูประวัติ:</label>
-                    <select id="filter_line" onchange="renderSetupHistory()" style="padding: 6px 12px; width: 160px; font-size: 13px;">
+            <h3 style="margin-top: 35px;">📋 ตารางประวัติการ Set-Up แม่พิมพ์</h3>
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                    เลือก Line เพื่อดูประวัติ:
+                    <select id="filterSetupLine" onchange="filterSetupHistory()" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
                         <option value="ALL">-- แสดงทั้งหมด (All) --</option>
                         <option value="Line A">Line A</option>
                         <option value="Line Q">Line Q</option>
                         <option value="Line C1">Line C1</option>
                         <option value="Line C2">Line C2</option>
                     </select>
-                </div>
+                </label>
             </div>
-
+            
             <div class="table-container">
                 <table class="history-table" id="setupHistoryTable">
                     <thead>
@@ -456,17 +458,18 @@
                             <th>Line</th>
                             <th>Lot No.</th>
                             <th>Part No.</th>
-                            <th>M/C No.</th>
+                            <th>Material</th>
                             <th>พนักงาน Set-Up</th>
-                            <th>Process</th>
-                            <th>Air / Cushion / SPM</th>
-                            <th>Material / DH</th>
-                            <th>เวลาเริ่ม - สิ้นสุด</th>
+                            <th>เวลาเริ่มต้น</th>
+                            <th>เวลาสิ้นสุด</th>
+                            <th>สถานะ QC</th>
                             <th>จัดการ</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
+                    <tbody id="setupHistoryBody">
+                        <tr>
+                            <td colspan="9" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
