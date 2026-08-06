@@ -1047,130 +1047,146 @@
         }
 
         // บันทึก Set-Up Die
-       // บันทึก Set-Up Die
-document.getElementById('setupForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const lineVal = document.getElementById('production_line').value;
-    const partVal = document.getElementById('part_no').value;
-    const lotVal = document.getElementById('lot_no').value;
-    const operatorName = document.getElementById('setup_operator').value;
+     // --- ส่วนหน้า 2 (Set-Up Die) ---
+    function handleSetupSubmit(e) {
+        e.preventDefault();
+        const data = {
+            id: Date.now(),
+            line: document.getElementById('setup_line').value,
+            part: document.getElementById('setup_part').value,
+            lot: document.getElementById('setup_lot').value,
+            material: document.getElementById('setup_material').value,
+            start: document.getElementById('setup_start').value.replace('T', ' '),
+            end: document.getElementById('setup_end').value.replace('T', ' '),
+            operator: document.getElementById('setup_operator').value
+        };
 
-    const formData = {
-        type: "Setup",
-        line: lineVal,
-        lot: lotVal,
-        part: partVal,
-        process: document.getElementById('process_name') ? document.getElementById('process_name').value : "-",
-        machine: document.getElementById('machine_no') ? document.getElementById('machine_no').value : "-",
-        air: document.getElementById('cond_air') ? document.getElementById('cond_air').value : "-",
-        cushion: document.getElementById('cond_cushion') ? document.getElementById('cond_cushion').value : "-",
-        spm: document.getElementById('cond_spm') ? document.getElementById('cond_spm').value : "-",
-        material: document.getElementById('material_size').value,
-        dh: document.getElementById('mold_dh') ? document.getElementById('mold_dh').value : "-",
-        start: document.getElementById('setup_start').value.replace('T', ' '),
-        end: document.getElementById('setup_end').value.replace('T', ' '),
-        qc_result: "-",
-        inspector: operatorName
-    };
-
-    // ตรวจสอบ element ว่ามีอยู่จริงหรือไม่เพื่อป้องกัน Error กรณีปรับแต่งหน้าจอ
-    const loadingEl = document.getElementById('setup-loading');
-    if (loadingEl) loadingEl.style.display = 'block';
-    
-    const submitBtn = document.getElementById('btnSetupSubmit');
-    if (submitBtn) submitBtn.disabled = true;
-
-    fetch(SCRIPT_URL, { 
-        method: 'POST', 
-        mode: 'no-cors', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(formData) 
-    })
-    .then(() => {
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (submitBtn) submitBtn.disabled = false;
-        
-        // เรียกใช้งานฟังก์ชันแจ้งเตือน (ถ้ามีในระบบ)
-        if (typeof triggerQcAlert === 'function') {
-            triggerQcAlert(lineVal, partVal, lotVal);
-        }
-
-        alert(`บันทึกข้อมูล Set-Up แม่พิมพ์ [${lineVal}] สำเร็จ และส่งสัญญาณแจ้งเตือนทีม QC ประจำไลน์แล้ว!`);
+        setupRecords.push(data);
+        localStorage.setItem('setupRecords', JSON.stringify(setupRecords));
+        alert('บันทึก Set-Up เรียบร้อย และส่งแจ้งเตือนไปหน้า QC Check แล้ว!');
         document.getElementById('setupForm').reset();
-        
-        // โหลดข้อมูลใหม่ (ถ้ามีฟังก์ชันนี้)
-        if (typeof loadDataFromGoogleSheet === 'function') {
-            loadDataFromGoogleSheet();
+        renderSetupHistory();
+        updateQcDropdown();
+        checkQcAlert();
+    }
+
+    function renderSetupHistory() {
+        const tbody = document.querySelector('#setupHistoryTable tbody');
+        if (!tbody) return;
+        if (setupRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="color: #7f8c8d; text-align: center;">ยังไม่มีข้อมูลการ Set-Up</td></tr>';
+            return;
         }
-        if (typeof updateDashboard === 'function') {
-            updateDashboard();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (submitBtn) submitBtn.disabled = false;
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
-    });
-});
-
-        // บันทึก QC Check (แก้ไขตัวแปร Line ให้ถูกต้อง)
-        document.getElementById('qcForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const lineVal = document.getElementById('qc_production_line').value;
-            const partVal = document.getElementById('qc_part_no').value;
-            const chkDim = document.querySelector('input[name="chk_dim"]:checked').value;
-            const chkBurr = document.querySelector('input[name="chk_burr"]:checked').value;
-            const chkHole = document.querySelector('input[name="chk_hole"]:checked').value;
-            const qcStatus = document.getElementById('qc_command_status').value;
-            const remarkVal = document.getElementById('qc_ng_remark').value || '-';
-
-            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
-            
-            const qcFormData = {
-                type: qcStatus,
-                line: lineVal,
-                lot: "-",
-                part: partVal,
-                process: "QC Check (" + document.getElementById('qc_actual_data').value + ") " + checklistSummary,
-                machine: "-",
-                air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
-                start: document.getElementById('qc_datetime').value.replace('T', ' '),
-                end: remarkVal,
-                qc_result: qcStatus,
-                inspector: document.getElementById('qc_inspector_name').value
-            };
-
-            document.getElementById('qc-loading').style.display = 'block';
-            document.getElementById('btnQcSubmit').disabled = true;
-
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
-            .then(() => {
-                document.getElementById('qc-loading').style.display = 'none';
-                document.getElementById('btnQcSubmit').disabled = false;
-                
-                // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
-                if (qcLineAlerts[lineVal]) {
-                    qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
-                    if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
-                }
-                renderQcAlertsUI();
-                
-                // ส่งสัญญาณแจ้งเตือนกลับเฉพาะหน้า Set-Up ของ Line นั้นๆ
-                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
-
-                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
-                document.getElementById('qcForm').reset();
-                loadDataFromGoogleSheet();
-            })
-            .catch(error => {
-                document.getElementById('qc-loading').style.display = 'none';
-                document.getElementById('btnQcSubmit').disabled = false;
-                console.error('Error:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-            });
+        tbody.innerHTML = '';
+        setupRecords.forEach((item, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${item.line}</b></td>
+                    <td>${item.part}</td>
+                    <td>${item.lot}</td>
+                    <td>${item.material}</td>
+                    <td>${item.operator}</td>
+                    <td style="font-size: 11px;">${item.start}</td>
+                    <td><button class="btn-delete" onclick="deleteSetup(${index})">ลบ</button></td>
+                </tr>
+            `;
         });
+    }
 
+    function deleteSetup(index) {
+        if (confirm('ต้องการลบข้อมูล Set-Up นี้?')) {
+            setupRecords.splice(index, 1);
+            localStorage.setItem('setupRecords', JSON.stringify(setupRecords));
+            renderSetupHistory();
+            updateQcDropdown();
+            checkQcAlert();
+        }
+    }
+
+    // --- ส่วนหน้า 3 (QC Check) ---
+    function updateQcDropdown() {
+        const select = document.getElementById('qc_select_setup');
+        if (!select) return;
+        select.innerHTML = '<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
+        setupRecords.forEach((item, index) => {
+            select.innerHTML += `<option value="${index}">Part: ${item.part} | Lot: ${item.lot} (${item.line})</option>`;
+        });
+    }
+
+    function loadSetupDataToQc() {
+        const index = document.getElementById('qc_select_setup').value;
+        if (index === "") return;
+        const selectedSetup = setupRecords[index];
+        document.getElementById('qc_line').value = selectedSetup.line;
+    }
+
+    function checkQcAlert() {
+        const alertBox = document.getElementById('qcAlertBox');
+        if (!alertBox) return;
+        if (setupRecords.length > 0) {
+            alertBox.style.display = 'flex';
+            const latest = setupRecords[setupRecords.length - 1];
+            document.getElementById('qcAlertText').innerText = `⚠️ แจ้งเตือนด่วน: มีรายการ Set-Up ใหม่ (Part: ${latest.part}, Lot: ${latest.lot}, ${latest.line}) รอตรวจสอบชิ้นงาน`;
+        } else {
+            alertBox.style.display = 'none';
+        }
+    }
+
+    function handleQcSubmit(e) {
+        e.preventDefault();
+        const selectIndex = document.getElementById('qc_select_setup').value;
+        if (selectIndex === "") {
+            alert('กรุณาเลือก Part No. จากแผน Set-Up ก่อน');
+            return;
+        }
+        const targetSetup = setupRecords[selectIndex];
+        const qcData = {
+            id: Date.now(),
+            line: targetSetup.line,
+            part: targetSetup.part,
+            lot: targetSetup.lot,
+            result: document.getElementById('qc_result_status').value,
+            inspector: document.getElementById('qc_inspector').value,
+            time: document.getElementById('qc_time').value.replace('T', ' ')
+        };
+
+        qcRecords.push(qcData);
+        localStorage.setItem('qcRecords', JSON.stringify(qcRecords));
+        alert('บันทึกผล QC เรียบร้อย!');
+        document.getElementById('qcForm').reset();
+        renderQcHistory();
+    }
+
+    function renderQcHistory() {
+        const tbody = document.querySelector('#qcHistoryTable tbody');
+        if (!tbody) return;
+        if (qcRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="color: #7f8c8d; text-align: center;">ยังไม่มีประวัติการตรวจ QC</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        qcRecords.forEach((item, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${item.line}</b></td>
+                    <td>${item.part}</td>
+                    <td>${item.lot}</td>
+                    <td><span style="color: ${item.result.includes('Approved') ? 'green' : 'red'};">${item.result}</span></td>
+                    <td>${item.inspector}</td>
+                    <td>${item.time}</td>
+                    <td><button class="btn-delete" onclick="deleteQc(${index})">ลบ</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function deleteQc(index) {
+        if (confirm('ต้องการลบประวัติ QC นี้?')) {
+            qcRecords.splice(index, 1);
+            localStorage.setItem('qcRecords', JSON.stringify(qcRecords));
+            renderQcHistory();
+        }
+    }
         // บันทึก Spot Welding (หน้า 4)
         document.getElementById('spotWeldingForm').addEventListener('submit', function(e) {
             e.preventDefault();
