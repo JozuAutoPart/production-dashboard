@@ -857,19 +857,26 @@
         const currentSelected = qcPartSelect.value;
         qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (รอตรวจ QC) --</option>`;
         
-        // 1. ดึงรายการ Part No. พร้อม Lot ที่เคยตรวจ QC ไปแล้ว (ทั้ง Pass และ Not Pass)
-        const checkedItems = qcHistoryData.map(qc => `${qc.part}_${qc.line}_${qc.lot}`);
-
-        // 2. กรองเอาเฉพาะรายการ Set-Up ที่ "ยังไม่เคยตรวจ QC" หรือ สถานะยังคงเป็น "Waiting QC"
-        const pendingSetupList = setupHistoryData.filter(setup => {
-            const itemKey = `${setup.part}_${setup.line}_${setup.lot}`;
-            const isAlreadyChecked = checkedItems.includes(itemKey);
-            
-            // แสดงเฉพาะรายการที่ยังไม่ได้ตรวจ และ (สถานะเป็น Waiting QC หรือยังไม่มีสถานะตรวจสำเร็จ)
-            return !isAlreadyChecked && (setup.status === 'Waiting QC' || !setup.status || setup.status === '-');
+        // 1. สร้างรายการคีย์ของ Part+Lot ที่ผ่านการบันทึกผล QC ไปแล้วทั้งหมด
+        const checkedSet = new Set();
+        qcHistoryData.forEach(qc => {
+            // เก็บทั้งแบบจับคู่ Line/Part/Lot และแบบเฉพาะ Part/Lot เพื่อความครอบคลุม
+            checkedSet.add(`${qc.part}_${qc.line}_${qc.lot}`);
+            checkedSet.add(`${qc.part}_${qc.lot}`);
         });
 
-        // 3. นำรายการที่รอตรวจ มาใส่ลงใน Dropdown
+        // 2. กรองเอาเฉพาะ Set-Up ที่ยังไม่มีประวัติใน qcHistoryData
+        const pendingSetupList = setupHistoryData.filter(setup => {
+            const key1 = `${setup.part}_${setup.line}_${setup.lot}`;
+            const key2 = `${setup.part}_${setup.lot}`;
+            
+            // เช็คว่าเคยถูกบันทึกผลใน QC หรือยัง
+            const isChecked = checkedSet.has(key1) || checkedSet.has(key2);
+            
+            return !isChecked;
+        });
+
+        // 3. แสดงผลใน Dropdown
         if (pendingSetupList.length === 0) {
             let opt = document.createElement('option');
             opt.disabled = true;
@@ -886,12 +893,10 @@
             });
         }
 
-        // คืนค่าที่เคยเลือกไว้ (ถ้ายังมีอยู่ในรายการรอตรวจ)
         if (currentSelected) {
             qcPartSelect.value = currentSelected;
         }
     }
-
     function onSelectQcPart(selectElem) {
         const selectedOption = selectElem.options[selectElem.selectedIndex];
         const lineValue = selectedOption.getAttribute('data-line');
