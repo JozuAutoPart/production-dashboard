@@ -857,29 +857,29 @@
     const currentSelected = qcPartSelect.value;
     qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (รอตรวจ QC) --</option>`;
     
-    // ดึงรายการที่เคยถูกบันทึกผล QC ไปแล้วจากตารางหรือตัวแปรประวัติ
-    // (ปรับชื่อตัวแปรประวัติ QC ของคุณให้ตรงกัน เช่น qcHistoryData หรือดึงจากตาราง HTML)
-    const checkedParts = [];
-    // ตัวอย่างเช่น ถ้าเก็บประวัติไว้ในตัวแปร array:
-    if (typeof qcHistoryData !== 'undefined') {
-        qcHistoryData.forEach(item => checkedParts.push(`${item.part}_${item.line}_${item.lot}`));
-    }
-
-    // กรองเฉพาะ setupHistoryData ที่ยังไม่มีในประวัติการตรวจ QC
-    const pendingList = setupHistoryData.filter(setup => {
-        const key = `${setup.part}_${setup.line}_${setup.lot}`;
-        return !checkedParts.includes(key);
+    // กรองเฉพาะรายการที่เป็น Setup และยังไม่มีการบันทึกผล QC (status ว่าง, เป็น "-" หรือ "Waiting QC")
+    const pendingList = setupHistoryData.filter(item => {
+        // เช็คว่าสถานะ QC เป็นค่าว่าง, ขีดกลาง หรือ Waiting QC หรือไม่
+        const isWaiting = (!item.status || item.status === "-" || item.status === "Waiting QC");
+        return isWaiting;
     });
 
-    // นำรายการที่เหลือมาใส่ใน Dropdown
-    pendingList.forEach(item => {
+    // นำรายการที่รอตรวจมาใส่ใน Dropdown
+    if (pendingList.length === 0) {
         let opt = document.createElement('option');
-        opt.value = item.part;
-        opt.setAttribute('data-line', item.line);
-        opt.setAttribute('data-lot', item.lot);
-        opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+        opt.disabled = true;
+        opt.text = "--ไม่มีรายการรอตรวจ QC--";
         qcPartSelect.appendChild(opt);
-    });
+    } else {
+        pendingList.forEach(item => {
+            let opt = document.createElement('option');
+            opt.value = item.part;
+            opt.setAttribute('data-line', item.line);
+            opt.setAttribute('data-lot', item.lot);
+            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+            qcPartSelect.appendChild(opt);
+        });
+    }
 
     if (currentSelected) {
         qcPartSelect.value = currentSelected;
