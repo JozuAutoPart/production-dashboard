@@ -760,10 +760,11 @@
     });
 
     function loadDataFromGoogleSheet() {
-    fetch(SCRIPT_URL, {
-        method: 'GET',
-        mode: 'cors' // เพิ่มบรรทัดนี้เพื่อแก้ปัญหา CORS
-    })
+    // ใช้ CORS Proxy เพื่อหลบการบล็อก CORS ระหว่าง GitHub กับ Google Apps Script
+    const corsProxy = 'https://corsproxy.io/?';
+    const targetUrl = corsProxy + encodeURIComponent(SCRIPT_URL);
+
+    fetch(targetUrl)
     .then(response => response.json())
     .then(data => {
         setupHistoryData = [];
@@ -847,6 +848,7 @@
             }
         });
 
+        // อัปเดตตัวเลขหน้า Dashboard
         if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
         if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
         if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
@@ -855,6 +857,7 @@
         if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
         if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
 
+        // เรียกฟังก์ชันเรนเดอร์ข้อมูลหน้าจอ
         if (typeof renderSetupHistory === 'function') renderSetupHistory();
         if (typeof renderQcHistory === 'function') renderQcHistory();
         if (typeof renderSpotHistory === 'function') renderSpotHistory();
