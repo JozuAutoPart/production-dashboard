@@ -855,18 +855,39 @@
         if (!qcPartSelect) return;
         
         const currentSelected = qcPartSelect.value;
-        qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
+        qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (รอตรวจ QC) --</option>`;
         
-        setupHistoryData.forEach(item => {
-            let opt = document.createElement('option');
-            opt.value = item.part;
-            opt.setAttribute('data-line', item.line);
-            opt.setAttribute('data-lot', item.lot);
-            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-            qcPartSelect.appendChild(opt);
+        // 1. ดึงรายการ Part No. พร้อม Lot ที่เคยตรวจ QC ไปแล้ว (ทั้ง Pass และ Not Pass)
+        const checkedItems = qcHistoryData.map(qc => `${qc.part}_${qc.line}_${qc.lot}`);
+
+        // 2. กรองเอาเฉพาะรายการ Set-Up ที่ "ยังไม่เคยตรวจ QC" หรือ สถานะยังคงเป็น "Waiting QC"
+        const pendingSetupList = setupHistoryData.filter(setup => {
+            const itemKey = `${setup.part}_${setup.line}_${setup.lot}`;
+            const isAlreadyChecked = checkedItems.includes(itemKey);
+            
+            // แสดงเฉพาะรายการที่ยังไม่ได้ตรวจ และ (สถานะเป็น Waiting QC หรือยังไม่มีสถานะตรวจสำเร็จ)
+            return !isAlreadyChecked && (setup.status === 'Waiting QC' || !setup.status || setup.status === '-');
         });
 
-        if(currentSelected) {
+        // 3. นำรายการที่รอตรวจ มาใส่ลงใน Dropdown
+        if (pendingSetupList.length === 0) {
+            let opt = document.createElement('option');
+            opt.disabled = true;
+            opt.text = "-- ไม่มีรายการรอตรวจ QC --";
+            qcPartSelect.appendChild(opt);
+        } else {
+            pendingSetupList.forEach(item => {
+                let opt = document.createElement('option');
+                opt.value = item.part;
+                opt.setAttribute('data-line', item.line);
+                opt.setAttribute('data-lot', item.lot);
+                opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+                qcPartSelect.appendChild(opt);
+            });
+        }
+
+        // คืนค่าที่เคยเลือกไว้ (ถ้ายังมีอยู่ในรายการรอตรวจ)
+        if (currentSelected) {
             qcPartSelect.value = currentSelected;
         }
     }
