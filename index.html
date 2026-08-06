@@ -760,7 +760,10 @@
     });
 
     function loadDataFromGoogleSheet() {
-    fetch(SCRIPT_URL)
+    fetch(SCRIPT_URL, {
+        method: 'GET',
+        mode: 'cors' // เพิ่มบรรทัดนี้เพื่อแก้ปัญหา CORS
+    })
     .then(response => response.json())
     .then(data => {
         setupHistoryData = [];
@@ -777,7 +780,6 @@
 
             const type = row[1]; // Column B
 
-            // แยกประเภท SpotWelding
             if (type === 'SpotWelding') {
                 spotHistoryData.push({
                     id: index,
@@ -793,7 +795,6 @@
                 return;
             }
 
-            // แยกประเภท DestructiveTest
             if (type === 'DestructiveTest') {
                 dtHistoryData.push({
                     id: index,
@@ -806,7 +807,6 @@
                 return;
             }
 
-            // ข้อมูล Set-Up และ QC ทั่วไป
             const record = {
                 id: index,
                 line: row[2] || '-',
@@ -822,19 +822,17 @@
                 dh: row[11] || '-',
                 start: row[12] || '-',
                 end: row[13] || '-',
-                status: row[14] || '-', // ผล QC (Column O)
+                status: row[14] || '-',
                 actual: row[5] || '-',
                 remark: row[13] || '-',
                 datetime: row[12] || '-',
                 inspector: row[15] || '-'
             };
 
-            // ถ้ามี Part No. ถือว่าเป็นรายการ Set-Up ที่ต้องนำมาแสดง
             if (record.part && record.part !== '-') {
                 setupCount++;
                 setupHistoryData.push(record);
 
-                // ตรวจสอบสถานะว่าผ่านการตรวจ QC หรือยัง
                 const statusStr = String(record.status).trim();
                 const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
 
@@ -849,7 +847,6 @@
             }
         });
 
-        // อัปเดตตัวเลขบนหน้า Dashboard
         if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
         if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
         if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
@@ -858,7 +855,6 @@
         if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
         if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
 
-        // เรียกฟังก์ชันเรนเดอร์หน้าจอทั้งหมด
         if (typeof renderSetupHistory === 'function') renderSetupHistory();
         if (typeof renderQcHistory === 'function') renderQcHistory();
         if (typeof renderSpotHistory === 'function') renderSpotHistory();
