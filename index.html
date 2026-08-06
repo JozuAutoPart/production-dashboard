@@ -1065,47 +1065,72 @@
             renderSetupAlertsUI();
         }
 
-        // บันทึก Set-Up Die
-        document.getElementById('setupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const lineVal = document.getElementById('production_line').value;
-            const partVal = document.getElementById('part_no').value;
-            const lotVal = document.getElementById('lot_no').value;
-            const operatorName = document.getElementById('setup_operator').value;
+      // บันทึก Set-Up Die
+document.getElementById('setupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const lineVal = document.getElementById('production_line').value;
+    const partVal = document.getElementById('part_no').value;
+    const lotVal = document.getElementById('lot_no').value;
+    const operatorName = document.getElementById('setup_operator').value;
 
-            const formData = {
-                type: "Setup",
-                line: lineVal,
-                lot: lotVal,
-                part: partVal,
-                process: document.getElementById('process_name').value,
-                machine: document.getElementById('machine_no').value,
-                air: document.getElementById('cond_air').value,
-                cushion: document.getElementById('cond_cushion').value,
-                spm: document.getElementById('cond_spm').value,
-                material: document.getElementById('material_size').value,
-                dh: document.getElementById('mold_dh').value,
-                start: document.getElementById('setup_start').value.replace('T', ' '),
-                end: document.getElementById('setup_end').value.replace('T', ' '),
-                qc_result: "-",
-                inspector: operatorName
-            };
+    const formData = {
+        type: "Setup",
+        line: lineVal,
+        lot: lotVal,
+        part: partVal,
+        process: document.getElementById('process_name') ? document.getElementById('process_name').value : "-",
+        machine: document.getElementById('machine_no') ? document.getElementById('machine_no').value : "-",
+        air: document.getElementById('cond_air') ? document.getElementById('cond_air').value : "-",
+        cushion: document.getElementById('cond_cushion') ? document.getElementById('cond_cushion').value : "-",
+        spm: document.getElementById('cond_spm') ? document.getElementById('cond_spm').value : "-",
+        material: document.getElementById('material_size').value,
+        dh: document.getElementById('mold_dh') ? document.getElementById('mold_dh').value : "-",
+        start: document.getElementById('setup_start').value.replace('T', ' '),
+        end: document.getElementById('setup_end').value.replace('T', ' '),
+        qc_result: "-",
+        inspector: operatorName
+    };
 
-            document.getElementById('setup-loading').style.display = 'block';
-            document.getElementById('btnSetupSubmit').disabled = true;
+    // ตรวจสอบ element ว่ามีอยู่จริงหรือไม่เพื่อป้องกัน Error กรณีปรับแต่งหน้าจอ
+    const loadingEl = document.getElementById('setup-loading');
+    if (loadingEl) loadingEl.style.display = 'block';
+    
+    const submitBtn = document.getElementById('btnSetupSubmit');
+    if (submitBtn) submitBtn.disabled = true;
 
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
-            .then(() => {
-                document.getElementById('setup-loading').style.display = 'none';
-                document.getElementById('btnSetupSubmit').disabled = false;
-                
-                triggerQcAlert(lineVal, partVal, lotVal);
+    fetch(SCRIPT_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(formData) 
+    })
+    .then(() => {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (submitBtn) submitBtn.disabled = false;
+        
+        // เรียกใช้งานฟังก์ชันแจ้งเตือน (ถ้ามีในระบบ)
+        if (typeof triggerQcAlert === 'function') {
+            triggerQcAlert(lineVal, partVal, lotVal);
+        }
 
-                alert(`บันทึกข้อมูล Set-Up แม่พิมพ์ [${lineVal}] สำเร็จ และส่งสัญญาณแจ้งเตือนทีม QC ประจำไลน์แล้ว!`);
-                document.getElementById('setupForm').reset();
-                loadDataFromGoogleSheet();
-            });
-        });
+        alert(`บันทึกข้อมูล Set-Up แม่พิมพ์ [${lineVal}] สำเร็จ และส่งสัญญาณแจ้งเตือนทีม QC ประจำไลน์แล้ว!`);
+        document.getElementById('setupForm').reset();
+        
+        // โหลดข้อมูลใหม่ (ถ้ามีฟังก์ชันนี้)
+        if (typeof loadDataFromGoogleSheet === 'function') {
+            loadDataFromGoogleSheet();
+        }
+        if (typeof updateDashboard === 'function') {
+            updateDashboard();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (submitBtn) submitBtn.disabled = false;
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+    });
+});
 
         // บันทึก QC Check (แก้ไขตัวแปร Line ให้ถูกต้อง)
         document.getElementById('qcForm').addEventListener('submit', function(e) {
