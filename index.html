@@ -1295,7 +1295,7 @@
         }
     }
 
-    const savedAlert = localStorage.getItem('latest_qc_alert');
+   const savedAlert = localStorage.getItem('latest_qc_alert');
     if (savedAlert) {
         try {
             const alertData = JSON.parse(savedAlert);
@@ -1303,24 +1303,25 @@
             
             if (isFail) {
                 alertBannerContainer.innerHTML = `
-                    <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative;">
+                        <button onclick="localStorage.removeItem('latest_qc_alert'); document.getElementById('setup-qc-notification-banner').innerHTML='';" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; color: #721c24; font-weight: bold;" title="ปิดการแจ้งเตือน">✕</button>
                         ⚠️ แจ้งเตือนด่วนจาก QC! (Line: ${alertData.line})<br>
                         Part No: ${alertData.part} | ผลการตรวจสอบ: <span style="color: #dc3545; font-size: 1.1em;">${alertData.status}</span><br>
                         หมายเหตุ / จุดที่พบปัญหา: ${alertData.remark} 
-                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
+                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal; margin-right: 20px;">เวลาบันทึก: ${alertData.time}</span>
                     </div>`;
             } else {
                 alertBannerContainer.innerHTML = `
-                    <div style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
+                    <div style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; position: relative;">
+                        <button onclick="localStorage.removeItem('latest_qc_alert'); document.getElementById('setup-qc-notification-banner').innerHTML='';" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; color: #155724; font-weight: bold;" title="ปิดการแจ้งเตือน">✕</button>
                         ✅ ผลการตรวจสอบ QC ล่าสุด (Line: ${alertData.line}): Part No: ${alertData.part} - <span style="color: #28a745;">${alertData.status}</span>
-                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
+                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal; margin-right: 20px;">เวลาบันทึก: ${alertData.time}</span>
                     </div>`;
             }
         } catch (err) {
             console.error(err);
         }
     }
-
     let filteredData = setupHistoryData;
     if (selectedFilterLine !== "ALL") {
         filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
