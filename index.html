@@ -436,7 +436,6 @@
                             <th>Line</th>
                             <th>Lot No.</th>
                             <th>Part No.</th>
-                            <th>จำนวน Process</th>
                             <th>พนักงาน Set-Up</th>
                             <th>ช่วงเวลาติดตั้ง</th>
                             <th>สถานะ QC</th>
@@ -1299,22 +1298,79 @@
     }
 
     function renderSetupHistory() {
-        const filterElem = document.getElementById('filter_line');
-        const selectedFilterLine = filterElem ? filterElem.value : "ALL";
-        const tbody = document.querySelector('#setupHistoryTable tbody');
-        if (!tbody) return;
-        
-        let filteredData = setupHistoryData;
-        if (selectedFilterLine !== "ALL") {
-            filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
+    const filterElem = document.getElementById('filter_line');
+    const selectedFilterLine = filterElem ? filterElem.value : "ALL";
+    const tbody = document.querySelector('#setupHistoryTable tbody');
+    if (!tbody) return;
+    
+    let alertBannerContainer = document.getElementById('setup-qc-notification-banner');
+    if (!alertBannerContainer) {
+        alertBannerContainer = document.createElement('div');
+        alertBannerContainer.id = 'setup-qc-notification-banner';
+        const tableElement = document.getElementById('setupHistoryTable');
+        if (tableElement && tableElement.parentNode) {
+            tableElement.parentNode.insertBefore(alertBannerContainer, tableElement);
+        }
+    }
+
+    const savedAlert = localStorage.getItem('latest_qc_alert');
+    if (savedAlert) {
+        try {
+            const alertData = JSON.parse(savedAlert);
+            const isFail = alertData.status.includes('Not Pass') || alertData.status.includes('Fail');
+            
+            if (isFail) {
+                alertBannerContainer.innerHTML = `
+                    <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        ⚠️ แจ้งเตือนด่วนจาก QC! (Line: ${alertData.line})<br>
+                        Part No: ${alertData.part} | ผลการตรวจสอบ: <span style="color: #dc3545; font-size: 1.1em;">${alertData.status}</span><br>
+                        หมายเหตุ / จุดที่พบปัญหา: ${alertData.remark} 
+                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
+                    </div>`;
+            } else {
+                alertBannerContainer.innerHTML = `
+                    <div style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
+                        ✅ ผลการตรวจสอบ QC ล่าสุด (Line: ${alertData.line}): Part No: ${alertData.part} - <span style="color: #28a745;">${alertData.status}</span>
+                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
+                    </div>`;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    let filteredData = setupHistoryData;
+    if (selectedFilterLine !== "ALL") {
+        filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
+    }
+
+    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="8" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+    
+    filteredData.forEach((item) => {
+        const statStr = String(item.status || '').trim();
+        let trStyle = '';
+        let statusBadge = '<span style="color: #f39c12; font-weight: bold;">⏳ Waiting QC</span>';
+
+        if (statStr.includes('Pass')) {
+            trStyle = 'style="background-color: #d4edda !important;"';
+            statusBadge = '<span style="color: #155724; font-weight: bold;">✔ QC Pass</span>';
+        } else if (statStr.includes('Not Pass') || statStr.includes('Fail')) {
+            trStyle = 'style="background-color: #f8d7da !important;"';
+            statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
         }
 
-        tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
-        
-        filteredData.forEach((item) => {
-            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.lot}</td><td>${item.part}</td><td><b>${item.machine}</b></td><td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td><td>${item.process}</td><td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td><td>Mat: ${item.material}<br>DH: ${item.dh}</td><td>${item.start}<br>ถึง<br>${item.end}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-        });
-    }
+        tbody.innerHTML += `<tr ${trStyle}>
+            <td><b>${item.line}</b></td>
+            <td>${item.lot}</td>
+            <td><b>${item.part}</b></td>
+            <td>👤 ${item.inspector || '-'}</td>
+            <td>Air: ${item.air} | Cush: ${item.cushion}<br>SPM: ${item.spm} | Mat: ${item.material} | DH: ${item.dh}</td>
+            <td>${item.start}<br>ถึง<br>${item.end}</td>
+            <td>${statusBadge}</td>
+            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
+        </tr>`;
+    });
+}
 
     function renderQcHistory() {
         const tbody = document.querySelector('#qcHistoryTable tbody');
