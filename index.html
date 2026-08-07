@@ -759,7 +759,7 @@
         loadDataFromGoogleSheet();
     });
 
-    function loadDataFromGoogleSheet() {
+   function loadDataFromGoogleSheet() {
     const corsProxy = 'https://corsproxy.io/?';
     const targetUrl = corsProxy + encodeURIComponent(SCRIPT_URL);
 
@@ -775,24 +775,32 @@
         let passCount = 0;
         let failCount = 0;
 
-        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อเก็บสถานะ
+        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อจับคู่สถานะ
         const qcCheckedParts = new Set(); 
+        const qcStatusMap = {};
 
         data.forEach((row, index) => {
             if (index === 0) return;
             const type = String(row[1] || '');
-            const line = String(row[2] || '-');
-            const part = String(row[4] || '-');
+            const line = String(row[2] || '');
+            const part = String(row[4] || '');
+            const statusCol = String(row[14] || '');
             const processCol = String(row[5] || '');
 
-            if (type.includes('QC') || processCol.includes('QC Check') || type.includes('Pass') || type.includes('Fail')) {
+            if (type.includes('QC') || processCol.includes('QC Check') || statusCol.includes('Pass') || statusCol.includes('Fail') || type.includes('Pass') || type.includes('Fail')) {
                 if (line && part && part !== '-') {
-                    qcCheckedParts.add(`${line}_${part}`);
+                    const key = `${line}_${part}`;
+                    qcCheckedParts.add(key);
+                    if (statusCol.includes('Fail') || statusCol.includes('Not Pass') || type.includes('Fail')) {
+                        qcStatusMap[key] = 'QC Fail';
+                    } else {
+                        qcStatusMap[key] = 'QC Pass';
+                    }
                 }
             }
         });
 
-        // ขั้นที่ 2: วนลูปเก็บประวัติ Set-Up ทั้งหมดเข้า Array โดยใช้คำสั่ง .push()
+        // ขั้นที่ 2: ดึงข้อมูล Set-Up ทั้งหมดมาแสดงในตาราง
         data.forEach((row, index) => {
             if (index === 0) return; // ข้าม Header
 
@@ -830,10 +838,13 @@
                 return;
             }
 
-            // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงเป็นตาราง Set-Up ซ้ำ
+            // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงซ้ำในตาราง Set-Up
             if (type.includes('QC') || processCol.includes('QC Check')) {
                 return;
             }
+
+            // ป้องกันกรณีแถวว่างเปล่าไม่มี Part No.
+            if (!part || part === '-') return;
 
             const record = {
                 id: index,
@@ -857,28 +868,26 @@
                 inspector: row[15] || '-'
             };
 
-            // หาก Part นี้เคยถูกตรวจ QC แล้ว ให้เปลี่ยนสถานะเป็น QC Pass ในตาราง
+            // อัปเดตสถานะถ้าผ่านการตรวจ QC แล้ว
             const matchKey = `${record.line}_${record.part}`;
-            if (qcCheckedParts.has(matchKey)) {
-                if (record.status === 'Waiting QC' || !record.status || record.status === '-') {
-                    record.status = 'QC Pass';
-                }
+            if (qcStatusMap[matchKey]) {
+                record.status = qcStatusMap[matchKey];
+            } else if (qcCheckedParts.has(matchKey)) {
+                record.status = 'QC Pass';
             }
 
-            if (record.part && record.part !== '-') {
-                setupCount++;
-                setupHistoryData.push(record); // ใช้ .push เพื่อเก็บทุกแถวอย่างถูกต้อง
+            setupCount++;
+            setupHistoryData.push(record);
 
-                const statusStr = String(record.status).trim();
-                const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
+            const statusStr = String(record.status).trim();
+            const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
 
-                if (hasCheckedQC) {
-                    qcHistoryData.push(record);
-                    if (statusStr.includes('Pass')) {
-                        passCount++;
-                    } else {
-                        failCount++;
-                    }
+            if (hasCheckedQC) {
+                qcHistoryData.push(record);
+                if (statusStr.includes('Pass')) {
+                    passCount++;
+                } else {
+                    failCount++;
                 }
             }
         });
