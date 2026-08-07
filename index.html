@@ -1213,6 +1213,93 @@ window.addEventListener('DOMContentLoaded', () => {
         // showSetupNotification(JSON.parse(savedAlert));
     }
 });
+        // บันทึก QC Check (หน้า 3) - เวอร์ชันป้องกัน Error และปลอดภัยสูงสุด
+const qcFormElem = document.getElementById('qcForm');
+if (qcFormElem) {
+    // ป้องกันการผูก Event ซ้ำซ้อน
+    if (!qcFormElem.dataset.listenerAttached) {
+        qcFormElem.dataset.listenerAttached = 'true';
+        
+        qcFormElem.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const lineVal = document.getElementById('qc_production_line') ? document.getElementById('qc_production_line').value : '';
+            const partVal = document.getElementById('qc_part_no') ? document.getElementById('qc_part_no').value : '';
+            
+            const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
+            const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
+            const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
+            
+            const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
+            const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
+            const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
+            
+            const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
+            const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
+            const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
+            const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
+            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
+
+            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
+            
+            const qcFormData = {
+                type: qcStatus,
+                line: lineVal,
+                lot: "-",
+                part: partVal,
+                process: "QC Check (" + actualData + ") " + checklistSummary,
+                machine: "-",
+                air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
+                start: datetimeVal,
+                end: remarkVal,
+                qc_result: qcStatus,
+                inspector: inspectorName
+            };
+
+            const qcLoading = document.getElementById('qc-loading');
+            const btnQcSubmit = document.getElementById('btnQcSubmit');
+            if(qcLoading) qcLoading.style.display = 'block';
+            if(btnQcSubmit) btnQcSubmit.disabled = true;
+
+            fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(qcFormData) 
+            })
+            .then(() => {
+                if(qcLoading) qcLoading.style.display = 'none';
+                if(btnQcSubmit) btnQcSubmit.disabled = false;
+                
+                // ใช้ try...catch ป้องกันโค้ดสะดุดหากฟังก์ชันเสริมยังไม่ถูกสร้าง
+                try {
+                    if (typeof qcLineAlerts !== 'undefined' && qcLineAlerts[lineVal]) {
+                        qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
+                        if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
+                    }
+                    if (typeof renderQcAlertsUI === 'function') renderQcAlertsUI();
+                    if (typeof triggerSetupReturnAlert === 'function') {
+                        triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
+                    }
+                } catch (err) {
+                    console.warn('UI Notification warning:', err);
+                }
+
+                alert(`บันทึกผล QC Check [Line: ${lineVal}] เรียบร้อยแล้ว!`);
+                qcFormElem.reset();
+                
+                if (typeof loadDataFromGoogleSheet === 'function') {
+                    loadDataFromGoogleSheet();
+                }
+            })
+            .catch(error => {
+                if(qcLoading) qcLoading.style.display = 'none';
+                if(btnQcSubmit) btnQcSubmit.disabled = false;
+                console.error('Fetch Error:', error);
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อบันทึกข้อมูล');
+            });
+        });
+    }
+}
     // บันทึก Spot Welding (หน้า 4)
     const spotFormElem = document.getElementById('spotWeldingForm');
     if (spotFormElem) {
