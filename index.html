@@ -1002,26 +1002,7 @@
         renderSetupAlertsUI();
     }
 
-    // เพิ่มแถว Process ใหม่ในหน้า Set-Up
-    function addProcessRow() {
-        const tbody = document.getElementById('processTableBody');
-        if (!tbody) return;
-        const rowCount = tbody.rows.length + 1;
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td class="row-num">${rowCount}</td>
-            <td><input type="text" class="p-name" value="Process ${rowCount}" required></td>
-            <td><input type="text" class="p-mc" placeholder="MC No." required></td>
-            <td><input type="text" class="p-air" placeholder="Air Press" required></td>
-            <td><input type="text" class="p-cushion" placeholder="Cushion" required></td>
-            <td><input type="text" class="p-spm" placeholder="SPM" required></td>
-            <td><input type="text" class="p-dh" placeholder="DH" required></td>
-            <td><button type="button" class="btn-delete" onclick="removeProcessRow(this)">X</button></td>
-        `;
-        tbody.appendChild(newRow);
-        updateRowNumbers();
-    }
-
+   
     function removeProcessRow(btn) {
         const row = btn.closest('tr');
         const tbody = document.getElementById('processTableBody');
