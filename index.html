@@ -1435,7 +1435,7 @@ if (qcFormElem) {
         });
     }
 
-    function renderSetupHistory() {
+   function renderSetupHistory() {
     const filterElem = document.getElementById('filter_line');
     const selectedFilterLine = filterElem ? filterElem.value : "ALL";
     const tbody = document.querySelector('#setupHistoryTable tbody');
@@ -1482,29 +1482,15 @@ if (qcFormElem) {
         filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
     }
 
-    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="8" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
     
     filteredData.forEach((item) => {
-        const statStr = String(item.status || '').trim();
-        let trStyle = '';
-        let statusBadge = '<span style="color: #f39c12; font-weight: bold;">⏳ Waiting QC</span>';
-
-        if (statStr.includes('Pass')) {
-            trStyle = 'style="background-color: #d4edda !important;"';
-            statusBadge = '<span style="color: #155724; font-weight: bold;">✔ QC Pass</span>';
-        } else if (statStr.includes('Not Pass') || statStr.includes('Fail')) {
-            trStyle = 'style="background-color: #f8d7da !important;"';
-            statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
-        }
-
-        tbody.innerHTML += `<tr ${trStyle}>
+        tbody.innerHTML += `<tr>
             <td><b>${item.line}</b></td>
             <td>${item.lot}</td>
             <td><b>${item.part}</b></td>
             <td>👤 ${item.inspector || '-'}</td>
             <td>${item.start}<br>ถึง<br>${item.end}</td>
-            <td>Air: ${item.air} | Cush: ${item.cushion}<br>SPM: ${item.spm} | Mat: ${item.material} | DH: ${item.dh}</td>
-            <td>${statusBadge}</td>
             <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
         </tr>`;
     });
