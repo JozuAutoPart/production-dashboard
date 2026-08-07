@@ -775,41 +775,32 @@
         let passCount = 0;
         let failCount = 0;
 
-        // ขั้นที่ 1: สแกนหาผลตรวจ QC ที่ถูกบันทึกเข้ามาแล้ว เพื่อนำมาอัปเดตเชื่อมโยง
-        const qcResultsMap = {}; // เก็บสถานะ QC ตาม Line และ Part (Key: Line_Part)
+        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อเอาไปอัปเดตสถานะ
+        const qcCheckedParts = new Set(); 
 
         data.forEach((row, index) => {
             if (index === 0) return;
-            const type = row[1]; // Column B (สถานะหรือ Type)
-            const line = row[2] || '-';
-            const part = row[4] || '-';
-            const statusCol = row[14] || '-';
-            const processCol = row[5] || '';
+            const type = String(row[1] || '');
+            const line = String(row[2] || '-');
+            const part = String(row[4] || '-');
+            const processCol = String(row[5] || '');
 
-            // ถ้าแถวนี้คือผลจากการตรวจ QC
-            if (type && (type.includes('QC') || statusCol.includes('Pass') || statusCol.includes('Fail') || processCol.includes('QC Check'))) {
-                let currentStatus = 'QC Pass';
-                if (type.includes('Fail') || statusCol.includes('Fail') || statusCol.includes('Not Pass')) {
-                    currentStatus = 'QC Fail';
-                } else if (type.includes('Pass') || statusCol.includes('Pass')) {
-                    currentStatus = 'QC Pass';
-                } else {
-                    currentStatus = statusCol;
-                }
-                
+            // ถ้าเจอรายการที่เป็นการตรวจ QC ให้บันทึกเก็บไว้ว่า Part นี้ตรวจแล้ว
+            if (type.includes('QC') || processCol.includes('QC Check') || type.includes('Pass') || type.includes('Fail')) {
                 if (line && part && part !== '-') {
-                    qcResultsMap[`${line}_${part}`] = currentStatus;
+                    qcCheckedParts.add(`${line}_${part}`);
                 }
             }
         });
 
-        // ขั้นที่ 2: ประมวลผลข้อมูลแสดงตาราง Set-Up
+        // ขั้นที่ 2: โหลดข้อมูลประวัติ Set-Up ทั้งหมดขึ้นมาแสดง
         data.forEach((row, index) => {
             if (index === 0) return; // ข้าม Header
 
-            const type = row[1]; // Column B
-            const line = row[2] || '-';
-            const part = row[4] || '-';
+            const type = String(row[1] || '');
+            const line = String(row[2] || '-');
+            const part = String(row[4] || '-');
+            const processCol = String(row[5] || '');
 
             // แยกประเภท SpotWelding
             if (type === 'SpotWelding') {
@@ -840,8 +831,8 @@
                 return;
             }
 
-            // ข้ามแถวที่เป็นผล QC โดยตรง ไม่ให้นำมาแสดงเป็นรายการตั้งเครื่องซ้ำซ้อน
-            if (type && (type.includes('QC') || String(row[5]).includes('QC Check'))) {
+            // หากแถวนี้คือแถวผลการตรวจ QC โดยตรง ให้ข้ามการแสดงผลในตาราง Set-Up เพื่อไม่ให้ซ้ำซ้อน
+            if (type.includes('QC') || processCol.includes('QC Check')) {
                 return;
             }
 
@@ -867,13 +858,14 @@
                 inspector: row[15] || '-'
             };
 
-            // หากมีผลตรวจ QC บันทึกเข้ามาแล้ว ให้ดึงมาทับสถานะเดิมทันที!
+            // เช็คว่าถ้า Part นี้เคยถูกบันทึกผล QC ไปแล้ว ให้เปลี่ยนสถานะเป็น QC Pass ในตาราง
             const matchKey = `${record.line}_${record.part}`;
-            if (qcResultsMap[matchKey]) {
-                record.status = qcResultsMap[matchKey];
+            if (qcCheckedParts.has(matchKey)) {
+                if (record.status === 'Waiting QC' || !record.status || record.status === '-') {
+                    record.status = 'QC Pass';
+                }
             }
 
-            // ถ้ามี Part No. ถือว่าเป็นรายการ Set-Up
             if (record.part && record.part !== '-') {
                 setupCount++;
                 setupHistoryData.push(record);
