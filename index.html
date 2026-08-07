@@ -1495,16 +1495,29 @@ if (qcFormElem) {
         </tr>`;
     });
 }
-    function renderQcHistory() {
-        const tbody = document.querySelector('#qcHistoryTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติ QC</td></tr>` : '';
-        qcHistoryData.forEach((item) => {
-            const color = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
-            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.part}</td><td>${item.actual}</td><td style="${color}">${item.status}</td><td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-        });
-    }
+   function renderQcHistory() {
+    const qcTableBody = document.querySelectorAll('table tbody')[2] || document.querySelector('#qcHistoryTable tbody');
+    if (!qcTableBody) return;
 
+    qcTableBody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="6" style="color: #7f8c8d; padding: 20px; text-align: center;">ยังไม่มีประวัติ QC</td></tr>` : '';
+    
+    qcHistoryData.forEach((item) => {
+        const statStr = String(item.status || '').trim();
+        let statusBadge = `<span style="color: #27ae60; font-weight: bold;">${statStr}</span>`;
+        if (statStr.includes('Fail') || statStr.includes('Not Pass')) {
+            statusBadge = `<span style="color: #c0392b; font-weight: bold;">${statStr}</span>`;
+        }
+
+        qcTableBody.innerHTML += `<tr>
+            <td><b>${item.line}</b></td>
+            <td><b>${item.part}</b></td>
+            <td>${statusBadge}</td>
+            <td>${item.remark || '-'}</td>
+            <td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector || '-'}</span></td>
+            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
+        </tr>`;
+    });
+}
     function renderSpotHistory() {
         const tbody = document.querySelector('#spotWeldingTable tbody');
         if (!tbody) return;
