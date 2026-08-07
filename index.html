@@ -1496,7 +1496,6 @@ if (qcFormElem) {
     });
 }
    function renderQcHistory() {
-    // ค้นหาตำแหน่ง tbody ของตารางประวัติ QC ให้ครอบคลุมทุกรูปแบบไอดี
     const qcTableBody = document.querySelector('#qcHistoryTable tbody') || document.querySelectorAll('table tbody')[2] || document.querySelector('table:has(#sum-qc-items) tbody');
     if (!qcTableBody) return;
 
@@ -1512,8 +1511,8 @@ if (qcFormElem) {
         qcTableBody.innerHTML += `<tr>
             <td><b>${item.line || '-'}</b></td>
             <td><b>${item.part || '-'}</b></td>
-            <td>${statusBadge}</td>
             <td>${item.remark || '-'}</td>
+            <td>${statusBadge}</td>
             <td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector || '-'}</span></td>
             <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
         </tr>`;
