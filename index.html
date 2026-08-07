@@ -775,10 +775,8 @@
         let passCount = 0;
         let failCount = 0;
 
-        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อจับคู่สถานะ
-        const qcCheckedParts = new Set(); 
+        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อเชื่อมโยงสถานะ
         const qcStatusMap = {};
-
         data.forEach((row, index) => {
             if (index === 0) return;
             const type = String(row[1] || '');
@@ -790,7 +788,6 @@
             if (type.includes('QC') || processCol.includes('QC Check') || statusCol.includes('Pass') || statusCol.includes('Fail') || type.includes('Pass') || type.includes('Fail')) {
                 if (line && part && part !== '-') {
                     const key = `${line}_${part}`;
-                    qcCheckedParts.add(key);
                     if (statusCol.includes('Fail') || statusCol.includes('Not Pass') || type.includes('Fail')) {
                         qcStatusMap[key] = 'QC Fail';
                     } else {
@@ -800,7 +797,7 @@
             }
         });
 
-        // ขั้นที่ 2: ดึงข้อมูล Set-Up ทั้งหมดมาแสดงในตาราง
+        // ขั้นที่ 2: โหลดข้อมูลประวัติทั้งหมดขึ้นมาแสดงโดยรักษาโครงสร้างเดิมครบถ้วน
         data.forEach((row, index) => {
             if (index === 0) return; // ข้าม Header
 
@@ -838,13 +835,13 @@
                 return;
             }
 
-            // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงซ้ำในตาราง Set-Up
-            if (type.includes('QC') || processCol.includes('QC Check')) {
+            // ป้องกันข้อมูลว่าง
+            if (!part || part === '-') return;
+
+            // ตรวจสอบว่าเป็นแถวผล QC บันทึกเดี่ยวๆ หรือไม่ ถ้าใช่ให้ข้ามไม่เอามาแสดงเป็นตาราง Set-Up ซ้ำซ้อน
+            if (type.includes('QC Check') || (type.includes('QC') && processCol.includes('QC Check'))) {
                 return;
             }
-
-            // ป้องกันกรณีแถวว่างเปล่าไม่มี Part No.
-            if (!part || part === '-') return;
 
             const record = {
                 id: index,
@@ -868,12 +865,10 @@
                 inspector: row[15] || '-'
             };
 
-            // อัปเดตสถานะถ้าผ่านการตรวจ QC แล้ว
+            // หาก Part นี้ผ่านการตรวจ QC แล้ว อัปเดตสถานะเป็น QC Pass / Fail ตามจริง
             const matchKey = `${record.line}_${record.part}`;
             if (qcStatusMap[matchKey]) {
                 record.status = qcStatusMap[matchKey];
-            } else if (qcCheckedParts.has(matchKey)) {
-                record.status = 'QC Pass';
             }
 
             setupCount++;
