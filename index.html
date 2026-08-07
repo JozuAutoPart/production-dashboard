@@ -1496,7 +1496,8 @@ if (qcFormElem) {
     });
 }
    function renderQcHistory() {
-    const qcTableBody = document.querySelectorAll('table tbody')[2] || document.querySelector('#qcHistoryTable tbody');
+    // ค้นหาตำแหน่ง tbody ของตารางประวัติ QC ให้ครอบคลุมทุกรูปแบบไอดี
+    const qcTableBody = document.querySelector('#qcHistoryTable tbody') || document.querySelectorAll('table tbody')[2] || document.querySelector('table:has(#sum-qc-items) tbody');
     if (!qcTableBody) return;
 
     qcTableBody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="6" style="color: #7f8c8d; padding: 20px; text-align: center;">ยังไม่มีประวัติ QC</td></tr>` : '';
@@ -1509,8 +1510,8 @@ if (qcFormElem) {
         }
 
         qcTableBody.innerHTML += `<tr>
-            <td><b>${item.line}</b></td>
-            <td><b>${item.part}</b></td>
+            <td><b>${item.line || '-'}</b></td>
+            <td><b>${item.part || '-'}</b></td>
             <td>${statusBadge}</td>
             <td>${item.remark || '-'}</td>
             <td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector || '-'}</span></td>
