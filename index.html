@@ -1433,7 +1433,7 @@ if (qcFormElem) {
     const tbody = document.querySelector('#setupHistoryTable tbody');
     if (!tbody) return;
     
-    // --- ส่วนเพิ่ม: สร้างกล่องแสดงผลการแจ้งเตือนล่าสุดจากหน้า QC ในหน้า Set-Up Die ---
+    // จัดการแสดงกล่องแจ้งเตือนล่าสุดจากหน้า QC
     let alertBannerContainer = document.getElementById('setup-qc-notification-banner');
     if (!alertBannerContainer) {
         alertBannerContainer = document.createElement('div');
@@ -1469,7 +1469,6 @@ if (qcFormElem) {
             console.error(err);
         }
     }
-    // -----------------------------------------------------------------
 
     let filteredData = setupHistoryData;
     if (selectedFilterLine !== "ALL") {
@@ -1491,18 +1490,19 @@ if (qcFormElem) {
             statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
         }
 
+        // นำปุ่มลบกลับมาแสดงผลในคอลัมน์สุดท้ายของตาราง
         tbody.innerHTML += `<tr ${trStyle}>
             <td><b>${item.line}</b></td>
             <td>${item.lot}</td>
             <td>${item.part}</td>
-            <td><b>${item.machine}</b></td>
-            <td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td>
+            <td>${item.actual || '-'}</td>
+            <td><b>👤 ${item.inspector}</b></td>
             <td>${statusBadge}</td>
             <td>${item.process}</td>
             <td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td>
             <td>Mat: ${item.material}<br>DH: ${item.dh}</td>
             <td>${item.start}<br>ถึง<br>${item.end}</td>
-            <td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td>
+            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
         </tr>`;
     });
 }
