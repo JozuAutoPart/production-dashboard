@@ -757,19 +757,29 @@
         loadDataFromGoogleSheet();
     });
 
-   function loadDataFromGoogleSheet() {
+ function loadDataFromGoogleSheet() {
     const corsProxy = 'https://corsproxy.io/?';
     const targetUrl = corsProxy + encodeURIComponent(SCRIPT_URL);
 
     fetch(targetUrl)
     .then(response => response.json())
     .then(data => {
-        setupHistoryData = [];
-        qcHistoryData = [];
-        spotHistoryData = [];
-        dtHistoryData = [];
+        if (!Array.isArray(data)) return;
+
+        // 1. ดึงข้อมูลเดิมจาก LocalStorage มาสำรองไว้ก่อน เพื่อป้องกันประวัติหาย
+        let localSetup = [];
+        let localQc = [];
+        try {
+            localSetup = JSON.parse(localStorage.getItem('local_setup_history') || '[]');
+            localQc = JSON.parse(localStorage.getItem('local_qc_history') || '[]');
+        } catch(e) {
+            localSetup = [];
+            localQc = [];
+        }
+
+        setupHistoryData = [...localSetup];
+        qcHistoryData = [...localQc];
         
-        let setupCount = 0;
         let passCount = 0;
         let failCount = 0;
 
@@ -779,24 +789,86 @@
 
         data.forEach((row, index) => {
             if (index === 0) return;
-            const type = String(row[1] || '');
+            const type = String(row[1] || '').trim();
             const line = String(row[2] || '');
+            const lot = String(row[3] || '');
             const part = String(row[4] || '');
+            const start = String(row[12] || '-');
+            const end = String(row[13] || '-');
             const statusCol = String(row[14] || '');
+            const inspector = String(row[15] || '-');
+            const remark = String(row[16] || '-');
             const processCol = String(row[5] || '');
 
+            // ตรวจสอบว่าเป็นรายการ QC หรือไม่
             if (type.includes('QC') || processCol.includes('QC Check') || statusCol.includes('Pass') || statusCol.includes('Fail') || type.includes('Pass') || type.includes('Fail')) {
                 if (line && part && part !== '-') {
                     const key = `${line}_${part}`;
                     qcCheckedParts.add(key);
                     if (statusCol.includes('Fail') || statusCol.includes('Not Pass') || type.includes('Fail')) {
                         qcStatusMap[key] = 'QC Fail';
+                        failCount++;
                     } else {
                         qcStatusMap[key] = 'QC Pass';
+                        passCount++;
+                    }
+
+                    // เพิ่มลง qcHistoryData แบบไม่ให้ซ้ำ
+                    const existsQc = qcHistoryData.some(item => item.line === line && item.part === part && item.status === statusCol);
+                    if (!existsQc) {
+                        qcHistoryData.push({
+                            id: Date.now() + index,
+                            line: line,
+                            part: part,
+                            status: statusCol || 'QC Pass',
+                            remark: remark,
+                            inspector: inspector
+                        });
                     }
                 }
             }
+
+            // ตรวจสอบว่าเป็นรายการ Setup หรือไม่
+            if (type.toLowerCase().includes('setup') || (!type.includes('QC') && !statusCol.includes('Pass') && !statusCol.includes('Fail') && line && part)) {
+                const existsSetup = setupHistoryData.some(item => item.line === line && item.part === part && item.start === start);
+                if (!existsSetup) {
+                    setupHistoryData.push({
+                        id: Date.now() + index,
+                        line: line,
+                        lot: lot,
+                        part: part,
+                        inspector: inspector,
+                        start: start.replace('T', ' '),
+                        end: end.replace('T', ' '),
+                        status: statusCol || 'Waiting QC'
+                    });
+                }
+            }
         });
+
+        // อัปเดตตัวเลขสรุปหน้า Dashboard
+        const setupCount = setupHistoryData.length;
+        if (document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
+        if (document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
+        if (document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+
+        // บันทึกสะสมลง LocalStorage เพื่อความเสถียรไม่ให้ประวัติหาย
+        localStorage.setItem('local_setup_history', JSON.stringify(setupHistoryData));
+        localStorage.setItem('local_qc_history', JSON.stringify(qcHistoryData));
+
+        // เรนเดอร์ตารางและกราฟแสดงผล
+        renderSetupHistory();
+        renderQcHistory();
+        if (typeof renderDashboardDonutChart === 'function') {
+            renderDashboardDonutChart();
+        }
+    })
+    .catch(error => {
+        console.error("Error loading data:", error);
+        renderSetupHistory();
+        renderQcHistory();
+    });
+}
 
         // ขั้นที่ 2: ดึงข้อมูล Set-Up ทั้งหมดมาแสดงในตาราง
         data.forEach((row, index) => {
