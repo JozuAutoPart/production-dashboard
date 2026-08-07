@@ -945,6 +945,10 @@
         if (!setupLineAlerts[lineName]) {
             setupLineAlerts[lineName] = [];
         }
+        // หลังจากบันทึกผล QC เรียบร้อยแล้ว
+if (typeof populateQcPartDropdown === 'function') {
+    populateQcPartDropdown(); // สั่งรีเฟรชรายการในดรอปดาวน์ทันที รายการที่ตรวจแล้วจะหายไป
+}
         setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
         renderSetupAlertsUI();
     }
