@@ -1482,7 +1482,7 @@ if (qcFormElem) {
         filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
     }
 
-    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="6" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
     
     filteredData.forEach((item) => {
         tbody.innerHTML += `<tr>
