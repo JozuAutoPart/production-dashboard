@@ -1507,12 +1507,15 @@ if (qcFormElem) {
             statusBadge = `<span style="color: #c0392b; font-weight: bold;">${statStr}</span>`;
         }
 
+        // ตรวจสอบและดึงชื่อผู้ตรวจ QC ให้ถูกต้อง (รองรับทั้ง inspector, qc_inspector หรือ checker)
+        const qcInspector = item.qc_inspector || item.checker || (item.type === 'QC' ? item.inspector : null) || '-';
+
         qcTableBody.innerHTML += `<tr>
             <td><b>${item.line || '-'}</b></td>
             <td><b>${item.part || '-'}</b></td>
             <td>${item.remark || '-'}</td>
             <td>${statusBadge}</td>
-            <td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector || '-'}</span></td>
+            <td><span style="color: #2980b9; font-weight: bold;">👤 ${qcInspector}</span></td>
             <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
         </tr>`;
     });
