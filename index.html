@@ -1502,9 +1502,9 @@ if (qcFormElem) {
             <td>${item.lot}</td>
             <td><b>${item.part}</b></td>
             <td>👤 ${item.inspector || '-'}</td>
-            <td>${statusBadge}</td>
             <td>Air: ${item.air} | Cush: ${item.cushion}<br>SPM: ${item.spm} | Mat: ${item.material} | DH: ${item.dh}</td>
             <td>${item.start}<br>ถึง<br>${item.end}</td>
+            <td>${statusBadge}</td>
             <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
         </tr>`;
     });
