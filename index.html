@@ -271,65 +271,42 @@
 
     <div class="container">
         
-        <!-- หน้าที่ 1: Dashboard -->
-        <div id="tab1" class="tab-content active">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <h2>📊 Dashboard ภาพรวมระบบ Set-Up & QC</h2>
-                <button class="btn-export" onclick="exportDashboardToExcel()">📥 Export Excel</button>
-            </div>
-            <p style="color: #7f8c8d; font-size: 14px; margin-top: 0; margin-bottom: 25px;">สรุปสถิติการทำงานภายในโรงงานแบบเรียลไทม์ แยกตามรายการปฏิบัติงาน</p>
-            
-            <div class="dashboard-grid">
-                <div class="card" style="background: linear-gradient(135deg, #fffdfa 0%, #fff5eb 100%); border-left-color: var(--warning-color);">
-                    <div style="font-size: 24px; margin-bottom: 5px;">⚙️</div>
-                    <h3 id="stat-setup" style="color: #d35400;">0</h3>
-                    <p>จำนวน Set-Up ทั้งหมด</p>
-                </div>
-                <div class="card" style="background: linear-gradient(135deg, #f4fbf7 0%, #e8f8f0 100%); border-left-color: var(--success-color);">
-                    <div style="font-size: 24px; margin-bottom: 5px;">✅</div>
-                    <h3 id="stat-pass" style="color: #27ae60;">0</h3>
-                    <p>QC Pass (พร้อมผลิต)</p>
-                </div>
-                <div class="card" style="background: linear-gradient(135deg, #fdf8f8 0%, #fdeaea 100%); border-left-color: var(--danger-color);">
-                    <div style="font-size: 24px; margin-bottom: 5px;">❌</div>
-                    <h3 id="stat-fail" style="color: #c0392b;">0</h3>
-                    <p>QC Not Pass (รอแก้ไข)</p>
-                </div>
-            </div>
-
-            <div style="margin-top: 40px; background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eaecee;">
-                <h3 style="margin-top: 0; border-left: 4px solid var(--secondary-color); padding-left: 10px;">📋 ตารางสรุปสถานะการปฏิบัติงานและรายการเช็ค QC</h3>
-                <div class="table-container" style="border: none; box-shadow: none;">
-                    <table class="history-table" id="dashboardSummaryTable">
-                        <thead>
-                            <tr style="background-color: #f4f6f7;">
-                                <th style="text-align: left; padding-left: 15px;">รายการสถานะระบบ / จุดตรวจ QC</th>
-                                <th style="text-align: center;">จำนวนรวม (ครั้ง)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="text-align: left; padding-left: 15px;">🛠️ จำนวน Set-Up แม่พิมพ์ทั้งหมด</td>
-                                <td><b id="sum-setup" style="color: #d35400; font-size: 15px;">0</b></td>
-                            </tr>
-                            <tr>
-                                <td style="text-align: left; padding-left: 15px;">✨ ผลตรวจสอบ QC Pass (ผ่านพร้อมผลิต)</td>
-                                <td><b id="sum-pass" style="color: #27ae60; font-size: 15px;">0</b></td>
-                            </tr>
-                            <tr>
-                                <td style="text-align: left; padding-left: 15px;">⚠️ ผลตรวจสอบ QC Not Pass (ไม่ผ่าน/รอแก้ไข)</td>
-                                <td><b id="sum-fail" style="color: #e74c3c; font-size: 15px;">0</b></td>
-                            </tr>
-                            <tr>
-                                <td style="text-align: left; padding-left: 15px;">📝 ผลรวมรายการเช็คพารามิเตอร์ QC ทั่วไป</td>
-                                <td><b id="sum-qc-items" style="color: #3498db; font-size: 15px;">0</b></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      <!-- หน้าที่ 1: Dashboard -->
+<div id="tab1" class="tab-content active">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <h2>📊 Dashboard ภาพรวมระบบ Set-Up & QC</h2>
+        <button class="btn-export" onclick="exportDashboardToExcel()">📥 Export Excel</button>
+    </div>
+    <p style="color: #7f8c8d; font-size: 14px; margin-top: 0; margin-bottom: 25px;">สรุปสถิติการทำงานภายในโรงงานแบบเรียลไทม์ แยกตามรายการปฏิบัติงาน</p>
+    
+    <div class="dashboard-grid">
+        <div class="card" style="background: linear-gradient(135deg, #fffdfa 0%, #fff5eb 100%); border-left-color: var(--warning-color);">
+            <div style="font-size: 24px; margin-bottom: 5px;">⚙️</div>
+            <h3 id="stat-setup" style="color: #d35400;">0</h3>
+            <p>จำนวน Set-Up ทั้งหมด</p>
         </div>
+        <div class="card" style="background: linear-gradient(135deg, #f4fbf7 0%, #e8f8f0 100%); border-left-color: var(--success-color);">
+            <div style="font-size: 24px; margin-bottom: 5px;">✅</div>
+            <h3 id="stat-pass" style="color: #27ae60;">0</h3>
+            <p>QC Pass (พร้อมผลิต)</p>
+        </div>
+        <div class="card" style="background: linear-gradient(135deg, #fdf8f8 0%, #fdeaea 100%); border-left-color: var(--danger-color);">
+            <div style="font-size: 24px; margin-bottom: 5px;">❌</div>
+            <h3 id="stat-fail" style="color: #c0392b;">0</h3>
+            <p>QC Not Pass (รอแก้ไข)</p>
+        </div>
+    </div>
 
+    <!-- ส่วนแสดงกราฟโดนัท Eff. แทนที่ตารางเดิม -->
+    <div style="margin-top: 40px; background: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #eaecee; text-align: center;">
+        <h3 style="margin-top: 0; margin-bottom: 15px; color: #333; font-size: 16px; border-left: 4px solid var(--secondary-color); padding-left: 10px; text-align: left;">📊 สัดส่วนและประสิทธิภาพ (Eff.) ระหว่าง Set-Up, QC Pass และ QC Not Pass</h3>
+        <p style="color: #7f8c8d; font-size: 13px; text-align: left; margin-bottom: 20px;">แสดงสัดส่วนภาพรวมของกระบวนการทำงานทั้งหมดในระบบ</p>
+        
+        <div style="max-width: 340px; margin: 0 auto;">
+            <canvas id="efficiencyDonutChart"></canvas>
+        </div>
+    </div>
+</div>
         <!-- หน้าที่ 2: Set-Up Die & Condition Machine (Redesigned for Multi-Process Complete Submission) -->
         <div id="tab2" class="tab-content">
             <h2>
@@ -757,7 +734,7 @@
         loadDataFromGoogleSheet();
     });
 
- function loadDataFromGoogleSheet() {
+function loadDataFromGoogleSheet() {
     const corsProxy = 'https://corsproxy.io/?';
     const targetUrl = corsProxy + encodeURIComponent(SCRIPT_URL);
 
@@ -846,27 +823,79 @@
             }
         });
 
-        // อัปเดตตัวเลขสรุปหน้า Dashboard
+        // อัปเดตตัวเลขสรุปหน้าการ์ด Dashboard
         const setupCount = setupHistoryData.length;
-        if (document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
-        if (document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
-        if (document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+        if (document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
+        if (document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
+        if (document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
 
         // บันทึกสะสมลง LocalStorage เพื่อความเสถียรไม่ให้ประวัติหาย
         localStorage.setItem('local_setup_history', JSON.stringify(setupHistoryData));
         localStorage.setItem('local_qc_history', JSON.stringify(qcHistoryData));
 
-        // เรนเดอร์ตารางและกราฟแสดงผล
+        // เรนเดอร์ตารางและกราฟโดนัท Eff. แสดงผล
         renderSetupHistory();
         renderQcHistory();
-        if (typeof renderDashboardDonutChart === 'function') {
-            renderDashboardDonutChart();
+        if (typeof renderEfficiencyDonutChart === 'function') {
+            renderEfficiencyDonutChart();
         }
     })
     .catch(error => {
         console.error("Error loading data:", error);
         renderSetupHistory();
         renderQcHistory();
+        if (typeof renderEfficiencyDonutChart === 'function') {
+            renderEfficiencyDonutChart();
+        }
+    });
+}
+
+// ฟังก์ชันวาดกราฟโดนัทแสดง Eff. (Set-Up, QC Pass, QC Not Pass) หน้า Dashboard
+let efficiencyDonutChartInstance = null;
+
+function renderEfficiencyDonutChart() {
+    const ctx = document.getElementById('efficiencyDonutChart');
+    if (!ctx) return;
+
+    const setupCount = setupHistoryData.length;
+    const passCount = qcHistoryData.filter(i => String(i.status).toLowerCase().includes('pass')).length;
+    const failCount = qcHistoryData.filter(i => String(i.status).toLowerCase().includes('fail') || String(i.status).toLowerCase().includes('not pass')).length;
+
+    if (efficiencyDonutChartInstance) {
+        efficiencyDonutChartInstance.destroy();
+    }
+
+    efficiencyDonutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                `Set-Up (${setupCount})`, 
+                `QC Pass (${passCount})`, 
+                `QC Not Pass (${failCount})`
+            ],
+            datasets: [{
+                data: [setupCount, passCount, failCount],
+                backgroundColor: [
+                    '#3498db', // สีฟ้า (Set-Up)
+                    '#27ae60', // สีเขียว (QC Pass)
+                    '#e74c3c'  // สีแดง (QC Not Pass)
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 15,
+                        font: { size: 13 }
+                    }
+                }
+            }
+        }
     });
 }
 
