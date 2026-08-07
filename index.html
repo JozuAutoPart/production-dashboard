@@ -1158,78 +1158,61 @@
         }
     }
 
-    // บันทึก QC Check (หน้า 3)
-    const qcFormElem = document.getElementById('qcForm');
-    if (qcFormElem) {
-        qcFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const lineVal = document.getElementById('qc_production_line').value;
-            const partVal = document.getElementById('qc_part_no').value;
-            
-            // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
-            const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
-            const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
-            const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
-            
-            const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
-            const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
-            const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
-            
-            const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
-            const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
-            const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
-            const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
-            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
+    // ฟังก์ชันรับส่งสัญญาณเตือนจากหน้า QC กลับไปยังหน้า Set-Up
+function triggerSetupReturnAlert(line, part, status, remark) {
+    // บันทึกสถานะการแจ้งเตือนลงในหน่วยความจำชั่วคราวของเบราว์เซอร์ (localStorage)
+    const alertData = {
+        line: line,
+        part: part,
+        status: status, // 'QC Pass' หรือ 'QC Not Pass' / 'Fail'
+        remark: remark,
+        time: new Date().toLocaleTimeString()
+    };
+    localStorage.setItem('latest_qc_alert', JSON.stringify(alertData));
 
-            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
-            
-            const qcFormData = {
-                type: qcStatus,
-                line: lineVal,
-                lot: "-",
-                part: partVal,
-                process: "QC Check (" + actualData + ") " + checklistSummary,
-                machine: "-",
-                air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
-                start: datetimeVal,
-                end: remarkVal,
-                qc_result: qcStatus,
-                inspector: inspectorName
-            };
+    // เช็คหากอยู่ในหน้า Set-Up ให้แสดงผลแจ้งเตือนทันที
+    showSetupNotification(alertData);
+}
 
-            const qcLoading = document.getElementById('qc-loading');
-            const btnQcSubmit = document.getElementById('btnQcSubmit');
-            if(qcLoading) qcLoading.style.display = 'block';
-            if(btnQcSubmit) btnQcSubmit.disabled = true;
-
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
-            .then(() => {
-                if(qcLoading) qcLoading.style.display = 'none';
-                if(btnQcSubmit) btnQcSubmit.disabled = false;
-                
-                // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
-                if (qcLineAlerts[lineVal]) {
-                    qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
-                    if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
-                }
-                renderQcAlertsUI();
-                
-                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
-                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
-
-                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
-                qcFormElem.reset();
-                loadDataFromGoogleSheet();
-            })
-            .catch(error => {
-                if(qcLoading) qcLoading.style.display = 'none';
-                if(btnQcSubmit) btnQcSubmit.disabled = false;
-                console.error('Error:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-            });
-        });
+// ฟังก์ชันแสดงผลแจ้งเตือนและเปลี่ยนสีในหน้า Set-Up Die
+function showSetupNotification(alert) {
+    const isFail = alert.status.includes('Not Pass') || alert.status.includes('Fail');
+    
+    // 1. สร้างกล่องแจ้งเตือน (Banner Alert) เด้งเตือนด้านบนจอทันที
+    let alertBox = document.getElementById('setup-live-alert');
+    if (!alertBox) {
+        alertBox = document.createElement('div');
+        alertBox.id = 'setup-live-alert';
+        alertBox.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: bold; transition: all 0.3s;';
+        document.body.appendChild(alertBox);
     }
 
+    if (isFail) {
+        alertBox.style.backgroundColor = '#f8d7da';
+        alertBox.style.color = '#721c24';
+        alertBox.style.border = '1px solid #f5c6cb';
+        alertBox.innerHTML = `⚠️ <b>แจ้งเตือนด่วน! (Line: ${alert.line})</b><br>Part: ${alert.part} ผลตรวจสอบ: <b>${alert.status}</b><br>หมายเหตุ: ${alert.remark}`;
+    } else {
+        alertBox.style.backgroundColor = '#d4edda';
+        alertBox.style.color = '#155724';
+        alertBox.style.border = '1px solid #c3e6cb';
+        alertBox.innerHTML = `✅ <b>แจ้งผล QC (Line: ${alert.line})</b><br>Part: ${alert.part} ผลตรวจสอบ: <b>${alert.status}</b>`;
+    }
+
+    // ซ่อนกล่องแจ้งเตือนอัตโนมัติหลังผ่านไป 8 วินาที
+    setTimeout(() => {
+        if (alertBox) alertBox.style.display = 'none';
+    }, 8000);
+}
+
+// ตรวจสอบข้อมูลแจ้งเตือนค้างไว้เมื่อเปลี่ยนหน้ามาที่ Set-Up
+window.addEventListener('DOMContentLoaded', () => {
+    const savedAlert = localStorage.getItem('latest_qc_alert');
+    if (savedAlert) {
+        // สามารถเรียกแสดงผลย้อนหลังได้หากผู้ใช้อยู่หน้า Set-Up
+        // showSetupNotification(JSON.parse(savedAlert));
+    }
+});
     // บันทึก Spot Welding (หน้า 4)
     const spotFormElem = document.getElementById('spotWeldingForm');
     if (spotFormElem) {
@@ -1299,23 +1282,47 @@
     }
 
     function renderSetupHistory() {
-        const filterElem = document.getElementById('filter_line');
-        const selectedFilterLine = filterElem ? filterElem.value : "ALL";
-        const tbody = document.querySelector('#setupHistoryTable tbody');
-        if (!tbody) return;
-        
-        let filteredData = setupHistoryData;
-        if (selectedFilterLine !== "ALL") {
-            filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
-        }
-
-        tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
-        
-        filteredData.forEach((item) => {
-            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.lot}</td><td>${item.part}</td><td><b>${item.machine}</b></td><td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td><td>${item.process}</td><td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td><td>Mat: ${item.material}<br>DH: ${item.dh}</td><td>${item.start}<br>ถึง<br>${item.end}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-        });
+    const filterElem = document.getElementById('filter_line');
+    const selectedFilterLine = filterElem ? filterElem.value : "ALL";
+    const tbody = document.querySelector('#setupHistoryTable tbody');
+    if (!tbody) return;
+    
+    let filteredData = setupHistoryData;
+    if (selectedFilterLine !== "ALL") {
+        filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
     }
 
+    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="11" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+    
+    filteredData.forEach((item) => {
+        const statStr = String(item.status || '').trim();
+        let trStyle = '';
+        let statusBadge = '<span style="color: #f39c12; font-weight: bold;">⏳ Waiting QC</span>';
+
+        // ตรวจสอบผลสถานะเพื่อเปลี่ยนสีแถวและป้ายสถานะ
+        if (statStr.includes('Pass')) {
+            trStyle = 'style="background-color: #d4edda !important;"'; // สีเขียวอ่อนเมื่อผ่าน
+            statusBadge = '<span style="color: #155724; font-weight: bold;">✔ QC Pass</span>';
+        } else if (statStr.includes('Not Pass') || statStr.includes('Fail')) {
+            trStyle = 'style="background-color: #f8d7da !important;"'; // สีแดงอ่อนเมื่อไม่ผ่าน/Fail
+            statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
+        }
+
+        tbody.innerHTML += `<tr ${trStyle}>
+            <td><b>${item.line}</b></td>
+            <td>${item.lot}</td>
+            <td>${item.part}</td>
+            <td><b>${item.machine}</b></td>
+            <td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td>
+            <td>${statusBadge}</td>
+            <td>${item.process}</td>
+            <td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td>
+            <td>Mat: ${item.material}<br>DH: ${item.dh}</td>
+            <td>${item.start}<br>ถึง<br>${item.end}</td>
+            <td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td>
+        </tr>`;
+    });
+}
     function renderQcHistory() {
         const tbody = document.querySelector('#qcHistoryTable tbody');
         if (!tbody) return;
