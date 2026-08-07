@@ -851,25 +851,30 @@
     }
 
     function populateQcPartDropdown() {
-        const qcPartSelect = document.getElementById('qc_part_no');
-        if (!qcPartSelect) return;
-        
-        const currentSelected = qcPartSelect.value;
-        qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
-        
-        setupHistoryData.forEach(item => {
-            let opt = document.createElement('option');
-            opt.value = item.part;
-            opt.setAttribute('data-line', item.line);
-            opt.setAttribute('data-lot', item.lot);
-            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-            qcPartSelect.appendChild(opt);
-        });
+    const dropdown = document.getElementById('qc_part_no');
+    if (!dropdown) return;
 
-        if(currentSelected) {
-            qcPartSelect.value = currentSelected;
-        }
-    }
+    // ล้างรายการเดิม (เก็บ Option แรกไว้)
+    dropdown.innerHTML = '<option value="">-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
+
+    // กรองเฉพาะรายการ Set-Up ที่ "ยังไม่เคยถูกตรวจ QC" หรือสถานะยังเป็น Waiting QC
+    const pendingItems = setupHistoryData.filter(item => {
+        const stat = String(item.status || '').trim();
+        // เงื่อนไข: ถ้าไม่มีสถานะ, เป็นค่าว่าง, หรือเป็น Waiting QC ถึงจะเอามาแสดงให้ QC ตรวจ
+        return (!stat || stat === '-' || stat === 'Waiting QC');
+    });
+
+    // นำรายการที่ยังไม่ตรวจมาใส่ใน Dropdown
+    pendingItems.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.part;
+        option.textContent = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+        
+        // ผูกข้อมูล Line อัตโนมัติเวลาเลือก
+        option.dataset.line = item.line;
+        dropdown.appendChild(option);
+    });
+}
 
     function onSelectQcPart(selectElem) {
         const selectedOption = selectElem.options[selectElem.selectedIndex];
