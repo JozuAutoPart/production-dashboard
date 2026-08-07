@@ -1417,6 +1417,25 @@
     function exportDashboardToExcel() {
         exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary.xls', -1);
     }
+        function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
+    // 1. ส่วนเดิมสำหรับการแจ้งเตือน (ที่แสดง Banner สีแดง/เขียว)
+    if (!setupLineAlerts[lineName]) {
+        setupLineAlerts[lineName] = [];
+    }
+    setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
+    renderSetupAlertsUI();
+
+    // 2. [เพิ่มตรงนี้] อัปเดตข้อมูลใน setupHistoryData ทันที เพื่อให้ตารางเปลี่ยนสถานะ
+    const recordToUpdate = setupHistoryData.find(item => item.line === lineName && item.part === partNo);
+    if (recordToUpdate) {
+        recordToUpdate.status = qcStatus; // เปลี่ยนสถานะเป็น QC Pass หรือ QC Not Pass
+        
+        // บังคับเรนเดอร์ตารางใหม่ทันทีเพื่อให้สีและสถานะเปลี่ยน
+        if (typeof renderSetupHistory === 'function') {
+            renderSetupHistory();
+        }
+    }
+}
 </script>
 </body>
 </html>
