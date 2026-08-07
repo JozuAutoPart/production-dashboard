@@ -962,27 +962,25 @@
             }
         });
 
-        // อัปเดตตัวเลขหน้า Dashboard
-        if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
-        if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
-        if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
-        if(document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
-        if(document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
-        if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
-        if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
+       // อัปเดตตัวเลขหน้า Dashboard
+    if (document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
+    if (document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
+    if (document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
+    if (document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
+    if (document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
+    if (document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+    if (document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
 
-        // เรียกฟังก์ชันเรนเดอร์หน้าจอทั้งหมด
-        if (typeof renderSetupHistory === 'function') renderSetupHistory();
-        if (typeof renderQcHistory === 'function') renderQcHistory();
-        if (typeof renderSpotHistory === 'function') renderSpotHistory();
-        if (typeof renderDtHistory === 'function') renderDtHistory();
-        if (typeof populateQcPartDropdown === 'function') populateQcPartDropdown();
-    }
-    .catch(error => {
-        console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
-    });
-}
-
+    // เรียกฟังก์ชันเรนเดอร์หน้าทั้งหมด
+    if (typeof renderSetupHistory === 'function') renderSetupHistory();
+    if (typeof renderQcHistory === 'function') renderQcHistory();
+    if (typeof renderSpotHistory === 'function') renderSpotHistory();
+    if (typeof renderDtHistory === 'function') renderDtHistory();
+    if (typeof populateQcPartDropdown === 'function') populateQcPartDropdown();
+})
+.catch(error => {
+    console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+});
     function populateQcPartDropdown() {
     const dropdown = document.getElementById('qc_part_no');
     if (!dropdown) return;
