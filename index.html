@@ -1297,7 +1297,7 @@
         });
     }
 
-    function renderSetupHistory() {
+   function renderSetupHistory() {
     const filterElem = document.getElementById('filter_line');
     const selectedFilterLine = filterElem ? filterElem.value : "ALL";
     const tbody = document.querySelector('#setupHistoryTable tbody');
@@ -1364,14 +1364,13 @@
             <td>${item.lot}</td>
             <td><b>${item.part}</b></td>
             <td>👤 ${item.inspector || '-'}</td>
-            <td>Air: ${item.air} | Cush: ${item.cushion}<br>SPM: ${item.spm} | Mat: ${item.material} | DH: ${item.dh}</td>
             <td>${item.start}<br>ถึง<br>${item.end}</td>
+            <td>Air: ${item.air} | Cush: ${item.cushion}<br>SPM: ${item.spm} | Mat: ${item.material} | DH: ${item.dh}</td>
             <td>${statusBadge}</td>
             <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
         </tr>`;
     });
 }
-
     function renderQcHistory() {
         const tbody = document.querySelector('#qcHistoryTable tbody');
         if (!tbody) return;
