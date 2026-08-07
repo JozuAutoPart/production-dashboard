@@ -775,8 +775,10 @@
         let passCount = 0;
         let failCount = 0;
 
-        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อเชื่อมโยงสถานะ
+        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อจับคู่สถานะ
+        const qcCheckedParts = new Set(); 
         const qcStatusMap = {};
+
         data.forEach((row, index) => {
             if (index === 0) return;
             const type = String(row[1] || '');
@@ -788,6 +790,7 @@
             if (type.includes('QC') || processCol.includes('QC Check') || statusCol.includes('Pass') || statusCol.includes('Fail') || type.includes('Pass') || type.includes('Fail')) {
                 if (line && part && part !== '-') {
                     const key = `${line}_${part}`;
+                    qcCheckedParts.add(key);
                     if (statusCol.includes('Fail') || statusCol.includes('Not Pass') || type.includes('Fail')) {
                         qcStatusMap[key] = 'QC Fail';
                     } else {
@@ -797,7 +800,7 @@
             }
         });
 
-        // ขั้นที่ 2: โหลดข้อมูลประวัติทั้งหมดขึ้นมาแสดงโดยรักษาโครงสร้างเดิมครบถ้วน
+        // ขั้นที่ 2: ดึงข้อมูล Set-Up ทั้งหมดมาแสดงในตาราง
         data.forEach((row, index) => {
             if (index === 0) return; // ข้าม Header
 
@@ -835,13 +838,13 @@
                 return;
             }
 
-            // ป้องกันข้อมูลว่าง
-            if (!part || part === '-') return;
-
-            // ตรวจสอบว่าเป็นแถวผล QC บันทึกเดี่ยวๆ หรือไม่ ถ้าใช่ให้ข้ามไม่เอามาแสดงเป็นตาราง Set-Up ซ้ำซ้อน
-            if (type.includes('QC Check') || (type.includes('QC') && processCol.includes('QC Check'))) {
+            // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงซ้ำในตาราง Set-Up
+            if (type.includes('QC') || processCol.includes('QC Check')) {
                 return;
             }
+
+            // ป้องกันกรณีแถวว่างเปล่าไม่มี Part No.
+            if (!part || part === '-') return;
 
             const record = {
                 id: index,
@@ -865,10 +868,12 @@
                 inspector: row[15] || '-'
             };
 
-            // หาก Part นี้ผ่านการตรวจ QC แล้ว อัปเดตสถานะเป็น QC Pass / Fail ตามจริง
+            // อัปเดตสถานะถ้าผ่านการตรวจ QC แล้ว
             const matchKey = `${record.line}_${record.part}`;
             if (qcStatusMap[matchKey]) {
                 record.status = qcStatusMap[matchKey];
+            } else if (qcCheckedParts.has(matchKey)) {
+                record.status = 'QC Pass';
             }
 
             setupCount++;
@@ -1479,8 +1484,7 @@ if (qcFormElem) {
         filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
     }
 
-    // ปรับ colspan เป็น 10 (เนื่องจากลบคอลัมน์จำนวน Process ออกแล้ว)
-    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="11" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
     
     filteredData.forEach((item) => {
         const statStr = String(item.status || '').trim();
@@ -1495,13 +1499,15 @@ if (qcFormElem) {
             statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
         }
 
-        // ตัดช่อง item.process (จำนวน Process / JSON) ออกจากตารางเรียบร้อย
+        // นำปุ่มลบกลับมาแสดงผลในคอลัมน์สุดท้ายของตาราง
         tbody.innerHTML += `<tr ${trStyle}>
             <td><b>${item.line}</b></td>
             <td>${item.lot}</td>
             <td>${item.part}</td>
+            <td>${item.actual || '-'}</td>
             <td><b>👤 ${item.inspector}</b></td>
             <td>${statusBadge}</td>
+            <td>${item.process}</td>
             <td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td>
             <td>Mat: ${item.material}<br>DH: ${item.dh}</td>
             <td>${item.start}<br>ถึง<br>${item.end}</td>
@@ -1510,33 +1516,15 @@ if (qcFormElem) {
     });
 }
     function renderQcHistory() {
-    const tbody = document.querySelector('#qcHistoryTable tbody') || document.querySelector('table:has(#sum-qc-items) tbody') || document.querySelector('#qcCheckTable tbody');
-    // หรือระบุไอดีตารางประวัติ QC ของคุณ เช่น document.getElementById('qcHistoryTableBody')
-    
-    // ค้นหาตำแหน่งตารางประวัติ QC หน้า 3 และเรนเดอร์ข้อมูลลงไป
-    const qcTableBody = document.querySelectorAll('table tbody')[2]; // หรือเลือกตามตารางประวัติหน้า QC จริง
-    if (!qcTableBody) return;
+        const tbody = document.querySelector('#qcHistoryTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติ QC</td></tr>` : '';
+        qcHistoryData.forEach((item) => {
+            const color = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
+            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.part}</td><td>${item.actual}</td><td style="${color}">${item.status}</td><td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
 
-    qcTableBody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px; text-align: center;">ยังไม่มีประวัติ QC</td></tr>` : '';
-    
-    qcHistoryData.forEach((item) => {
-        const statStr = String(item.status || '').trim();
-        let statusBadge = `<span style="color: #27ae60; font-weight: bold;">${statStr}</span>`;
-        if (statStr.includes('Fail') || statStr.includes('Not Pass')) {
-            statusBadge = `<span style="color: #c0392b; font-weight: bold;">${statStr}</span>`;
-        }
-
-        qcTableBody.innerHTML += `<tr>
-            <td><b>${item.line}</b></td>
-            <td>${item.part}</td>
-            <td>${item.actual || '-'}</td>
-            <td>${statusBadge}</td>
-            <td>${item.remark || '-'}</td>
-            <td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector || '-'}</span></td>
-            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
-        </tr>`;
-    });
-}
     function renderSpotHistory() {
         const tbody = document.querySelector('#spotWeldingTable tbody');
         if (!tbody) return;
@@ -1556,22 +1544,18 @@ if (qcFormElem) {
     }
 
     function deleteLocal(id) {
-    if (confirm('คุณต้องการลบประวัติการ Set-Up รายการนี้ใช่หรือไม่?')) {
-        // กรองข้อมูลในตารางเพื่อตัดแถวที่ถูกลบออกทันที
-        setupHistoryData = setupHistoryData.filter(item => item.id !== id);
-        
-        // เรนเดอร์ตารางใหม่ทันทีเพื่อให้แถวหายไปจากหน้าจอ
-        renderSetupHistory();
-        
-        // ส่งคำสั่งแจ้งเตือนไปที่ Google Sheets (ผ่าน Apps Script)
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'Delete', id: id })
-        }).catch(err => console.error('Delete error:', err));
+        if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+            setupHistoryData = setupHistoryData.filter(i => i.id !== id);
+            qcHistoryData = qcHistoryData.filter(i => i.id !== id);
+            spotHistoryData = spotHistoryData.filter(i => i.id !== id);
+            dtHistoryData = dtHistoryData.filter(i => i.id !== id);
+            renderSetupHistory();
+            renderQcHistory();
+            renderSpotHistory();
+            renderDtHistory();
+            populateQcPartDropdown();
+        }
     }
-}
 
     function exportTableToExcel(tableID, filename = '', actionColumnIndex = -1) {
         let tableSelect = document.getElementById(tableID);
