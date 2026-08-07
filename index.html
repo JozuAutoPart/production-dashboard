@@ -775,7 +775,7 @@
         let passCount = 0;
         let failCount = 0;
 
-        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อเอาไปอัปเดตสถานะ
+        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อเก็บสถานะ
         const qcCheckedParts = new Set(); 
 
         data.forEach((row, index) => {
@@ -785,7 +785,6 @@
             const part = String(row[4] || '-');
             const processCol = String(row[5] || '');
 
-            // ถ้าเจอรายการที่เป็นการตรวจ QC ให้บันทึกเก็บไว้ว่า Part นี้ตรวจแล้ว
             if (type.includes('QC') || processCol.includes('QC Check') || type.includes('Pass') || type.includes('Fail')) {
                 if (line && part && part !== '-') {
                     qcCheckedParts.add(`${line}_${part}`);
@@ -793,7 +792,7 @@
             }
         });
 
-        // ขั้นที่ 2: โหลดข้อมูลประวัติ Set-Up ทั้งหมดขึ้นมาแสดง
+        // ขั้นที่ 2: วนลูปเก็บประวัติ Set-Up ทั้งหมดเข้า Array โดยใช้คำสั่ง .push()
         data.forEach((row, index) => {
             if (index === 0) return; // ข้าม Header
 
@@ -831,7 +830,7 @@
                 return;
             }
 
-            // หากแถวนี้คือแถวผลการตรวจ QC โดยตรง ให้ข้ามการแสดงผลในตาราง Set-Up เพื่อไม่ให้ซ้ำซ้อน
+            // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงเป็นตาราง Set-Up ซ้ำ
             if (type.includes('QC') || processCol.includes('QC Check')) {
                 return;
             }
@@ -858,7 +857,7 @@
                 inspector: row[15] || '-'
             };
 
-            // เช็คว่าถ้า Part นี้เคยถูกบันทึกผล QC ไปแล้ว ให้เปลี่ยนสถานะเป็น QC Pass ในตาราง
+            // หาก Part นี้เคยถูกตรวจ QC แล้ว ให้เปลี่ยนสถานะเป็น QC Pass ในตาราง
             const matchKey = `${record.line}_${record.part}`;
             if (qcCheckedParts.has(matchKey)) {
                 if (record.status === 'Waiting QC' || !record.status || record.status === '-') {
@@ -868,7 +867,7 @@
 
             if (record.part && record.part !== '-') {
                 setupCount++;
-                setupHistoryData.push(record);
+                setupHistoryData.push(record); // ใช้ .push เพื่อเก็บทุกแถวอย่างถูกต้อง
 
                 const statusStr = String(record.status).trim();
                 const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
