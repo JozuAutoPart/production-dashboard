@@ -1538,18 +1538,22 @@ if (qcFormElem) {
     }
 
     function deleteLocal(id) {
-        if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
-            setupHistoryData = setupHistoryData.filter(i => i.id !== id);
-            qcHistoryData = qcHistoryData.filter(i => i.id !== id);
-            spotHistoryData = spotHistoryData.filter(i => i.id !== id);
-            dtHistoryData = dtHistoryData.filter(i => i.id !== id);
-            renderSetupHistory();
-            renderQcHistory();
-            renderSpotHistory();
-            renderDtHistory();
-            populateQcPartDropdown();
-        }
+    if (confirm('คุณต้องการลบประวัติการ Set-Up รายการนี้ใช่หรือไม่?')) {
+        // กรองข้อมูลในตารางเพื่อตัดแถวที่ถูกลบออกทันที
+        setupHistoryData = setupHistoryData.filter(item => item.id !== id);
+        
+        // เรนเดอร์ตารางใหม่ทันทีเพื่อให้แถวหายไปจากหน้าจอ
+        renderSetupHistory();
+        
+        // ส่งคำสั่งแจ้งเตือนไปที่ Google Sheets (ผ่าน Apps Script)
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'Delete', id: id })
+        }).catch(err => console.error('Delete error:', err));
     }
+}
 
     function exportTableToExcel(tableID, filename = '', actionColumnIndex = -1) {
         let tableSelect = document.getElementById(tableID);
