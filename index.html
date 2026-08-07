@@ -1374,6 +1374,44 @@ if (qcFormElem) {
     const tbody = document.querySelector('#setupHistoryTable tbody');
     if (!tbody) return;
     
+    // --- ส่วนเพิ่ม: สร้างกล่องแสดงผลการแจ้งเตือนล่าสุดจากหน้า QC ในหน้า Set-Up Die ---
+    let alertBannerContainer = document.getElementById('setup-qc-notification-banner');
+    if (!alertBannerContainer) {
+        alertBannerContainer = document.createElement('div');
+        alertBannerContainer.id = 'setup-qc-notification-banner';
+        const tableElement = document.getElementById('setupHistoryTable');
+        if (tableElement && tableElement.parentNode) {
+            tableElement.parentNode.insertBefore(alertBannerContainer, tableElement);
+        }
+    }
+
+    const savedAlert = localStorage.getItem('latest_qc_alert');
+    if (savedAlert) {
+        try {
+            const alertData = JSON.parse(savedAlert);
+            const isFail = alertData.status.includes('Not Pass') || alertData.status.includes('Fail');
+            
+            if (isFail) {
+                alertBannerContainer.innerHTML = `
+                    <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        ⚠️ แจ้งเตือนด่วนจาก QC! (Line: ${alertData.line})<br>
+                        Part No: ${alertData.part} | ผลการตรวจสอบ: <span style="color: #dc3545; font-size: 1.1em;">${alertData.status}</span><br>
+                        หมายเหตุ / จุดที่พบปัญหา: ${alertData.remark} 
+                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
+                    </div>`;
+            } else {
+                alertBannerContainer.innerHTML = `
+                    <div style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
+                        ✅ ผลการตรวจสอบ QC ล่าสุด (Line: ${alertData.line}): Part No: ${alertData.part} - <span style="color: #28a745;">${alertData.status}</span>
+                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
+                    </div>`;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    // -----------------------------------------------------------------
+
     let filteredData = setupHistoryData;
     if (selectedFilterLine !== "ALL") {
         filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
@@ -1386,12 +1424,11 @@ if (qcFormElem) {
         let trStyle = '';
         let statusBadge = '<span style="color: #f39c12; font-weight: bold;">⏳ Waiting QC</span>';
 
-        // ตรวจสอบผลสถานะเพื่อเปลี่ยนสีแถวและป้ายสถานะ
         if (statStr.includes('Pass')) {
-            trStyle = 'style="background-color: #d4edda !important;"'; // สีเขียวอ่อนเมื่อผ่าน
+            trStyle = 'style="background-color: #d4edda !important;"';
             statusBadge = '<span style="color: #155724; font-weight: bold;">✔ QC Pass</span>';
         } else if (statStr.includes('Not Pass') || statStr.includes('Fail')) {
-            trStyle = 'style="background-color: #f8d7da !important;"'; // สีแดงอ่อนเมื่อไม่ผ่าน/Fail
+            trStyle = 'style="background-color: #f8d7da !important;"';
             statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
         }
 
