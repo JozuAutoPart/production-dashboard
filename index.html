@@ -1434,22 +1434,30 @@ if (qcFormElem) {
         });
     }
 
-   function renderSetupHistory() {
-    const filterElem = document.getElementById('filter_line');
-    const selectedFilterLine = filterElem ? filterElem.value : "ALL";
-    const tbody = document.querySelector('#setupHistoryTable tbody');
+  function renderSetupHistory() {
+    // ค้นหาตำแหน่ง tbody ของตารางประวัติ Set-Up
+    const tbody = document.querySelector('#setupHistoryTable tbody') || document.querySelectorAll('table tbody')[1];
     if (!tbody) return;
-    
-    let alertBannerContainer = document.getElementById('setup-qc-notification-banner');
-    if (!alertBannerContainer) {
-        alertBannerContainer = document.createElement('div');
-        alertBannerContainer.id = 'setup-qc-notification-banner';
-        const tableElement = document.getElementById('setupHistoryTable');
-        if (tableElement && tableElement.parentNode) {
-            tableElement.parentNode.insertBefore(alertBannerContainer, tableElement);
-        }
+
+    // ถ้า setupHistoryData ไม่มีข้อมูล ให้แสดงข้อความแจ้งเตือน
+    if (!setupHistoryData || setupHistoryData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #7f8c8d;">ยังไม่มีประวัติ Set-Up</td></tr>`;
+        return;
     }
 
+    tbody.innerHTML = '';
+
+    setupHistoryData.forEach((item) => {
+        tbody.innerHTML += `<tr>
+            <td><b>${item.line || '-'}</b></td>
+            <td>${item.lot || '-'}</td>
+            <td><b>${item.part || '-'}</b></td>
+            <td>👤 ${item.inspector || '-'}</td>
+            <td>${item.start || '-'} <br>ถึง ${item.end || '-'}</td>
+            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
+        </tr>`;
+    });
+}
     const savedAlert = localStorage.getItem('latest_qc_alert');
     if (savedAlert) {
         try {
