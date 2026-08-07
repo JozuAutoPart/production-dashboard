@@ -895,95 +895,93 @@
                 return;
             }
 
-            // แยกประเภท DestructiveTest
-            if (type === 'DestructiveTest') {
-                dtHistoryData.push({
-                    id: index,
-                    part: part,
-                    datetime: row[12] || '-',
-                    resultFirst: row[13] || '-',
-                    resultFinish: row[14] || '-',
-                    inspector: row[15] || '-'
-                });
-                return;
-            }
-
-            // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงซ้ำในตาราง Set-Up
-            if (type.includes('QC') || processCol.includes('QC Check')) {
-                return;
-            }
-
-            // ป้องกันกรณีแถวว่างเปล่าไม่มี Part No.
-            if (!part || part === '-') return;
-
-            const record = {
+   // แยกประเภท DestructiveTest
+        if (type === 'DestructiveTest') {
+            dtHistoryData.push({
                 id: index,
-                line: line,
-                lot: row[3] || '-',
                 part: part,
-                operator: row[15] || '-',
-                process: row[5] || '-',
-                machine: row[6] || '-',
-                air: row[7] || '-',
-                cushion: row[8] || '-',
-                spm: row[9] || '-',
-                material: row[10] || '-',
-                dh: row[11] || '-',
-                start: row[12] || '-',
-                end: row[13] || '-',
-                status: row[14] || 'Waiting QC',
-                actual: row[5] || '-',
-                remark: row[13] || '-',
                 datetime: row[12] || '-',
+                resultFirst: row[13] || '-',
+                resultFinish: row[14] || '-',
                 inspector: row[15] || '-'
-            };
+            });
+            return;
+        }
 
-            // อัปเดตสถานะถ้าผ่านการตรวจ QC แล้ว
-            const matchKey = `${record.line}_${record.part}`;
-            if (qcStatusMap[matchKey]) {
-                record.status = qcStatusMap[matchKey];
-            } else if (qcCheckedParts.has(matchKey)) {
-                record.status = 'QC Pass';
+        // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงซ้ำในตาราง Set-Up
+        if (type.includes('QC') || processCol.includes('QC Check')) {
+            return;
+        }
+
+        // ป้องกันกรณีแถวว่างเปล่าไม่มี Part No.
+        if (!part || part === '-') return;
+
+        const record = {
+            id: index,
+            line: line,
+            lot: row[3] || '-',
+            part: part,
+            operator: row[15] || '-',
+            process: row[5] || '-',
+            machine: row[6] || '-',
+            air: row[7] || '-',
+            cushion: row[8] || '-',
+            spm: row[9] || '-',
+            material: row[10] || '-',
+            dh: row[11] || '-',
+            start: row[12] || '-',
+            end: row[13] || '-',
+            status: row[14] || 'Waiting QC',
+            actual: row[5] || '-',
+            remark: row[13] || '-',
+            datetime: row[12] || '-',
+            inspector: row[15] || '-'
+        };
+
+        // อัปเดตสถานะถ้าผ่านการตรวจ QC แล้ว
+        const matchKey = `${record.line}_${record.part}`;
+        if (qcStatusMap[matchKey]) {
+            record.status = qcStatusMap[matchKey];
+        } else if (qcCheckedParts.has(matchKey)) {
+            record.status = 'QC Pass';
+        }
+
+        setupCount++;
+        setupHistoryData.push(record);
+
+        const statusStr = String(record.status).trim();
+        const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
+
+        if (hasCheckedQC) {
+            qcHistoryData.push(record);
+            if (statusStr.includes('Pass')) {
+                passCount++;
+            } else {
+                failCount++;
             }
-
-           setupCount++;
-            setupHistoryData.push(record);
-
-            const statusStr = String(record.status).trim();
-            const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
-
-            if (hasCheckedQC) {
-                qcHistoryData.push(record);
-                if (statusStr.includes('Pass')) {
-                    passCount++;
-                } else {
-                    failCount++;
-                }
-            }
-        });
-
-        // อัปเดตตัวเลขหน้า Dashboard
-        if (document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
-        if (document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
-        if (document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
-        if (document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
-        if (document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
-        if (document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
-        if (document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
-
-        // เรียกฟังก์ชันเรนเดอร์หน้าทั้งหมด
-        if (typeof renderSetupHistory === 'function') renderSetupHistory();
-        if (typeof renderQcHistory === 'function') renderQcHistory();
-        if (typeof renderSpotHistory === 'function') renderSpotHistory();
-        if (typeof renderDtHistory === 'function') renderDtHistory();
-        if (typeof populateQcPartDropdown === 'function') populateQcPartDropdown();
-
-    })
-    .catch(error => {
-        console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+        }
     });
-}
 
+    // อัปเดตตัวเลขหน้า Dashboard
+    if (document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
+    if (document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
+    if (document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
+    if (document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
+    if (document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
+    if (document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+    if (document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
+
+    // เรียกฟังก์ชันเรนเดอร์หน้าทั้งหมด
+    if (typeof renderSetupHistory === 'function') renderSetupHistory();
+    if (typeof renderQcHistory === 'function') renderQcHistory();
+    if (typeof renderSpotHistory === 'function') renderSpotHistory();
+    if (typeof renderDtHistory === 'function') renderDtHistory();
+    if (typeof populateQcPartDropdown === 'function') populateQcPartDropdown();
+
+})
+.catch(error => {
+    console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+});
 // แยกฟังก์ชันออกมาข้างนอกให้ถูกต้อง
 function populateQcPartDropdown() {
     const dropdown = document.getElementById('qc_part_no');
