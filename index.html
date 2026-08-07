@@ -1479,7 +1479,8 @@ if (qcFormElem) {
         filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
     }
 
-    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="11" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+    // ปรับ colspan เป็น 10 (เนื่องจากลบคอลัมน์จำนวน Process ออกแล้ว)
+    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
     
     filteredData.forEach((item) => {
         const statStr = String(item.status || '').trim();
@@ -1494,15 +1495,13 @@ if (qcFormElem) {
             statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
         }
 
-        // นำปุ่มลบกลับมาแสดงผลในคอลัมน์สุดท้ายของตาราง
+        // ตัดช่อง item.process (จำนวน Process / JSON) ออกจากตารางเรียบร้อย
         tbody.innerHTML += `<tr ${trStyle}>
             <td><b>${item.line}</b></td>
             <td>${item.lot}</td>
             <td>${item.part}</td>
-            <td>${item.actual || '-'}</td>
             <td><b>👤 ${item.inspector}</b></td>
             <td>${statusBadge}</td>
-            <td>${item.process}</td>
             <td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td>
             <td>Mat: ${item.material}<br>DH: ${item.dh}</td>
             <td>${item.start}<br>ถึง<br>${item.end}</td>
