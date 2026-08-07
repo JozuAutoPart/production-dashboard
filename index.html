@@ -857,15 +857,19 @@
         const currentSelected = qcPartSelect.value;
         qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
         
-        setupHistoryData.forEach(item => {
-            let opt = document.createElement('option');
-            opt.value = item.part;
-            opt.setAttribute('data-line', item.line);
-            opt.setAttribute('data-lot', item.lot);
-            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-            qcPartSelect.appendChild(opt);
-        });
+        const pendingItems = setupHistoryData.filter(item => {
+        const stat = String(item.status || '').trim();
+        return stat === '' || stat === '-' || stat === 'Waiting QC';
+    });
 
+    pendingItems.forEach((item) => {
+        let opt = document.createElement('option');
+        opt.value = item.part;
+        opt.setAttribute('data-line', item.line);
+        opt.setAttribute('data-lot', item.lot);
+        opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+        qcPartSelect.appendChild(opt);
+    });
         if(currentSelected) {
             qcPartSelect.value = currentSelected;
         }
