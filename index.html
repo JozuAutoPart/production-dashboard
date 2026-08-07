@@ -436,7 +436,6 @@
                             <th>Line</th>
                             <th>Lot No.</th>
                             <th>Part No.</th>
-                            <th>จำนวน Process</th>
                             <th>พนักงาน Set-Up</th>
                             <th>ช่วงเวลาติดตั้ง</th>
                             <th>สถานะ QC</th>
@@ -1442,7 +1441,6 @@ if (qcFormElem) {
     const tbody = document.querySelector('#setupHistoryTable tbody');
     if (!tbody) return;
     
-    // จัดการแสดงกล่องแจ้งเตือนล่าสุดจากหน้า QC
     let alertBannerContainer = document.getElementById('setup-qc-notification-banner');
     if (!alertBannerContainer) {
         alertBannerContainer = document.createElement('div');
@@ -1484,7 +1482,7 @@ if (qcFormElem) {
         filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
     }
 
-    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="11" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="8" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
     
     filteredData.forEach((item) => {
         const statStr = String(item.status || '').trim();
@@ -1499,17 +1497,13 @@ if (qcFormElem) {
             statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
         }
 
-        // นำปุ่มลบกลับมาแสดงผลในคอลัมน์สุดท้ายของตาราง
         tbody.innerHTML += `<tr ${trStyle}>
             <td><b>${item.line}</b></td>
             <td>${item.lot}</td>
-            <td>${item.part}</td>
-            <td>${item.actual || '-'}</td>
-            <td><b>👤 ${item.inspector}</b></td>
+            <td><b>${item.part}</b></td>
+            <td>👤 ${item.inspector || '-'}</td>
             <td>${statusBadge}</td>
-            <td>${item.process}</td>
-            <td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td>
-            <td>Mat: ${item.material}<br>DH: ${item.dh}</td>
+            <td>Air: ${item.air} | Cush: ${item.cushion}<br>SPM: ${item.spm} | Mat: ${item.material} | DH: ${item.dh}</td>
             <td>${item.start}<br>ถึง<br>${item.end}</td>
             <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
         </tr>`;
