@@ -873,8 +873,10 @@
         if(currentSelected) {
             qcPartSelect.value = currentSelected;
         }
-    }
-
+        // หลังจากบันทึกผล QC เรียบร้อยแล้ว
+if (typeof populateQcPartDropdown === 'function') {
+    populateQcPartDropdown(); // สั่งรีเฟรชรายการในดรอปดาวน์ทันที รายการที่ตรวจแล้วจะหายไป
+}
     function onSelectQcPart(selectElem) {
         const selectedOption = selectElem.options[selectElem.selectedIndex];
         const lineValue = selectedOption.getAttribute('data-line');
