@@ -331,7 +331,7 @@
         </div>
 
         <!-- หน้าที่ 2: Set-Up Die & Condition Machine (Redesigned for Multi-Process Complete Submission) -->
-        <div id="tab2" class="tab-content">
+        <div id="tab2" class="tab-content active">
             <h2>
                 <span>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition (Multi-Process)</span>
                 <button class="btn-export" onclick="exportTableToExcel()">📥 Export Excel</button>
@@ -432,15 +432,16 @@
             <div class="table-container">
                 <table class="history-table" id="setupHistoryTable">
                     <thead>
-    <tr>
-        <th>Line</th>
-        <th>Lot No.</th>
-        <th>Part No.</th>
-        <th>พนักงาน Set-Up</th>
-        <th>ช่วงเวลาติดตั้ง</th>
-        <th>จัดการ</th>
-    </tr>
-</thead>
+                        <tr>
+                            <th>Line</th>
+                            <th>Lot No.</th>
+                            <th>Part No.</th>
+                            <th>จำนวน Process</th>
+                            <th>พนักงาน Set-Up</th>
+                            <th>ช่วงเวลาติดตั้ง</th>
+                            <th>สถานะ QC</th>
+                        </tr>
+                    </thead>
                     <tbody id="setupHistoryBody">
                         <tr>
                             <td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการบันทึกข้อมูล</td>
@@ -559,15 +560,16 @@
             <div class="table-container">
                 <table class="history-table" id="qcHistoryTable">
                     <thead>
-    <tr>
-        <th>Line</th>
-        <th>Part No.</th>
-        <th>หมายเหตุ NG / เวลา</th>
-        <th>ผลลัพธ์ (QC Status)</th>
-        <th>ผู้ตรวจ</th>
-        <th>จัดการ</th>
-    </tr>
-</thead>
+                        <tr>
+                            <th>Line</th>
+                            <th>Part No.</th>
+                            <th>ผลการตรวจ (Actual Data)</th>
+                            <th>ผลลัพธ์ (QC Status)</th>
+                            <th>หมายเหตุ NG / เวลา</th>
+                            <th>ผู้ตรวจ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
                     </tbody>
@@ -757,257 +759,117 @@
         loadDataFromGoogleSheet();
     });
 
- function loadDataFromGoogleSheet() {
-    const corsProxy = 'https://corsproxy.io/?';
-    const targetUrl = corsProxy + encodeURIComponent(SCRIPT_URL);
+    function loadDataFromGoogleSheet() {
+        fetch(SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            setupHistoryData = [];
+            qcHistoryData = [];
+            spotHistoryData = [];
+            dtHistoryData = [];
+            
+            let setupCount = 0;
+            let passCount = 0;
+            let failCount = 0;
 
-    fetch(targetUrl)
-    .then(response => response.json())
-    .then(data => {
-        if (!Array.isArray(data)) return;
+            data.forEach((row, index) => {
+                if(index === 0) return;
 
-        // 1. ดึงข้อมูลเดิมจาก LocalStorage มาสำรองไว้ก่อน เพื่อป้องกันประวัติหาย
-        let localSetup = [];
-        let localQc = [];
-        try {
-            localSetup = JSON.parse(localStorage.getItem('local_setup_history') || '[]');
-            localQc = JSON.parse(localStorage.getItem('local_qc_history') || '[]');
-        } catch(e) {
-            localSetup = [];
-            localQc = [];
-        }
+                const type = row[1];
+                const record = {
+                    id: index,
+                    line: row[2] || '-',
+                    lot: row[3] || '-',
+                    part: row[4] || '-',
+                    operator: row[15] || '-',
+                    process: row[5] || '-',
+                    machine: row[6] || '-',
+                    air: row[7] || '-',
+                    cushion: row[8] || '-',
+                    spm: row[9] || '-',
+                    material: row[10] || '-',
+                    dh: row[11] || '-',
+                    start: row[12] || '-',
+                    end: row[13] || '-',
+                    status: row[14] || '-',
+                    actual: row[5] ? row[5].replace('QC Check (', '').replace(')', '') : '-',
+                    remark: row[13] || '-',
+                    datetime: row[12] || '-',
+                    inspector: row[15] || '-'
+                };
 
-        setupHistoryData = [...localSetup];
-        qcHistoryData = [...localQc];
-        
-        let passCount = 0;
-        let failCount = 0;
-
-        // ขั้นที่ 1: ตรวจสอบรายการที่ถูกตรวจ QC ไปแล้ว เพื่อจับคู่สถานะ
-        const qcCheckedParts = new Set(); 
-        const qcStatusMap = {};
-
-        data.forEach((row, index) => {
-            if (index === 0) return;
-            const type = String(row[1] || '').trim();
-            const line = String(row[2] || '');
-            const lot = String(row[3] || '');
-            const part = String(row[4] || '');
-            const start = String(row[12] || '-');
-            const end = String(row[13] || '-');
-            const statusCol = String(row[14] || '');
-            const inspector = String(row[15] || '-');
-            const remark = String(row[16] || '-');
-            const processCol = String(row[5] || '');
-
-            // ตรวจสอบว่าเป็นรายการ QC หรือไม่
-            if (type.includes('QC') || processCol.includes('QC Check') || statusCol.includes('Pass') || statusCol.includes('Fail') || type.includes('Pass') || type.includes('Fail')) {
-                if (line && part && part !== '-') {
-                    const key = `${line}_${part}`;
-                    qcCheckedParts.add(key);
-                    if (statusCol.includes('Fail') || statusCol.includes('Not Pass') || type.includes('Fail')) {
-                        qcStatusMap[key] = 'QC Fail';
-                        failCount++;
-                    } else {
-                        qcStatusMap[key] = 'QC Pass';
-                        passCount++;
-                    }
-
-                    // เพิ่มลง qcHistoryData แบบไม่ให้ซ้ำ
-                    const existsQc = qcHistoryData.some(item => item.line === line && item.part === part && item.status === statusCol);
-                    if (!existsQc) {
-                        qcHistoryData.push({
-                            id: Date.now() + index,
-                            line: line,
-                            part: part,
-                            status: statusCol || 'QC Pass',
-                            remark: remark,
-                            inspector: inspector
-                        });
-                    }
-                }
-            }
-
-            // ตรวจสอบว่าเป็นรายการ Setup หรือไม่
-            if (type.toLowerCase().includes('setup') || (!type.includes('QC') && !statusCol.includes('Pass') && !statusCol.includes('Fail') && line && part)) {
-                const existsSetup = setupHistoryData.some(item => item.line === line && item.part === part && item.start === start);
-                if (!existsSetup) {
-                    setupHistoryData.push({
-                        id: Date.now() + index,
-                        line: line,
-                        lot: lot,
-                        part: part,
-                        inspector: inspector,
-                        start: start.replace('T', ' '),
-                        end: end.replace('T', ' '),
-                        status: statusCol || 'Waiting QC'
+                if (type === 'Setup') {
+                    setupHistoryData.push(record);
+                    setupCount++;
+                } else if (type === 'QC Pass') {
+                    qcHistoryData.push(record);
+                    passCount++;
+                } else if (type === 'QC Not Pass') {
+                    qcHistoryData.push(record);
+                    failCount++;
+                } else if (type === 'SpotWelding') {
+                    spotHistoryData.push({
+                        id: index,
+                        datetime: row[1] || '-',
+                        part: row[4] || '-',
+                        jobno: row[5] || '-',
+                        welcurr: row[7] || '-',
+                        pressure: row[8] || '-',
+                        tipbalance: row[9] || '-',
+                        water: row[10] || '-',
+                        inspector: row[15] || '-'
+                    });
+                } else if (type === 'DestructiveTest') {
+                    dtHistoryData.push({
+                        id: index,
+                        part: row[4] || '-',
+                        datetime: row[12] || '-',
+                        resultFirst: row[13] || '-',
+                        resultFinish: row[14] || '-',
+                        inspector: row[15] || '-'
                     });
                 }
-            }
+            });
+
+            if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
+            if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
+            if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
+            if(document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
+            if(document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
+            if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+            if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
+
+            renderSetupHistory();
+            renderQcHistory();
+            renderSpotHistory();
+            renderDtHistory();
+            populateQcPartDropdown();
+        })
+        .catch(error => {
+            console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+        });
+    }
+
+    function populateQcPartDropdown() {
+        const qcPartSelect = document.getElementById('qc_part_no');
+        if (!qcPartSelect) return;
+        
+        const currentSelected = qcPartSelect.value;
+        qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
+        
+        setupHistoryData.forEach(item => {
+            let opt = document.createElement('option');
+            opt.value = item.part;
+            opt.setAttribute('data-line', item.line);
+            opt.setAttribute('data-lot', item.lot);
+            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+            qcPartSelect.appendChild(opt);
         });
 
-        // อัปเดตตัวเลขสรุปหน้า Dashboard
-        const setupCount = setupHistoryData.length;
-        if (document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
-        if (document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
-        if (document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
-
-        // บันทึกสะสมลง LocalStorage เพื่อความเสถียรไม่ให้ประวัติหาย
-        localStorage.setItem('local_setup_history', JSON.stringify(setupHistoryData));
-        localStorage.setItem('local_qc_history', JSON.stringify(qcHistoryData));
-
-        // เรนเดอร์ตารางและกราฟแสดงผล
-        renderSetupHistory();
-        renderQcHistory();
-        if (typeof renderDashboardDonutChart === 'function') {
-            renderDashboardDonutChart();
+        if(currentSelected) {
+            qcPartSelect.value = currentSelected;
         }
-    })
-    .catch(error => {
-        console.error("Error loading data:", error);
-        renderSetupHistory();
-        renderQcHistory();
-    });
-}
-
-        // ขั้นที่ 2: ดึงข้อมูล Set-Up ทั้งหมดมาแสดงในตาราง
-        data.forEach((row, index) => {
-            if (index === 0) return; // ข้าม Header
-
-            const type = String(row[1] || '');
-            const line = String(row[2] || '-');
-            const part = String(row[4] || '-');
-            const processCol = String(row[5] || '');
-
-            // แยกประเภท SpotWelding
-            if (type === 'SpotWelding') {
-                spotHistoryData.push({
-                    id: index,
-                    datetime: row[1] || '-',
-                    part: part,
-                    jobno: row[5] || '-',
-                    welcurr: row[7] || '-',
-                    pressure: row[8] || '-',
-                    tipbalance: row[9] || '-',
-                    water: row[10] || '-',
-                    inspector: row[15] || '-'
-                });
-                return;
-            }
-
-   // แยกประเภท DestructiveTest
-        if (type === 'DestructiveTest') {
-            dtHistoryData.push({
-                id: index,
-                part: part,
-                datetime: row[12] || '-',
-                resultFirst: row[13] || '-',
-                resultFinish: row[14] || '-',
-                inspector: row[15] || '-'
-            });
-            return;
-        }
-
-        // ข้ามแถวที่เป็นผลการตรวจ QC โดยตรง เพื่อไม่ให้นำมาแสดงซ้ำในตาราง Set-Up
-        if (type.includes('QC') || processCol.includes('QC Check')) {
-            return;
-        }
-
-        // ป้องกันกรณีแถวว่างเปล่าไม่มี Part No.
-        if (!part || part === '-') return;
-
-        const record = {
-            id: index,
-            line: line,
-            lot: row[3] || '-',
-            part: part,
-            operator: row[15] || '-',
-            process: row[5] || '-',
-            machine: row[6] || '-',
-            air: row[7] || '-',
-            cushion: row[8] || '-',
-            spm: row[9] || '-',
-            material: row[10] || '-',
-            dh: row[11] || '-',
-            start: row[12] || '-',
-            end: row[13] || '-',
-            status: row[14] || 'Waiting QC',
-            actual: row[5] || '-',
-            remark: row[13] || '-',
-            datetime: row[12] || '-',
-            inspector: row[15] || '-'
-        };
-
-        // อัปเดตสถานะถ้าผ่านการตรวจ QC แล้ว
-        const matchKey = `${record.line}_${record.part}`;
-        if (qcStatusMap[matchKey]) {
-            record.status = qcStatusMap[matchKey];
-        } else if (qcCheckedParts.has(matchKey)) {
-            record.status = 'QC Pass';
-        }
-
-        setupCount++;
-        setupHistoryData.push(record);
-
-        const statusStr = String(record.status).trim();
-        const hasCheckedQC = (statusStr && statusStr !== '-' && statusStr !== 'Waiting QC' && statusStr !== '');
-
-        if (hasCheckedQC) {
-            qcHistoryData.push(record);
-            if (statusStr.includes('Pass')) {
-                passCount++;
-            } else {
-                failCount++;
-            }
-        }
-    });
-
-    // อัปเดตตัวเลขหน้า Dashboard
-    if (document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
-    if (document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
-    if (document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
-    if (document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
-    if (document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
-    if (document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
-    if (document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
-
-    // เรียกฟังก์ชันเรนเดอร์หน้าทั้งหมด
-    if (typeof renderSetupHistory === 'function') renderSetupHistory();
-    if (typeof renderQcHistory === 'function') renderQcHistory();
-    if (typeof renderSpotHistory === 'function') renderSpotHistory();
-    if (typeof renderDtHistory === 'function') renderDtHistory();
-    if (typeof populateQcPartDropdown === 'function') populateQcPartDropdown();
-
-})
-.catch(error => {
-    console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
-});
-// แยกฟังก์ชันออกมาข้างนอกให้ถูกต้อง
-function populateQcPartDropdown() {
-    const dropdown = document.getElementById('qc_part_no');
-    if (!dropdown) return;
-
-    // ล้างรายการเดิม (เก็บ Option แรกไว้)
-    dropdown.innerHTML = '<option value="">-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
-
-    // กรองเฉพาะรายการ Set-Up ที่ "ยังไม่เคยถูกตรวจ QC" หรือสถานะยังเป็น Waiting QC
-    const pendingItems = setupHistoryData.filter(item => {
-        const stat = String(item.status || '').trim();
-        // เงื่อนไข: ถ้าไม่มีสถานะ, เป็นค่าว่าง, หรือเป็น Waiting QC ถึงจะเอามาแสดงให้ QC ตรวจ
-        return (!stat || stat === '-' || stat === 'Waiting QC');
-    });
-}
-    // นำรายการที่ยังไม่ตรวจมาใส่ใน Dropdown
-    pendingItems.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item.part;
-        option.textContent = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-        
-        // ผูกข้อมูล Line อัตโนมัติเวลาเลือก
-        option.dataset.line = item.line;
-        dropdown.appendChild(option);
-    });
-}
+    }
 
     function onSelectQcPart(selectElem) {
         const selectedOption = selectElem.options[selectElem.selectedIndex];
@@ -1296,73 +1158,15 @@ function populateQcPartDropdown() {
         }
     }
 
-    // ฟังก์ชันรับส่งสัญญาณเตือนจากหน้า QC กลับไปยังหน้า Set-Up
-function triggerSetupReturnAlert(line, part, status, remark) {
-    // บันทึกสถานะการแจ้งเตือนลงในหน่วยความจำชั่วคราวของเบราว์เซอร์ (localStorage)
-    const alertData = {
-        line: line,
-        part: part,
-        status: status, // 'QC Pass' หรือ 'QC Not Pass' / 'Fail'
-        remark: remark,
-        time: new Date().toLocaleTimeString()
-    };
-    localStorage.setItem('latest_qc_alert', JSON.stringify(alertData));
-
-    // เช็คหากอยู่ในหน้า Set-Up ให้แสดงผลแจ้งเตือนทันที
-    showSetupNotification(alertData);
-}
-
-// ฟังก์ชันแสดงผลแจ้งเตือนและเปลี่ยนสีในหน้า Set-Up Die
-function showSetupNotification(alert) {
-    const isFail = alert.status.includes('Not Pass') || alert.status.includes('Fail');
-    
-    // 1. สร้างกล่องแจ้งเตือน (Banner Alert) เด้งเตือนด้านบนจอทันที
-    let alertBox = document.getElementById('setup-live-alert');
-    if (!alertBox) {
-        alertBox = document.createElement('div');
-        alertBox.id = 'setup-live-alert';
-        alertBox.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: bold; transition: all 0.3s;';
-        document.body.appendChild(alertBox);
-    }
-
-    if (isFail) {
-        alertBox.style.backgroundColor = '#f8d7da';
-        alertBox.style.color = '#721c24';
-        alertBox.style.border = '1px solid #f5c6cb';
-        alertBox.innerHTML = `⚠️ <b>แจ้งเตือนด่วน! (Line: ${alert.line})</b><br>Part: ${alert.part} ผลตรวจสอบ: <b>${alert.status}</b><br>หมายเหตุ: ${alert.remark}`;
-    } else {
-        alertBox.style.backgroundColor = '#d4edda';
-        alertBox.style.color = '#155724';
-        alertBox.style.border = '1px solid #c3e6cb';
-        alertBox.innerHTML = `✅ <b>แจ้งผล QC (Line: ${alert.line})</b><br>Part: ${alert.part} ผลตรวจสอบ: <b>${alert.status}</b>`;
-    }
-
-    // ซ่อนกล่องแจ้งเตือนอัตโนมัติหลังผ่านไป 8 วินาที
-    setTimeout(() => {
-        if (alertBox) alertBox.style.display = 'none';
-    }, 8000);
-}
-
-// ตรวจสอบข้อมูลแจ้งเตือนค้างไว้เมื่อเปลี่ยนหน้ามาที่ Set-Up
-window.addEventListener('DOMContentLoaded', () => {
-    const savedAlert = localStorage.getItem('latest_qc_alert');
-    if (savedAlert) {
-        // สามารถเรียกแสดงผลย้อนหลังได้หากผู้ใช้อยู่หน้า Set-Up
-        // showSetupNotification(JSON.parse(savedAlert));
-    }
-});
-        // บันทึก QC Check (หน้า 3) - เวอร์ชันป้องกัน Error และปลอดภัยสูงสุด
-const qcFormElem = document.getElementById('qcForm');
-if (qcFormElem) {
-    // ป้องกันการผูก Event ซ้ำซ้อน
-    if (!qcFormElem.dataset.listenerAttached) {
-        qcFormElem.dataset.listenerAttached = 'true';
-        
+    // บันทึก QC Check (หน้า 3)
+    const qcFormElem = document.getElementById('qcForm');
+    if (qcFormElem) {
         qcFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
-            const lineVal = document.getElementById('qc_production_line') ? document.getElementById('qc_production_line').value : '';
-            const partVal = document.getElementById('qc_part_no') ? document.getElementById('qc_part_no').value : '';
+            const lineVal = document.getElementById('qc_production_line').value;
+            const partVal = document.getElementById('qc_part_no').value;
             
+            // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
             const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
             const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
             const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
@@ -1398,46 +1202,34 @@ if (qcFormElem) {
             if(qcLoading) qcLoading.style.display = 'block';
             if(btnQcSubmit) btnQcSubmit.disabled = true;
 
-            fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify(qcFormData) 
-            })
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
             .then(() => {
                 if(qcLoading) qcLoading.style.display = 'none';
                 if(btnQcSubmit) btnQcSubmit.disabled = false;
                 
-                // ใช้ try...catch ป้องกันโค้ดสะดุดหากฟังก์ชันเสริมยังไม่ถูกสร้าง
-                try {
-                    if (typeof qcLineAlerts !== 'undefined' && qcLineAlerts[lineVal]) {
-                        qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
-                        if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
-                    }
-                    if (typeof renderQcAlertsUI === 'function') renderQcAlertsUI();
-                    if (typeof triggerSetupReturnAlert === 'function') {
-                        triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
-                    }
-                } catch (err) {
-                    console.warn('UI Notification warning:', err);
+                // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
+                if (qcLineAlerts[lineVal]) {
+                    qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
+                    if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
                 }
-
-                alert(`บันทึกผล QC Check [Line: ${lineVal}] เรียบร้อยแล้ว!`);
-                qcFormElem.reset();
+                renderQcAlertsUI();
                 
-                if (typeof loadDataFromGoogleSheet === 'function') {
-                    loadDataFromGoogleSheet();
-                }
+                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
+                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
+
+                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
+                qcFormElem.reset();
+                loadDataFromGoogleSheet();
             })
             .catch(error => {
                 if(qcLoading) qcLoading.style.display = 'none';
                 if(btnQcSubmit) btnQcSubmit.disabled = false;
-                console.error('Fetch Error:', error);
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อบันทึกข้อมูล');
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             });
         });
     }
-}
+
     // บันทึก Spot Welding (หน้า 4)
     const spotFormElem = document.getElementById('spotWeldingForm');
     if (spotFormElem) {
@@ -1506,92 +1298,34 @@ if (qcFormElem) {
         });
     }
 
-   function renderSetupHistory() {
-    const filterElem = document.getElementById('filter_line');
-    const selectedFilterLine = filterElem ? filterElem.value : "ALL";
-    const tbody = document.querySelector('#setupHistoryTable tbody');
-    if (!tbody) return;
-    
-    let alertBannerContainer = document.getElementById('setup-qc-notification-banner');
-    if (!alertBannerContainer) {
-        alertBannerContainer = document.createElement('div');
-        alertBannerContainer.id = 'setup-qc-notification-banner';
-        const tableElement = document.getElementById('setupHistoryTable');
-        if (tableElement && tableElement.parentNode) {
-            tableElement.parentNode.insertBefore(alertBannerContainer, tableElement);
-        }
-    }
-
-    const savedAlert = localStorage.getItem('latest_qc_alert');
-    if (savedAlert) {
-        try {
-            const alertData = JSON.parse(savedAlert);
-            const isFail = alertData.status.includes('Not Pass') || alertData.status.includes('Fail');
-            
-            if (isFail) {
-                alertBannerContainer.innerHTML = `
-                    <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        ⚠️ แจ้งเตือนด่วนจาก QC! (Line: ${alertData.line})<br>
-                        Part No: ${alertData.part} | ผลการตรวจสอบ: <span style="color: #dc3545; font-size: 1.1em;">${alertData.status}</span><br>
-                        หมายเหตุ / จุดที่พบปัญหา: ${alertData.remark} 
-                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
-                    </div>`;
-            } else {
-                alertBannerContainer.innerHTML = `
-                    <div style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
-                        ✅ ผลการตรวจสอบ QC ล่าสุด (Line: ${alertData.line}): Part No: ${alertData.part} - <span style="color: #28a745;">${alertData.status}</span>
-                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal;">เวลาบันทึก: ${alertData.time}</span>
-                    </div>`;
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    let filteredData = setupHistoryData;
-    if (selectedFilterLine !== "ALL") {
-        filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
-    }
-
-    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="6" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
-    
-    filteredData.forEach((item) => {
-        tbody.innerHTML += `<tr>
-            <td><b>${item.line}</b></td>
-            <td>${item.lot}</td>
-            <td><b>${item.part}</b></td>
-            <td>👤 ${item.inspector || '-'}</td>
-            <td>${item.start}<br>ถึง<br>${item.end}</td>
-            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
-        </tr>`;
-    });
-}
-   function renderQcHistory() {
-    const qcTableBody = document.querySelector('#qcHistoryTable tbody') || document.querySelectorAll('table tbody')[2] || document.querySelector('table:has(#sum-qc-items) tbody');
-    if (!qcTableBody) return;
-
-    qcTableBody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="6" style="color: #7f8c8d; padding: 20px; text-align: center;">ยังไม่มีประวัติ QC</td></tr>` : '';
-    
-    qcHistoryData.forEach((item) => {
-        const statStr = String(item.status || '').trim();
-        let statusBadge = `<span style="color: #27ae60; font-weight: bold;">${statStr}</span>`;
-        if (statStr.includes('Fail') || statStr.includes('Not Pass')) {
-            statusBadge = `<span style="color: #c0392b; font-weight: bold;">${statStr}</span>`;
+    function renderSetupHistory() {
+        const filterElem = document.getElementById('filter_line');
+        const selectedFilterLine = filterElem ? filterElem.value : "ALL";
+        const tbody = document.querySelector('#setupHistoryTable tbody');
+        if (!tbody) return;
+        
+        let filteredData = setupHistoryData;
+        if (selectedFilterLine !== "ALL") {
+            filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
         }
 
-        // ตรวจสอบและดึงชื่อผู้ตรวจ QC ให้ถูกต้อง (รองรับทั้ง inspector, qc_inspector หรือ checker)
-        const qcInspector = item.qc_inspector || item.checker || (item.type === 'QC' ? item.inspector : null) || '-';
+        tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+        
+        filteredData.forEach((item) => {
+            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.lot}</td><td>${item.part}</td><td><b>${item.machine}</b></td><td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td><td>${item.process}</td><td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td><td>Mat: ${item.material}<br>DH: ${item.dh}</td><td>${item.start}<br>ถึง<br>${item.end}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
 
-        qcTableBody.innerHTML += `<tr>
-            <td><b>${item.line || '-'}</b></td>
-            <td><b>${item.part || '-'}</b></td>
-            <td>${item.remark || '-'}</td>
-            <td>${statusBadge}</td>
-            <td><span style="color: #2980b9; font-weight: bold;">👤 ${qcInspector}</span></td>
-            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
-        </tr>`;
-    });
-}
+    function renderQcHistory() {
+        const tbody = document.querySelector('#qcHistoryTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติ QC</td></tr>` : '';
+        qcHistoryData.forEach((item) => {
+            const color = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
+            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.part}</td><td>${item.actual}</td><td style="${color}">${item.status}</td><td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
+
     function renderSpotHistory() {
         const tbody = document.querySelector('#spotWeldingTable tbody');
         if (!tbody) return;
