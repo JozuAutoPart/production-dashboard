@@ -1440,12 +1440,12 @@ if (typeof populateQcPartDropdown === 'function') {
     if (recordToUpdate) {
         recordToUpdate.status = qcStatus; // เปลี่ยนสถานะเป็น QC Pass หรือ QC Not Pass
         
-        // บังคับเรนเดอร์ตารางใหม่ทันทีเพื่อให้สีและสถานะเปลี่ยน
+      // บังคับเรนเดอร์ตารางใหม่ทันทีเพื่อให้สีและสถานะเปลี่ยน
         if (typeof renderSetupHistory === 'function') {
             renderSetupHistory();
         }
     }
-} // ปิดฟังก์ชัน triggerSetupReturnAlert ตรงนี้พอครับ (ลบบรรทัดเกินออก)
+}
 </script>
 </body>
 </html>
