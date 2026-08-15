@@ -857,26 +857,20 @@
         const currentSelected = qcPartSelect.value;
         qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
         
-        const pendingItems = setupHistoryData.filter(item => {
-        const stat = String(item.status || '').trim();
-        return stat === '' || stat === '-' || stat === 'Waiting QC';
-    });
+        setupHistoryData.forEach(item => {
+            let opt = document.createElement('option');
+            opt.value = item.part;
+            opt.setAttribute('data-line', item.line);
+            opt.setAttribute('data-lot', item.lot);
+            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+            qcPartSelect.appendChild(opt);
+        });
 
-    pendingItems.forEach((item) => {
-        let opt = document.createElement('option');
-        opt.value = item.part;
-        opt.setAttribute('data-line', item.line);
-        opt.setAttribute('data-lot', item.lot);
-        opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-        qcPartSelect.appendChild(opt);
-    });
         if(currentSelected) {
             qcPartSelect.value = currentSelected;
         }
-        // หลังจากบันทึกผล QC เรียบร้อยแล้ว
-if (typeof populateQcPartDropdown === 'function') {
-    populateQcPartDropdown(); // สั่งรีเฟรชรายการในดรอปดาวน์ทันที รายการที่ตรวจแล้วจะหายไป
-}
+    }
+
     function onSelectQcPart(selectElem) {
         const selectedOption = selectElem.options[selectElem.selectedIndex];
         const lineValue = selectedOption.getAttribute('data-line');
@@ -947,10 +941,6 @@ if (typeof populateQcPartDropdown === 'function') {
         if (!setupLineAlerts[lineName]) {
             setupLineAlerts[lineName] = [];
         }
-        // หลังจากบันทึกผล QC เรียบร้อยแล้ว
-if (typeof populateQcPartDropdown === 'function') {
-    populateQcPartDropdown(); // สั่งรีเฟรชรายการในดรอปดาวน์ทันที รายการที่ตรวจแล้วจะหายไป
-}
         setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
         renderSetupAlertsUI();
     }
@@ -1427,25 +1417,6 @@ if (typeof populateQcPartDropdown === 'function') {
     function exportDashboardToExcel() {
         exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary.xls', -1);
     }
-      function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
-    // 1. ส่วนเดิมสำหรับการแจ้งเตือน (ที่แสดง Banner สีแดง/เขียว)
-    if (!setupLineAlerts[lineName]) {
-        setupLineAlerts[lineName] = [];
-    }
-    setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
-    renderSetupAlertsUI();
-
-    // 2. [เพิ่มตรงนี้] อัปเดตข้อมูลใน setupHistoryData ทันที เพื่อให้ตารางเปลี่ยนสถานะ
-    const recordToUpdate = setupHistoryData.find(item => item.line === lineName && item.part === partNo);
-    if (recordToUpdate) {
-        recordToUpdate.status = qcStatus; // เปลี่ยนสถานะเป็น QC Pass หรือ QC Not Pass
-        
-        // บังคับเรนเดอร์ตารางใหม่ทันทีเพื่อให้สีและสถานะเปลี่ยน
-        if (typeof renderSetupHistory === 'function') {
-            renderSetupHistory();
-        }
-    }
-}
 </script>
 </body>
 </html>
