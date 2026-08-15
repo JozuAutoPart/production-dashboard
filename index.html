@@ -1511,39 +1511,59 @@ window.addEventListener('DOMContentLoaded', () => {
     loadPendingQCData();
 });
         // ฟังก์ชันดึงรายการที่รอ QC มาแสดงในหน้า QC Check อัตโนมัติทุกเครื่อง
-function loadPendingQCData() {
+// ฟังก์ชันดึงรายการรอตรวจ QC จาก Google Sheets กลาง (ทุกเครื่องซิงค์ตรงกัน)
+function loadPendingQCDataFromSheet() {
+    if (typeof SCRIPT_URL === 'undefined' || !SCRIPT_URL) return;
+
     fetch(SCRIPT_URL)
         .then(response => response.json())
         .then(data => {
-            // ค้นหาแท็ก select ทั้งหมดในหน้าเพื่อความชัวร์ว่าจะเจอช่องเลือก
-            const partSelect = document.getElementById('qcPartSelect') || document.querySelector('select'); 
+            const partSelect = document.getElementById('qc_part_no'); // ตรงกับ ID ใน HTML ของคุณ
             if (!partSelect) return;
 
-            partSelect.innerHTML = '<option value="">-- เลือก Part No. (ทดสอบดึงข้อมูล) --</option>';
+            const currentSelected = partSelect.value;
+            partSelect.innerHTML = '<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
 
             data.forEach((row, index) => {
                 if (index === 0) return; // ข้ามแถวหัวตาราง
                 
-                // เอาข้อมูลจากคอลัมน์ที่ 4 (Part No.) หรือปรับ index ตามช่องจริง
-                const partVal = String(row[4] || row[3] || row[2] || '').trim();
-                if (partVal) {
+                const type = String(row[1] || '').trim();       // ชนิดข้อมูล (Setup)
+                const lineVal = String(row[2] || '').trim();    // Line การผลิต
+                const lotVal = String(row[3] || '').trim();     // Lot No.
+                const partVal = String(row[4] || '').trim();    // Part No.
+                const statusVal = String(row[14] || '').trim(); // สถานะ QC (คอลัมน์ O)
+
+                // ถ้าเป็นรายการ Setup และยังรอการตรวจสอบ
+                if (type === 'Setup' && (statusVal === '' || statusVal === 'Waiting QC' || statusVal.toLowerCase().includes('wait'))) {
                     const option = document.createElement('option');
                     option.value = partVal;
-                    option.textContent = `Part: ${partVal} (แถวที่ ${index + 1})`;
+                    option.setAttribute('data-line', lineVal); // เก็บค่า Line ไว้ใช้อัตโนมัติ
+                    option.textContent = `Part: ${partVal} (Line: ${lineVal}, Lot: ${lotVal})`;
                     partSelect.appendChild(option);
                 }
             });
+
+            if (currentSelected) partSelect.value = currentSelected;
         })
-        .catch(error => console.error('Error loading data:', error));
+        .catch(error => console.error('Error fetching sheet data:', error));
 }
 
+// ฟังก์ชันเติม Line อัตโนมัติเมื่อเลือก Part No. ตามโค้ด HTML ของคุณ (onSelectQcPart)
+function onSelectQcPart(selectElem) {
+    const selectedOption = selectElem.options[selectElem.selectedIndex];
+    const lineVal = selectedOption.getAttribute('data-line');
+    if (lineVal) {
+        const lineSelect = document.getElementById('qc_production_line');
+        if (lineSelect) {
+            lineSelect.value = lineVal;
+        }
+    }
+}
+
+// โหลดข้อมูลทันทีเมื่อเปิดหน้าเว็บ และอัปเดตอัตโนมัติทุกๆ 10 วินาที
 window.addEventListener('DOMContentLoaded', () => {
-    loadPendingQCData();
-});
-// ให้ดึงข้อมูลทันทีเมื่อเปิดหน้าเว็บ และอัปเดตซ้ำทุกๆ 10 วินาที
-window.addEventListener('DOMContentLoaded', () => {
-    loadPendingQCData();
-    setInterval(loadPendingQCData, 10000); // อัปเดตทุก 10 วิ
+    loadPendingQCDataFromSheet();
+    setInterval(loadPendingQCDataFromSheet, 10000);
 });
 </script>
 </body>
