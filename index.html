@@ -274,8 +274,14 @@
         <!-- หน้าที่ 1: Dashboard -->
         <div id="tab1" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-               <h2><img src="Jozu.png" alt="Logo" style="height: 35px; vertical-align: middle; margin-right: 10px;">Dashboard ภาพรวมระบบ Set-Up & QC</h2>
-                <button class="btn-export" onclick="exportDashboardToExcel()">📥 Export Excel</button>
+                <h2><img src="Jozu.png" alt="Logo" style="height: 35px; vertical-align: middle; margin-right: 10px;">Dashboard ภาพรวมระบบ Set-Up & QC</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <!-- ปุ่ม Refresh ที่เพิ่มเข้ามา -->
+                    <button onclick="refreshDashboard()" style="background-color: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                        🔄 Refresh
+                    </button>
+                    <button class="btn-export" onclick="exportDashboardToExcel()">📥 Export Excel</button>
+                </div>
             </div>
             <p style="color: #7f8c8d; font-size: 14px; margin-top: 0; margin-bottom: 25px;">สรุปสถิติการทำงานภายในโรงงานแบบเรียลไทม์ แยกตามรายการปฏิบัติงาน</p>
             
@@ -1703,6 +1709,13 @@ function loadSpotHistory() {
             }
         })
         .catch(error => console.error('Error loading spot history:', error));
+}
+        function refreshDashboard() {
+    if (typeof loadPendingQCDataFromSheet === 'function') {
+        loadPendingQCDataFromSheet();
+    } else {
+        location.reload(); // หากไม่มีฟังก์ชันเฉพาะ ให้รีเฟรชหน้าเว็บใหม่เพื่อดึงข้อมูลล่าสุด
+    }
 }
 </script>
 </body>
