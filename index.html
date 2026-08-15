@@ -944,13 +944,19 @@
     setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
     renderSetupAlertsUI();
 
-    // [เพิ่มตรงนี้] อัปเดตสถานะในตาราง Setup ทันทีเมื่อ QC บันทึกผล
+   // แปลงสถานะยาวๆ ให้เป็น QC Pass หรือ QC Not Pass อัตโนมัติ
+    let finalStatus = "QC Pass";
+    if (String(qcStatus).toLowerCase().includes("not pass") || String(qcStatus).toLowerCase().includes("ไม่ผ่าน")) {
+        finalStatus = "QC Not Pass";
+    }
+
     const targetItem = setupHistoryData.find(item => 
         String(item.line).trim() === String(lineName).trim() && 
         String(item.part).trim() === String(partNo).trim()
     );
+    
     if (targetItem) {
-        targetItem.status = qcStatus; // อัปเดตสถานะเป็น QC Pass หรือ QC Not Pass
+        targetItem.status = finalStatus; // อัปเดตสถานะเป็น QC Pass หรือ QC Not Pass
         if (typeof renderSetupHistory === 'function') {
             renderSetupHistory(); // สั่งรีเฟรชตารางหน้า Set-Up ทันที
         }
