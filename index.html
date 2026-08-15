@@ -759,7 +759,7 @@
         loadDataFromGoogleSheet();
     });
 
-    function loadDataFromGoogleSheet() {
+   function loadDataFromGoogleSheet() {
     fetch(SCRIPT_URL)
         .then(response => response.json())
         .then(data => {
@@ -772,21 +772,22 @@
             let passCount = 0;
             let failCount = 0;
 
-            // 1. สร้าง Map เก็บผล QC ล่าสุดจากแถวที่มีการบันทึกผลตรวจสอบแล้ว
             const qcMap = {};
             data.forEach((r, idx) => {
                 if (idx === 0) return;
                 const typeName = String(r[1] || '').trim();
                 const lineKey = String(r[2] || '').trim();
                 const partKey = String(r[4] || '').trim();
-                const qcResultVal = r[14]; // คอลัมน์ O: QC Result
+                const qcResultVal = r[14];
 
                 if ((typeName.includes('QC') || String(r[5] || '').includes('QC')) && qcResultVal) {
                     qcMap[`${lineKey}_${partKey}`] = qcResultVal;
+                    // นับจำนวน Pass / Fail
+                    if (String(qcResultVal).includes('Pass')) passCount++;
+                    if (String(qcResultVal).includes('Not Pass') || String(qcResultVal).includes('Fail')) failCount++;
                 }
             });
 
-            // 2. วนลูปสร้างตาราง Setup และดึงผล QC มาแสดงทับ
             data.forEach((row, index) => {
                 if (index === 0) return;
 
@@ -794,7 +795,6 @@
                 const lineVal = String(row[2] || '').trim();
                 const partVal = String(row[4] || '').trim();
                 
-                // ดึงค่าสถานะเดิม หรือถ้ามีผล QC แล้วให้นำมาแสดงแทนทันที
                 let currentStatus = row[14];
                 const mapKey = `${lineVal}_${partVal}`;
                 if (qcMap[mapKey]) {
@@ -828,6 +828,16 @@
                     setupCount++;
                 }
             });
+
+            // --- [เพิ่มส่วนนี้] อัปเดตตัวเลขแสดงผลบนหน้า Dashboard ---
+            if (typeof updateDashboardStats === 'function') {
+                updateDashboardStats(setupCount, passCount, failCount);
+            } else {
+                // เผื่อใช้การยิง DOM ตรงๆ
+                document.querySelectorAll('.dashboard-setup-count').forEach(el => el.innerText = setupCount);
+                document.querySelectorAll('.dashboard-pass-count').forEach(el => el.innerText = passCount);
+                document.querySelectorAll('.dashboard-fail-count').forEach(el => el.innerText = failCount);
+            }
 
             if (typeof renderSetupHistory === 'function') {
                 renderSetupHistory();
