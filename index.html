@@ -1209,7 +1209,7 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText, targetI
                 renderQcAlertsUI();
                 
                 // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
-                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
+                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal, window.currentQcIndex);
 
                 alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
                 qcFormElem.reset();
