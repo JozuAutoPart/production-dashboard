@@ -577,91 +577,73 @@
             </div>
         </div>
 
-        <!-- หน้าที่ 4: Set-UP Spot Welding -->
-        <div id="tab4" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <h2>⚡ หน้าที่ 4: Set-UP Spot Welding</h2>
-                <button class="btn-export" onclick="exportTableToExcel('spotWeldingTable', 'Spot_Welding_Report.xls', 6)">📥 Export Excel</button>
+      <!-- โครงสร้าง HTML ตัวอย่างสำหรับหน้า Spot Welding -->
+<div id="tab4" class="tab-content" style="display:none;">
+    <h2>⚡ หน้าที่ 4: Set-UP Spot Welding</h2>
+    <form id="spotForm">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>วันที่ - เวลา:</label>
+                <input type="datetime-local" id="spot_datetime" required>
             </div>
-            <p style="color: #7f8c8d; font-size: 14px; margin-top: 0; margin-bottom: 25px;">บันทึกข้อมูลการตั้งค่าและเงื่อนไขการเชื่อมจุด (Spot Welding Condition)</p>
-            
-            <form id="spotWeldingForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>1. วันที่ - เวลา:</label>
-                        <input type="datetime-local" id="sw_datetime" required>
-                    </div>
-                    <div class="form-group">
-                        <label>2. Part No.:</label>
-                        <input type="text" id="sw_part" placeholder="เช่น SW-PART-001" required>
-                    </div>
-                </div>
-
-                <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin-top: 15px; margin-bottom: 20px;">
-                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: #2c3e50; border-left: 4px solid #3498db; padding-left: 8px;">
-                        3. Welding Condition (เงื่อนไขการเชื่อม)
-                    </h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Job No.:</label>
-                            <input type="text" id="sw_jobno" placeholder="เช่น JOB-2026-08" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Wel Curr (กระแสไฟเชื่อม):</label>
-                            <input type="text" id="sw_welcurr" placeholder="เช่น 9.5 kA" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Pressure Gauge (แรงดัน):</label>
-                            <input type="text" id="sw_pressure" placeholder="เช่น 0.45 MPa" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Tip Balance (ความสมดุลหัวเชื่อม):</label>
-                            <select id="sw_tipbalance" required>
-                                <option value="" disabled selected>-- เลือกสถานะ --</option>
-                                <option value="ผ่าน">ผ่าน (Pass)</option>
-                                <option value="ไม่ผ่าน">ไม่ผ่าน (Fail)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Water (ระบบน้ำหล่อเย็น):</label>
-                            <select id="sw_water" required>
-                                <option value="" disabled selected>-- เลือกสถานะ --</option>
-                                <option value="ผ่าน">ผ่าน (Pass)</option>
-                                <option value="ไม่ผ่าน">ไม่ผ่าน (Fail)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>พนักงาน Set-Up:</label>
-                            <input type="text" id="sw_inspector" placeholder="ชื่อ-นามสกุล / รหัสพนักงาน" required>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit" id="btnSpotSubmit" style="background-color: #2980b9;">บันทึกข้อมูล Set-Up Spot Welding</button>
-                <div id="spot-loading" class="loading">กำลังส่งข้อมูล Spot Welding ไปยัง Google Sheets...</div>
-            </form>
-
-            <h3 style="margin-top: 35px;">📋 ประวัติการ Set-Up Spot Welding</h3>
-            <div class="table-container">
-                <table class="history-table" id="spotWeldingTable">
-                    <thead>
-                        <tr>
-                            <th>วันที่-เวลา</th>
-                            <th>Part No.</th>
-                            <th>Job No.</th>
-                            <th>Wel Curr / Pressure</th>
-                            <th>Tip Balance / Water</th>
-                            <th>ผู้ Set-Up</th>
-                            <th>จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
-                    </tbody>
-                </table>
+            <div class="form-group">
+                <label>Part No.:</label>
+                <input type="text" id="spot_part_no" placeholder="เช่น SW-PART-001" required>
+            </div>
+            <div class="form-group">
+                <label>Job No.:</label>
+                <input type="text" id="spot_job_no" placeholder="เช่น JOB-2026-08" required>
+            </div>
+            <div class="form-group">
+                <label>Wel Curr (กระแสไฟเชื่อม):</label>
+                <input type="text" id="spot_wel_curr" placeholder="เช่น 9.5 kA" required>
+            </div>
+            <div class="form-group">
+                <label>Pressure Gauge (แรงดัน):</label>
+                <input type="text" id="spot_pressure" placeholder="เช่น 0.45 MPa" required>
+            </div>
+            <div class="form-group">
+                <label>Tip Balance (ความสมดุลหัวเชื่อม):</label>
+                <select id="spot_tip_balance" required>
+                    <option value="" disabled selected>-- เลือกสถานะ --</option>
+                    <option value="Normal">Normal (ปกติ)</option>
+                    <option value="Abnormal">Abnormal (ผิดปกติ)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Water (ระบบน้ำหล่อเย็น):</label>
+                <select id="spot_water" required>
+                    <option value="" disabled selected>-- เลือกสถานะ --</option>
+                    <option value="OK">OK (ไหลปกติ)</option>
+                    <option value="NG">NG (ไม่ไหล/รั่ว)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>พนักงาน Set-Up:</label>
+                <input type="text" id="spot_inspector" placeholder="ชื่อ-นามสกุล / รหัสพนักงาน" required>
             </div>
         </div>
+        <button type="submit" class="btn-submit">บันทึกข้อมูล Set-Up Spot Welding</button>
+    </form>
 
+    <h3 style="margin-top: 35px;">📋 ประวัติ Set-Up Spot Welding</h3>
+    <table class="history-table" id="spotHistoryTable">
+        <thead>
+            <tr>
+                <th>วันที่-เวลา</th>
+                <th>Part No.</th>
+                <th>Job No.</th>
+                <th>Wel Curr / Pressure</th>
+                <th>Tip Balance / Water</th>
+                <th>ผู้ Set-Up</th>
+                <th>จัดการ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="7" style="color: #7f8c8d; text-align: center;">กำลังโหลดข้อมูล...</td></tr>
+        </tbody>
+    </table>
+</div>
         <!-- หน้าที่ 5: QC Check Destructive testing -->
         <div id="tab5" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
