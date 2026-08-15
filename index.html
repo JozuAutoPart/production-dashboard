@@ -1474,6 +1474,42 @@ setInterval(() => {
         loadDataFromGoogleSheet();
     }
 }, 10000);
+        // ฟังก์ชันดึงข้อมูล Set-up ล่าสุดที่รอ QC มาแสดงในหน้า QC Check อัตโนมัติ
+function loadPendingQCData() {
+    fetch(SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            const partSelect = document.getElementById('qcPartSelect'); // ID ช่องเลือก Part No. ของหน้า QC
+            if (!partSelect) return;
+
+            //เคลียร์ตัวเลือกเดิมก่อน
+            partSelect.innerHTML = '<option value="">-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
+
+            data.forEach((row, index) => {
+                if (index === 0) return;
+                const type = row[1];
+                const lineVal = String(row[2] || '').trim();
+                const lotVal = String(row[3] || '').trim();
+                const partVal = String(row[4] || '').trim();
+                const statusVal = row[14]; // สถานะ QC
+
+                // ถ้าเป็นรายการ Setup และยังไม่ได้ตรวจ (หรือสถานะเป็น Waiting QC)
+                if (type === 'Setup' && (!statusVal || statusVal === 'Waiting QC')) {
+                    const option = document.createElement('option');
+                    option.value = partVal;
+                    // แสดงรายละเอียดให้เห็นชัดเจนว่าเป็นเครื่องไหน Lot ไหน
+                    option.textContent = `Part: ${partVal} (Line: ${lineVal}, Lot: ${lotVal})`;
+                    partSelect.appendChild(option);
+                }
+            });
+        })
+        .catch(error => console.error('Error loading QC pending data:', error));
+}
+
+// ให้เรียกใช้งานฟังก์ชันนี้ทันทีที่เปิดหน้า QC Check หรือหน้าเว็บโหลดเสร็จ
+window.addEventListener('DOMContentLoaded', () => {
+    loadPendingQCData();
+});
 </script>
 </body>
 </html>
