@@ -945,13 +945,14 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
     setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
     renderSetupAlertsUI();
 
-    // แปลงสถานะ
+    // แปลงสถานะให้ตรงกับเงื่อนไขใน renderSetupHistory เป๊ะๆ
     let finalStatus = "QC Pass";
-    if (String(qcStatus).toLowerCase().includes("not pass") || String(qcStatus).toLowerCase().includes("ไม่ผ่าน")) {
+    const statusLower = String(qcStatus).toLowerCase();
+    if (statusLower.includes("not pass") || statusLower.includes("fail") || statusLower.includes("ไม่ผ่าน")) {
         finalStatus = "QC Not Pass";
     }
 
-    // วนลูปหาทุกรายการที่ Line และ Part ตรงกัน แล้วอัปเดตสถานะทั้งหมดทันที
+    // อัปเดตสถานะในประวัติ Set-Up ทุกรายการที่ Line และ Part ตรงกัน
     if (Array.isArray(setupHistoryData)) {
         setupHistoryData.forEach(item => {
             if (String(item.line).trim() === String(lineName).trim() && 
@@ -960,8 +961,9 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
             }
         });
         
+        // สั่งวาดตารางหน้า Set-Up ใหม่ทันที
         if (typeof renderSetupHistory === 'function') {
-            renderSetupHistory(); // รีเฟรชตารางหน้า Set-Up
+            renderSetupHistory();
         }
     }
 }
