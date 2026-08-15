@@ -1262,42 +1262,50 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         });
     }
 
-    // บันทึก Spot Welding (หน้า 4)
-    const spotFormElem = document.getElementById('spotWeldingForm');
-    if (spotFormElem) {
-        spotFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const spotData = {
-                type: "SpotWelding",
-                line: document.getElementById('sw_datetime').value.replace('T', ' '),
-                lot: "-",
-                part: document.getElementById('sw_part').value,
-                process: document.getElementById('sw_jobno').value,
-                machine: "-",
-                air: document.getElementById('sw_welcurr').value,
-                cushion: document.getElementById('sw_pressure').value,
-                spm: document.getElementById('sw_tipbalance').value,
-                material: document.getElementById('sw_water').value,
-                dh: "-", start: "-", end: "-", qc_result: "-",
-                inspector: document.getElementById('sw_inspector').value
-            };
+  // บันทึก Spot Welding (หน้า 4)
+const spotFormElem = document.getElementById('spotWeldingForm');
+if (spotFormElem) {
+    spotFormElem.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const spotData = {
+            type: "SpotWelding",
+            datetime: document.getElementById('sw_datetime').value,
+            part: document.getElementById('sw_part').value,
+            job: document.getElementById('sw_jobno').value,           // แก้จาก process เป็น job
+            wel_curr: document.getElementById('sw_welcurr').value,     // แก้จาก air เป็น wel_curr
+            pressure: document.getElementById('sw_pressure').value,   // แก้จาก cushion เป็น pressure
+            tip_balance: document.getElementById('sw_tipbalance').value, // แก้จาก spm เป็น tip_balance
+            water: document.getElementById('sw_water').value,         // แก้จาก material เป็น water
+            inspector: document.getElementById('sw_inspector').value
+        };
 
-            const spotLoading = document.getElementById('spot-loading');
-            const btnSpotSubmit = document.getElementById('btnSpotSubmit');
-            if(spotLoading) spotLoading.style.display = 'block';
-            if(btnSpotSubmit) btnSpotSubmit.disabled = true;
+        const spotLoading = document.getElementById('spot-loading');
+        const btnSpotSubmit = document.getElementById('btnSpotSubmit');
+        if(spotLoading) spotLoading.style.display = 'block';
+        if(btnSpotSubmit) btnSpotSubmit.disabled = true;
 
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spotData) })
-            .then(() => {
-                if(spotLoading) spotLoading.style.display = 'none';
-                if(btnSpotSubmit) btnSpotSubmit.disabled = false;
-                alert('บันทึก Set-Up Spot Welding สำเร็จ!');
-                spotFormElem.reset();
-                loadDataFromGoogleSheet();
-            });
+        fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(spotData) 
+        })
+        .then(() => {
+            if(spotLoading) spotLoading.style.display = 'none';
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+            alert('บันทึก Set-Up Spot Welding สำเร็จ!');
+            spotFormElem.reset();
+            loadSpotHistory(); // เรียกฟังก์ชันโหลดข้อมูลเฉพาะหน้า Spot
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if(spotLoading) spotLoading.style.display = 'none';
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         });
-    }
-
+    });
+}
     // บันทึก Destructive Testing (หน้า 5)
     const dtFormElem = document.getElementById('destructiveForm');
     if (dtFormElem) {
