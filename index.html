@@ -1621,6 +1621,122 @@ function loadSpotHistory() {
 document.addEventListener('DOMContentLoaded', () => {
     loadSpotHistory();
 });
+      // ฟังก์ชันตรวจสอบและแจ้งเตือน Grinding สำหรับชุดหัวเชื่อม
+function checkTipAlarm() {
+    const strokeVal = parseInt(document.getElementById('sw_stroke').value) || 0;
+    const alarmBox = document.getElementById('tip_alarm_box');
+    
+    if (strokeVal >= 5000) {
+        alarmBox.style.display = 'block';
+        alarmBox.style.backgroundColor = '#f8d7da';
+        alarmBox.style.color = '#721c24';
+        alarmBox.style.border = '1px solid #f5c6cb';
+        alarmBox.innerHTML = "🚨 <b>Tip (ชุดหัวเชื่อม)</b> ครบ/เกินกำหนด 5,000 Strokes! กรุณาถอดเจียรแต่ง (Grinding)";
+    } else if (strokeVal >= 4500) {
+        alarmBox.style.display = 'block';
+        alarmBox.style.backgroundColor = '#fff3cd';
+        alarmBox.style.color = '#856404';
+        alarmBox.style.border = '1px solid #ffeeba';
+        alarmBox.innerHTML = "⚠️ <b>Tip (ชุดหัวเชื่อม)</b> ใกล้ถึงกำหนด 5,000 Strokes แล้ว (เหลืออีก " + (5000 - strokeVal) + " Strokes)";
+    } else {
+        alarmBox.style.display = 'none';
+    }
+}
+
+// บันทึก Spot Welding (หน้า 4)
+const spotFormElem = document.getElementById('spotWeldingForm');
+if (spotFormElem) {
+    spotFormElem.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const spotData = {
+            type: "SpotWelding",
+            datetime: document.getElementById('sw_datetime').value,
+            part: document.getElementById('sw_part').value,
+            job: document.getElementById('sw_jobno').value,
+            wel_curr: document.getElementById('sw_welcurr').value,
+            pressure: document.getElementById('sw_pressure').value,
+            tip_balance: document.getElementById('sw_tipbalance').value,
+            water: document.getElementById('sw_water').value,
+            stroke: document.getElementById('sw_stroke').value, // บันทึกจำนวน Stroke ของชุดหัวเชื่อม
+            inspector: document.getElementById('sw_inspector').value
+        };
+
+        const spotLoading = document.getElementById('spot-loading');
+        const btnSpotSubmit = document.getElementById('btnSpotSubmit');
+        if(spotLoading) spotLoading.style.display = 'block';
+        if(btnSpotSubmit) btnSpotSubmit.disabled = true;
+
+        fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(spotData) 
+        })
+        .then(() => {
+            if(spotLoading) spotLoading.style.display = 'none';
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+            alert('บันทึก Set-Up Spot Welding สำเร็จ!');
+            spotFormElem.reset();
+            document.getElementById('tip_alarm_box').style.display = 'none';
+            loadSpotHistory();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if(spotLoading) spotLoading.style.display = 'none';
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        });
+    });
+}
+
+// ฟังก์ชันโหลดประวัติ Spot Welding
+function loadSpotHistory() {
+    if (typeof SCRIPT_URL === 'undefined' || !SCRIPT_URL) return;
+
+    fetch(SCRIPT_URL + '?action=spot')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#spotWeldingTable tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (!data || data.length <= 1) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการบันทึก Spot Welding</td></tr>';
+                return;
+            }
+
+            for (let i = data.length - 1; i >= 1; i--) {
+                const row = data[i];
+                const timestamp = row[0] ? new Date(row[0]).toLocaleString() : '-';
+                const part = row[2] || '-';
+                const job = row[3] || '-';
+                const welCurr = row[4] || '-';
+                const pressure = row[5] || '-';
+                const tipBalance = row[6] || '-';
+                const water = row[7] || '-';
+                const inspector = row[8] || '-';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${timestamp}</td>
+                    <td><b>${part}</b></td>
+                    <td>${job}</td>
+                    <td>${welCurr} / ${pressure}</td>
+                    <td>${tipBalance} / ${water}</td>
+                    <td>${inspector}</td>
+                    <td><span style="color: #27ae60; font-weight: bold;">Saved</span></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        })
+        .catch(error => console.error('Error loading spot history:', error));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadSpotHistory();
+});  
 </script>
 </body>
 </html>
