@@ -1230,7 +1230,7 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         });
     }
 
-  // บันทึก Spot Welding (หน้า 4)
+ // บันทึก Spot Welding (หน้า 4)
 const spotFormElem = document.getElementById('spotWeldingForm');
 if (spotFormElem) {
     spotFormElem.addEventListener('submit', function(e) {
@@ -1240,12 +1240,14 @@ if (spotFormElem) {
             type: "SpotWelding",
             datetime: document.getElementById('sw_datetime').value,
             part: document.getElementById('sw_part').value,
-            job: document.getElementById('sw_jobno').value,           // แก้จาก process เป็น job
+            job: document.getElementById('sw_jobno').value,            // แก้จาก process เป็น job
             wel_curr: document.getElementById('sw_welcurr').value,     // แก้จาก air เป็น wel_curr
-            pressure: document.getElementById('sw_pressure').value,   // แก้จาก cushion เป็น pressure
+            pressure: document.getElementById('sw_pressure').value,    // แก้จาก cushion เป็น pressure
             tip_balance: document.getElementById('sw_tipbalance').value, // แก้จาก spm เป็น tip_balance
-            water: document.getElementById('sw_water').value,         // แก้จาก material เป็น water
-            inspector: document.getElementById('sw_inspector').value
+            water: document.getElementById('sw_water').value,          // แก้จาก material เป็น water
+            inspector: document.getElementById('sw_inspector').value,
+            stroke: document.getElementById('sw_stroke').value,        // เพิ่มจำนวนครั้ง Stroke สะสม
+            tip_code: document.getElementById('sw_tipcode').value      // เพิ่มรหัสหัวทิป (เช่น TP-01)
         };
 
         const spotLoading = document.getElementById('spot-loading');
@@ -1264,6 +1266,7 @@ if (spotFormElem) {
             if(btnSpotSubmit) btnSpotSubmit.disabled = false;
             alert('บันทึก Set-Up Spot Welding สำเร็จ!');
             spotFormElem.reset();
+            document.getElementById('tip_alarm_box').style.display = 'none'; // ซ่อนกล่องแจ้งเตือน Alarm (ถ้ามี)
             loadSpotHistory(); // เรียกฟังก์ชันโหลดข้อมูลเฉพาะหน้า Spot
         })
         .catch(error => {
