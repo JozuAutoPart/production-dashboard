@@ -576,8 +576,7 @@
                 </table>
             </div>
         </div>
-
-        <!-- หน้าที่ 4: Set-UP Spot Welding -->
+<!-- หน้าที่ 4: Set-UP Spot Welding -->
         <div id="tab4" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <h2>⚡ หน้าที่ 4: Set-UP Spot Welding</h2>
@@ -637,8 +636,24 @@
                     </div>
                 </div>
 
+                <!-- Tip Stroke Control (นับแบบรวมเป็นชุด Target: 5,000 Strokes) -->
+                <div style="background: #eef9fd; border: 1px solid #bce8f1; border-radius: 8px; padding: 20px; margin-top: 15px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: #2c3e50; border-left: 4px solid #e67e22; padding-left: 8px;">
+                        ⚙️ Tip Stroke Control (Target: 5,000 Strokes)
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Tip Current Stroke (จำนวนครั้งสะสมของชุดหัวเชื่อม):</label>
+                            <input type="number" id="sw_stroke" placeholder="เช่น 4800" value="0" required oninput="checkTipAlarm()">
+                        </div>
+                    </div>
+                    <!-- กล่องแสดงสถานะ Alarm / แจ้งเตือน Grinding -->
+                    <div id="tip_alarm_box" style="margin-top: 15px; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; display: none;">
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-submit" id="btnSpotSubmit" style="background-color: #2980b9;">บันทึกข้อมูล Set-Up Spot Welding</button>
-                <div id="spot-loading" class="loading">กำลังส่งข้อมูล Spot Welding ไปยัง Google Sheets...</div>
+                <div id="spot-loading" class="loading" style="display:none;">กำลังส่งข้อมูล Spot Welding ไปยัง Google Sheets...</div>
             </form>
 
             <h3 style="margin-top: 35px;">📋 ประวัติการ Set-Up Spot Welding</h3>
@@ -661,7 +676,6 @@
                 </table>
             </div>
         </div>
-
         <!-- หน้าที่ 5: QC Check Destructive testing -->
         <div id="tab5" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
