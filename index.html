@@ -937,28 +937,23 @@
         renderQcAlertsUI();
     }
 
-    function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
+   // ปรับให้รับค่า index เพิ่มเข้ามาด้วย
+function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText, targetIndex) {
     if (!setupLineAlerts[lineName]) {
         setupLineAlerts[lineName] = [];
     }
     setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
     renderSetupAlertsUI();
 
-   // แปลงสถานะยาวๆ ให้เป็น QC Pass หรือ QC Not Pass อัตโนมัติ
-    let finalStatus = "QC Pass";
-    if (String(qcStatus).toLowerCase().includes("not pass") || String(qcStatus).toLowerCase().includes("ไม่ผ่าน")) {
-        finalStatus = "QC Not Pass";
-    }
-
-    const targetItem = setupHistoryData.find(item => 
-        String(item.line).trim() === String(lineName).trim() && 
-        String(item.part).trim() === String(partNo).trim()
-    );
-    
-    if (targetItem) {
-        targetItem.status = finalStatus; // อัปเดตสถานะเป็น QC Pass หรือ QC Not Pass
+    // อัปเดตผ่าน Index ที่ส่งมาโดยตรง (ชัวร์ที่สุด)
+    if (targetIndex !== undefined && setupHistoryData[targetIndex]) {
+        let finalStatus = "QC Pass";
+        if (String(qcStatus).toLowerCase().includes("not pass") || String(qcStatus).toLowerCase().includes("ไม่ผ่าน")) {
+            finalStatus = "QC Not Pass";
+        }
+        setupHistoryData[targetIndex].status = finalStatus;
         if (typeof renderSetupHistory === 'function') {
-            renderSetupHistory(); // สั่งรีเฟรชตารางหน้า Set-Up ทันที
+            renderSetupHistory();
         }
     }
 }
