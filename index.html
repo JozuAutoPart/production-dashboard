@@ -1035,7 +1035,12 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
     if (setupFormElem) {
         setupFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
-
+const submitBtn = e.target.querySelector('button[type="submit"]') || document.querySelector('#setupForm button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.innerText = 'กำลังบันทึกข้อมูล...';
+        }
             const line = document.getElementById('production_line').value;
             const lot = document.getElementById('lot_no').value;
             const part = document.getElementById('part_no').value;
