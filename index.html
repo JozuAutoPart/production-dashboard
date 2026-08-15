@@ -759,7 +759,7 @@
         loadDataFromGoogleSheet();
     });
 
-   function loadDataFromGoogleSheet() {
+  function loadDataFromGoogleSheet() {
     fetch(SCRIPT_URL)
         .then(response => response.json())
         .then(data => {
@@ -829,8 +829,6 @@
                 }
             });
 
-            // --- อัปเดตตัวเลขหน้า Dashboard อัตโนมัติ (ทั้งการ์ดด้านบนและตารางด้านล่าง) ---
-            
             // 1. อัปเดตตารางสรุปด้านล่าง
             const tableRows = document.querySelectorAll('tr');
             tableRows.forEach(row => {
@@ -847,19 +845,21 @@
                 }
             });
 
-            // 2. อัปเดตการ์ดตัวเลขด้านบน
-            const cards = document.querySelectorAll('div');
-            cards.forEach(card => {
-                const cardText = card.innerText || '';
-                const numberEl = card.querySelector('h2, h3, h1, .number, span');
-                if (!numberEl || card.children.length > 4) return;
-
-                if (cardText.includes('จำนวน Set-Up ทั้งหมด')) {
-                    numberEl.innerText = setupCount;
-                } else if (cardText.includes('QC Pass (พร้อมผลิต)')) {
-                    numberEl.innerText = passCount;
-                } else if (cardText.includes('QC Not Pass (รอแก้ไข)')) {
-                    numberEl.innerText = failCount;
+            // 2. อัปเดตตัวเลขในการ์ดสถิติด้านบนแบบเจาะจงกล่อง (ป้องกันเลขเกิน)
+            const cardBoxes = document.querySelectorAll('div');
+            cardBoxes.forEach(card => {
+                const text = card.innerText || '';
+                if (card.children.length >= 1 && card.children.length <= 4) {
+                    const targetNumEl = card.querySelector('h2, h3, h1, span');
+                    if (targetNumEl && !text.includes('ตารางสรุป') && !text.includes('Dashboard')) {
+                        if (text.includes('จำนวน Set-Up ทั้งหมด') && text.length < 50) {
+                            targetNumEl.innerText = setupCount;
+                        } else if (text.includes('QC Pass (พร้อมผลิต)') && text.length < 50) {
+                            targetNumEl.innerText = passCount;
+                        } else if (text.includes('QC Not Pass (รอแก้ไข)') && text.length < 50) {
+                            targetNumEl.innerText = failCount;
+                        }
+                    }
                 }
             });
 
