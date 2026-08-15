@@ -1558,6 +1558,55 @@ window.addEventListener('DOMContentLoaded', () => {
     // อัปเดตข้อมูลจาก Google Sheets ทุกๆ 15 วินาที
     setInterval(loadPendingQCDataFromSheet, 15000);
 });
+        // ฟังก์ชันสำหรับดึงประวัติ Spot Welding มาแสดงในตาราง
+function loadSpotHistory() {
+    if (typeof SCRIPT_URL === 'undefined' || !SCRIPT_URL) return;
+
+    fetch(SCRIPT_URL + '?action=spot')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#spotWeldingTable tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (!data || data.length <= 1) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการบันทึก Spot Welding</td></tr>';
+                return;
+            }
+
+            // วนลูปจากล่างขึ้นบนเพื่อให้ข้อมูลล่าสุดแสดงอยู่ด้านบน
+            for (let i = data.length - 1; i >= 1; i--) {
+                const row = data[i];
+                const timestamp = row[0] ? new Date(row[0]).toLocaleString() : '-';
+                const part = row[2] || '-';
+                const job = row[3] || '-';
+                const welCurr = row[4] || '-';
+                const pressure = row[5] || '-';
+                const tipBalance = row[6] || '-';
+                const water = row[7] || '-';
+                const inspector = row[8] || '-';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${timestamp}</td>
+                    <td><b>${part}</b></td>
+                    <td>${job}</td>
+                    <td>${welCurr} / ${pressure}</td>
+                    <td>${tipBalance} / ${water}</td>
+                    <td>${inspector}</td>
+                    <td><span style="color: #27ae60; font-weight: bold;">Saved</span></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        })
+        .catch(error => console.error('Error loading spot history:', error));
+}
+
+// เรียกใช้งานเมื่อเปิดหน้าเว็บ
+document.addEventListener('DOMContentLoaded', () => {
+    loadSpotHistory();
+});
 </script>
 </body>
 </html>
