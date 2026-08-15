@@ -938,12 +938,21 @@
     }
 
     function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
-        if (!setupLineAlerts[lineName]) {
-            setupLineAlerts[lineName] = [];
-        }
-        setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
-        renderSetupAlertsUI();
+    if (!setupLineAlerts[lineName]) {
+        setupLineAlerts[lineName] = [];
     }
+    setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
+    renderSetupAlertsUI();
+
+    // [เพิ่มตรงนี้] อัปเดตสถานะในตาราง Setup ทันทีเมื่อ QC บันทึกผล
+    const targetItem = setupHistoryData.find(item => item.line === lineName && item.part === partNo);
+    if (targetItem) {
+        targetItem.status = qcStatus; // อัปเดตสถานะเป็น QC Pass หรือ QC Not Pass
+        if (typeof renderSetupHistory === 'function') {
+            renderSetupHistory(); // สั่งรีเฟรชตารางหน้า Set-Up ทันที
+        }
+    }
+}
 
     function renderSetupAlertsUI() {
         const container = document.getElementById('setupAlertContainer');
