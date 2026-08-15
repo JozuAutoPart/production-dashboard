@@ -1510,6 +1510,45 @@ function loadPendingQCData() {
 window.addEventListener('DOMContentLoaded', () => {
     loadPendingQCData();
 });
+        // ฟังก์ชันดึงรายการที่รอ QC มาแสดงในหน้า QC Check อัตโนมัติทุกเครื่อง
+function loadPendingQCData() {
+    fetch(SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            const partSelect = document.getElementById('qcPartSelect'); // ชื่อ ID ช่องเลือก Part ในหน้า QC ของคุณ
+            if (!partSelect) return;
+
+            // บันทึกค่าที่เลือกไว้เดิม (ถ้ามี)
+            const currentSelected = partSelect.value;
+            partSelect.innerHTML = '<option value="">-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
+
+            data.forEach((row, index) => {
+                if (index === 0) return;
+                const type = row[1];
+                const lineVal = String(row[2] || '').trim();
+                const lotVal = String(row[3] || '').trim();
+                const partVal = String(row[4] || '').trim();
+                const statusVal = row[14]; 
+
+                // ดึงเฉพาะรายการที่เป็น Setup และยังไม่ได้ตรวจ
+                if (type === 'Setup' && (!statusVal || statusVal === 'Waiting QC' || statusVal.includes('Waiting'))) {
+                    const option = document.createElement('option');
+                    option.value = partVal;
+                    option.textContent = `Part: ${partVal} (Line: ${lineVal}, Lot: ${lotVal})`;
+                    partSelect.appendChild(option);
+                }
+            });
+
+            if (currentSelected) partSelect.value = currentSelected;
+        })
+        .catch(error => console.error('Error loading QC pending data:', error));
+}
+
+// ให้ดึงข้อมูลทันทีเมื่อเปิดหน้าเว็บ และอัปเดตซ้ำทุกๆ 10 วินาที
+window.addEventListener('DOMContentLoaded', () => {
+    loadPendingQCData();
+    setInterval(loadPendingQCData, 10000); // อัปเดตทุก 10 วิ
+});
 </script>
 </body>
 </html>
