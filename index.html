@@ -938,26 +938,33 @@
     }
 
    // ปรับให้รับค่า index เพิ่มเข้ามาด้วย
-function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText, targetIndex) {
+function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
     if (!setupLineAlerts[lineName]) {
         setupLineAlerts[lineName] = [];
     }
     setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
     renderSetupAlertsUI();
 
-    // อัปเดตผ่าน Index ที่ส่งมาโดยตรง (ชัวร์ที่สุด)
-    if (targetIndex !== undefined && setupHistoryData[targetIndex]) {
-        let finalStatus = "QC Pass";
-        if (String(qcStatus).toLowerCase().includes("not pass") || String(qcStatus).toLowerCase().includes("ไม่ผ่าน")) {
-            finalStatus = "QC Not Pass";
-        }
-        setupHistoryData[targetIndex].status = finalStatus;
+    // แปลงสถานะ
+    let finalStatus = "QC Pass";
+    if (String(qcStatus).toLowerCase().includes("not pass") || String(qcStatus).toLowerCase().includes("ไม่ผ่าน")) {
+        finalStatus = "QC Not Pass";
+    }
+
+    // วนลูปหาทุกรายการที่ Line และ Part ตรงกัน แล้วอัปเดตสถานะทั้งหมดทันที
+    if (Array.isArray(setupHistoryData)) {
+        setupHistoryData.forEach(item => {
+            if (String(item.line).trim() === String(lineName).trim() && 
+                String(item.part).trim() === String(partNo).trim()) {
+                item.status = finalStatus;
+            }
+        });
+        
         if (typeof renderSetupHistory === 'function') {
-            renderSetupHistory();
+            renderSetupHistory(); // รีเฟรชตารางหน้า Set-Up
         }
     }
 }
-
     function renderSetupAlertsUI() {
         const container = document.getElementById('setupAlertContainer');
         if (!container) return;
@@ -1209,7 +1216,7 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText, targetI
                 renderQcAlertsUI();
                 
                 // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
-                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal, window.currentQcIndex);
+                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
 
                 alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
                 qcFormElem.reset();
