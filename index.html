@@ -829,15 +829,39 @@
                 }
             });
 
-            // --- [เพิ่มส่วนนี้] อัปเดตตัวเลขแสดงผลบนหน้า Dashboard ---
-            if (typeof updateDashboardStats === 'function') {
-                updateDashboardStats(setupCount, passCount, failCount);
-            } else {
-                // เผื่อใช้การยิง DOM ตรงๆ
-                document.querySelectorAll('.dashboard-setup-count').forEach(el => el.innerText = setupCount);
-                document.querySelectorAll('.dashboard-pass-count').forEach(el => el.innerText = passCount);
-                document.querySelectorAll('.dashboard-fail-count').forEach(el => el.innerText = failCount);
-            }
+            // --- อัปเดตตัวเลขหน้า Dashboard อัตโนมัติ (ทั้งการ์ดด้านบนและตารางด้านล่าง) ---
+            
+            // 1. อัปเดตตารางสรุปด้านล่าง
+            const tableRows = document.querySelectorAll('tr');
+            tableRows.forEach(row => {
+                const text = row.innerText;
+                const valueCell = row.querySelector('td:last-child');
+                if (!valueCell) return;
+
+                if (text.includes('จำนวน Set-Up แม่พิมพ์ทั้งหมด')) {
+                    valueCell.innerText = setupCount;
+                } else if (text.includes('ผลตรวจสอบ QC Pass')) {
+                    valueCell.innerText = passCount;
+                } else if (text.includes('ผลตรวจสอบ QC Not Pass')) {
+                    valueCell.innerText = failCount;
+                }
+            });
+
+            // 2. อัปเดตการ์ดตัวเลขด้านบน
+            const cards = document.querySelectorAll('div');
+            cards.forEach(card => {
+                const cardText = card.innerText || '';
+                const numberEl = card.querySelector('h2, h3, h1, .number, span');
+                if (!numberEl || card.children.length > 4) return;
+
+                if (cardText.includes('จำนวน Set-Up ทั้งหมด')) {
+                    numberEl.innerText = setupCount;
+                } else if (cardText.includes('QC Pass (พร้อมผลิต)')) {
+                    numberEl.innerText = passCount;
+                } else if (cardText.includes('QC Not Pass (รอแก้ไข)')) {
+                    numberEl.innerText = failCount;
+                }
+            });
 
             if (typeof renderSetupHistory === 'function') {
                 renderSetupHistory();
