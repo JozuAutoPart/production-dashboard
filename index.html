@@ -1105,37 +1105,42 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
                 alertBox.innerHTML = `⏳ กำลังบันทึกข้อมูล Set-Up และส่งไปยังระบบ...`;
             }
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(setupPayload)
-            }).then(() => {
-                if (alertBox) {
-                    alertBox.innerHTML = `✅ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ! <button type="button" onclick="goToQcPageFromSetup('${line}', '${part}', '${lot}')" style="margin-left: 10px; background: #2980b9; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight:bold;">👉 ไปหน้า QC Check</button>`;
-                }
+            // 1. สั่งล็อคปุ่มก่อนเริ่ม fetch (ที่เราเคยใส่ไว้ด้านบน)
+    
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(setupPayload)
+    }).then(() => {
+        if (alertBox) {
+            alertBox.className = "alert-box alert-success";
+            alertBox.style.display = "block";
+            alertBox.innerHTML = `✔️ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ! <button type="button" onclick="goToQcPageFromSetup('${line}', '${part}', '${lot}')">ไปยังหน้า QC</button>`;
+        }
 
-                // สั่งแจ้งเตือนไปที่หน้า QC ของ Line นั้นๆ
-                triggerQcAlert(line, part, lot);
+        triggerQcAlert(line, part, lot);
 
-                // บันทึกลง Local array ชั่วคราวเพื่ออัปเดตหน้าจอทันที
-                setupHistoryData.unshift({
-                    id: Date.now(),
-                    line: line, lot: lot, part: part, machine: processesData[0]?.machine || '-',
-                    inspector: operator, process: `${processesData.length} Process`,
-                    air: processesData[0]?.air || '-', cushion: processesData[0]?.cushion || '-', spm: processesData[0]?.spm || '-',
-                    material: material, dh: processesData[0]?.dh || '-',
-                    start: start.replace('T', ' '), end: end.replace('T', ' '), status: 'Waiting QC'
-                });
-                renderSetupHistory();
-                populateQcPartDropdown();
-            }).catch(error => {
-                console.error("Error:", error);
-                if (alertBox) {
-                    alertBox.className = "alert-box alert-error";
-                    alertBox.innerText = "❌ เกิดข้อผิดพลาดในการบันทึกข้อมูลไปยัง Google Sheets";
-                }
-            });
+        setupHistoryData.unshift({
+            id: Date.now(),
+            line: line, lot: lot, part: part, machine: processesData[0]?.machine || '-',
+            inspector: operator, process: `${processesData.length} Process`,
+            air: processesData[0]?.air || '-', cushion: processesData[0]?.cushion || '-', spm: processesData[0]?.spm || '-',
+            material: material, dh: processesData[0]?.dh || '-',
+            start: start.replace('T', ' '), end: end.replace('T', ' '), status: 'Waiting QC'
+        });
+        renderSetupHistory();
+        populateQcPartDropdown();
+    }).catch(error => {
+        console.error("Error:", error);
+    }).finally(() => {
+        // 2. [เพิ่มตรงนี้] คืนค่าเปิดปุ่มให้ใช้งานได้เหมือนเดิมเมื่อทำงานเสร็จ (ไม่ว่าจะสำเร็จหรือพัง)
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.innerText = 'บันทึกข้อมูล Set-Up ทั้งหมดของ Part No. นี้ และส่งตรวจสอบ QC';
+        }
+    });
         });
     }
 
