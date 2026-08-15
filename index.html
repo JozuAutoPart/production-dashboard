@@ -1468,6 +1468,12 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
     function exportDashboardToExcel() {
         exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary.xls', -1);
     }
+        // ตั้งเวลาดึงข้อมูลใหม่และอัปเดตหน้าจออัตโนมัติทุกๆ 10 วินาที
+setInterval(() => {
+    if (typeof loadDataFromGoogleSheet === 'function') {
+        loadDataFromGoogleSheet();
+    }
+}, 10000);
 </script>
 </body>
 </html>
