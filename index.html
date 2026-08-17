@@ -1215,78 +1215,107 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         }
     }
 
-    // บันทึก QC Check (หน้า 3)
-    const qcFormElem = document.getElementById('qcForm');
-    if (qcFormElem) {
-        qcFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const lineVal = document.getElementById('qc_production_line').value;
-            const partVal = document.getElementById('qc_part_no').value;
-            
-            // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
-            const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
-            const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
-            const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
-            
-            const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
-            const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
-            const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
-            
-            const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
-            const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
-            const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
-            const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
-            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
+   // 2. จัดการการส่งข้อมูลฟอร์ม QC Check และลบ Part ออกจาก Dropdown ทันที
+const qcFormElem = document.getElementById('qcForm');
+if (qcFormElem) {
+    qcFormElem.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const lineVal = document.getElementById('qc_production_line').value;
+        const partVal = document.getElementById('qc_part_no').value;
+        
+        const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
+        const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
+        const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
+        
+        const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
+        const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
+        const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
+        
+        const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
+        const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
+        const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
+        const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
+        const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
 
-            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
+        const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
+        
+        const qcFormData = {
+            type: qcStatus,
+            line: lineVal,
+            lot: "-",
+            part: partVal,
+            process: "QC Check (" + actualData + ") " + checklistSummary,
+            machine: "-",
+            air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
+            start: datetimeVal,
+            end: remarkVal,
+            qc_result: qcStatus,
+            inspector: inspectorName
+        };
+
+        const qcLoading = document.getElementById('qc-loading');
+        const btnQcSubmit = document.getElementById('btnQcSubmit');
+        if(qcLoading) qcLoading.style.display = 'block';
+        if(btnQcSubmit) btnQcSubmit.disabled = true;
+
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
+        .then(() => {
+            if(qcLoading) qcLoading.style.display = 'none';
+            if(btnQcSubmit) btnQcSubmit.disabled = false;
             
-            const qcFormData = {
-                type: qcStatus,
+            // 1. เพิ่มข้อมูลลงในประวัติหน้าจอ (qcHistoryData) และเรนเดอร์ใหม่
+            const newHistoryItem = {
+                id: Date.now(),
                 line: lineVal,
-                lot: "-",
                 part: partVal,
-                process: "QC Check (" + actualData + ") " + checklistSummary,
-                machine: "-",
-                air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
-                start: datetimeVal,
-                end: remarkVal,
-                qc_result: qcStatus,
+                actual: actualData,
+                status: qcStatus,
+                remark: remarkVal,
+                datetime: datetimeVal,
                 inspector: inspectorName
             };
+            if (typeof qcHistoryData !== 'undefined') {
+                qcHistoryData.unshift(newHistoryItem);
+                renderQcHistory();
+            }
 
-            const qcLoading = document.getElementById('qc-loading');
-            const btnQcSubmit = document.getElementById('btnQcSubmit');
-            if(qcLoading) qcLoading.style.display = 'block';
-            if(btnQcSubmit) btnQcSubmit.disabled = true;
-
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
-            .then(() => {
-                if(qcLoading) qcLoading.style.display = 'none';
-                if(btnQcSubmit) btnQcSubmit.disabled = false;
-                
-                // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
-                if (qcLineAlerts[lineVal]) {
-                    qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
-                    if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
-                }
+            // 2. ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
+            if (typeof qcLineAlerts !== 'undefined' && qcLineAlerts[lineVal]) {
+                qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
+                if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
+            }
+            if (typeof renderQcAlertsUI === 'function') {
                 renderQcAlertsUI();
-                
-                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
+            }
+            
+            // 3. [จุดสำคัญ] ลบ Part ที่เพิ่งตรวจสอบเสร็จออกจาก Dropdown ทันที
+            const qcPartSelect = document.getElementById('qc_part_no');
+            if (qcPartSelect) {
+                for (let i = 0; i < qcPartSelect.options.length; i++) {
+                    if (qcPartSelect.options[i].value === partVal) {
+                        qcPartSelect.remove(i);
+                        break;
+                    }
+                }
+                qcPartSelect.value = ""; 
+            }
+            
+            // 4. ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up
+            if (typeof triggerSetupReturnAlert === 'function') {
                 triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
+            }
 
-                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
-                qcFormElem.reset();
-                loadDataFromGoogleSheet();
-            })
-            .catch(error => {
-                if(qcLoading) qcLoading.style.display = 'none';
-                if(btnQcSubmit) btnQcSubmit.disabled = false;
-                console.error('Error:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-            });
+            alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
+            qcFormElem.reset();
+        })
+        .catch(error => {
+            if(qcLoading) qcLoading.style.display = 'none';
+            if(btnQcSubmit) btnQcSubmit.disabled = false;
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         });
-    }
-
+    });
+}
 // ตัวแปรสำหรับล็อกเวลาป้องกันการส่งซ้ำ (Time Lock)
 let lastSpotSubmitTime = 0;
 
@@ -1474,15 +1503,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function renderSpotHistory() {
-        const tbody = document.querySelector('#spotWeldingTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = spotHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีข้อมูล Spot Welding</td></tr>` : '';
-        spotHistoryData.forEach((item) => {
-            tbody.innerHTML += `<tr><td>${item.datetime}</td><td><b>${item.part}</b></td><td>${item.jobno}</td><td>Wel Curr: ${item.welcurr}<br>Pressure: ${item.pressure}</td><td>Tip Balance: ${item.tipbalance}<br>Water: ${item.water}</td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-        });
-    }
-
+   function renderQcHistory() {
+    const tbody = document.querySelector('#qcHistoryTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติ QC</td></tr>` : '';
+    qcHistoryData.forEach((item) => {
+        const color = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
+        tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.part}</td><td>${item.actual}</td><td style="${color}">${item.status}</td><td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+    });
+}
     function renderDtHistory() {
         const tbody = document.querySelector('#destructiveTable tbody');
         if (!tbody) return;
