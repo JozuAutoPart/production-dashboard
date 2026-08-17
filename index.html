@@ -1203,7 +1203,7 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         });
     }
 
-    // ฟังก์ชันกดสลับไปหน้า QC อัตโนมัติจากหน้า Set-Up พร้อมส่งค่าพารามิเตอร์ไป
+ // ฟังก์ชันกดสลับไปหน้า QC อัตโนมัติจากหน้า Set-Up พร้อมส่งค่าพารามิเตอร์ไป
     function goToQcPageFromSetup(line, part, lot) {
         const tabBtns = document.querySelectorAll('.navbar button');
         if(tabBtns[2]) tabBtns[2].click(); // ไปแท็บที่ 3 (QC Check)
@@ -1312,19 +1312,20 @@ if (qcFormElem) {
             // 4. ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up
             if (typeof triggerSetupReturnAlert === 'function') {
                 triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
-          }
-alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
-        qcFormElem.reset();
-    })
-    .catch(error => {
-        if(qcLoading) qcLoading.style.display = 'none';
-        if(btnQcSubmit) btnQcSubmit.disabled = false;
-        console.error('Error:', error);
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            }
+            
+            alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
+            qcFormElem.reset();
+        })
+        .catch(error => {
+            if(qcLoading) qcLoading.style.display = 'none';
+            if(btnQcSubmit) btnQcSubmit.disabled = false;
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        });
     });
-});
-// ตัวแปรสำหรับล๊อกเวลาป้องกันการส่งซ้ำ (Time Lock)
-let lastSpotSubmitTime = 0;
+}
+
 // ตัวแปรสำหรับล็อกเวลาป้องกันการส่งซ้ำ (Time Lock)
 let lastSpotSubmitTime = 0;
 
