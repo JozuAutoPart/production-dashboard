@@ -1503,7 +1503,7 @@ function loadPendingQCDataFromSheet() {
         .catch(error => console.error('Error fetching sheet data:', error));
 }
 
-// ฟังก์ชันกรอง Part No. ตาม Line ที่เลือกในหน้า QC (ฉบับปลอดภัย ป้องกันตัวแปร undefined)
+// ฟังก์ชันกรอง Part No. แบบครอบคลุมทุกชื่อตัวแปรข้อมูล
 function populatePartDropdown() {
     const partSelect = document.getElementById('qc_part_no');
     const lineSelect = document.getElementById('qc_production_line');
@@ -1519,13 +1519,15 @@ function populatePartDropdown() {
         return;
     }
 
-    // ป้องกันกรณีตัวแปร globalQCData ยังไม่ถูกโหลดหรือประกาศ
-    const dataList = (typeof globalQCData !== 'undefined') ? globalQCData : (window.globalQCData || []);
+    // ตรวจสอบตัวแปรเก็บข้อมูลทุกชื่อที่เป็นไปได้ในระบบของคุณ
+    const dataList = (typeof globalQCData !== 'undefined') ? globalQCData : 
+                     (typeof qcData !== 'undefined') ? qcData : 
+                     (typeof allData !== 'undefined') ? allData : 
+                     (window.globalQCData || window.qcData || []);
+
     if (!Array.isArray(dataList) || dataList.length === 0) {
         return;
     }
-
-    let found = false;
 
     dataList.forEach((row, index) => {
         if (index === 0) return; // ข้ามหัวตาราง
@@ -1536,16 +1538,15 @@ function populatePartDropdown() {
         const partVal = String(row[4] || '').trim();
         const statusVal = String(row[14] || '').trim();
 
-        // เช็คว่า Line ตรงกัน และสถานะไม่ใช่ QC Pass
         const isLineMatch = (col2 === selectedLine || col3 === selectedLine);
 
+        // เงื่อนไข: เป็น Setup, สถานะยังไม่เป็น QC Pass, และ Line ตรงกัน
         if (type === 'Setup' && statusVal !== 'QC Pass' && isLineMatch) {
             const option = document.createElement('option');
             option.value = partVal;
             option.setAttribute('data-line', selectedLine);
             option.textContent = `Part: ${partVal} (Line: ${selectedLine}, Status: ${statusVal || 'Waiting QC'})`;
             partSelect.appendChild(option);
-            found = true;
         }
     });
 
@@ -1553,7 +1554,14 @@ function populatePartDropdown() {
         partSelect.value = currentSelected;
     }
 }
-// ผูก Event และตั้งค่าการทำงานเมื่อเปิดหน้าเว็บ
+
+// ผูก Event ให้ทำงานทันทีเมื่อมีการเปลี่ยน Line หรือเปลี่ยนหน้าจอมาที่หน้า QC
+document.addEventListener('DOMContentLoaded', () => {
+    const lineSelect = document.getElementById('qc_production_line');
+    if (lineSelect) {
+        lineSelect.addEventListener('change', populatePartDropdown);
+    }
+});// ผูก Event และตั้งค่าการทำงานเมื่อเปิดหน้าเว็บ
 window.addEventListener('DOMContentLoaded', () => {
     loadPendingQCDataFromSheet();
 
