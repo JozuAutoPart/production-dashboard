@@ -1230,30 +1230,31 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         });
     }
 
-// ประกาศตัวแปร Global ป้องกันการกดเบิ้ลระดับระบบ
-let isSpotSubmitting = false;
+// ตัวแปรสำหรับล็อกเวลาป้องกันการส่งซ้ำ (Time Lock)
+let lastSpotSubmitTime = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
     const spotFormElem = document.getElementById('spotWeldingForm');
     
-    if (spotFormElem && !spotFormElem.dataset.bound) {
-        // ทำเครื่องหมายว่าฟอร์มนี้ผูก Event แล้ว ป้องกันการแอดซ้ำซ้อน
-        spotFormElem.dataset.bound = "true";
-
+    if (spotFormElem) {
         spotFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // ถ้ากำลังส่งข้อมูลอยู่ ให้ตัดจบการทำงานทันที (กันกดรัว/กันเบิ้ล)
-            if (isSpotSubmitting) return;
-            isSpotSubmitting = true;
+            // ป้องกันการส่งซ้ำหากกดห่างกันไม่ถึง 2 วินาที (แก้ปัญหาโค้ดรันเบิ้ล 2 รอบ)
+            const currentTime = Date.now();
+            if (currentTime - lastSpotSubmitTime < 2000) {
+                console.warn("Blocked duplicate form submission.");
+                return;
+            }
+            lastSpotSubmitTime = currentTime;
 
             const btnSpotSubmit = document.getElementById('btnSpotSubmit');
             const spotLoading = document.getElementById('spot-loading');
 
-            if (spotLoading) spotLoading.style.display = 'block';
+            if (btnSpotSubmit && btnSpotSubmit.disabled) return;
             if (btnSpotSubmit) btnSpotSubmit.disabled = true;
+            if (spotLoading) spotLoading.style.display = 'block';
 
-            // รวบรวมข้อมูลล่าสุดจากฟอร์ม
             const spotData = {
                 type: "SpotWelding",
                 datetime: document.getElementById('sw_datetime').value,
@@ -1268,7 +1269,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 stroke: document.getElementById('sw_stroke').value
             };
 
-            // ส่งข้อมูลไปยัง Google Sheets รอบเดียวจบ
             fetch(SCRIPT_URL, { 
                 method: 'POST', 
                 mode: 'no-cors', 
@@ -1288,14 +1288,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 setTimeout(() => {
                     alert('บันทึก Set-Up Spot Welding สำเร็จ!');
-                    isSpotSubmitting = false; // ปลดล็อกสถานะหลังทำงานเสร็จ
                     if (btnSpotSubmit) btnSpotSubmit.disabled = false;
                 }, 100);
             })
             .catch(error => {
                 console.error('Error:', error);
                 if (spotLoading) spotLoading.style.display = 'none';
-                isSpotSubmitting = false; // ปลดล็อกสถานะเมื่อเกิด Error
                 if (btnSpotSubmit) btnSpotSubmit.disabled = false;
                 alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             });
