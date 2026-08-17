@@ -1314,16 +1314,16 @@ if (qcFormElem) {
                 triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
             }
 
-            alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
-            qcFormElem.reset();
-        })
-        .catch(error => {
-            if(qcLoading) qcLoading.style.display = 'none';
-            if(btnQcSubmit) btnQcSubmit.disabled = false;
-            console.error('Error:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-        });
+         alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
+        qcFormElem.reset();
+    })
+    .catch(error => {
+        if(qcLoading) qcLoading.style.display = 'none';
+        if(btnQcSubmit) btnQcSubmit.disabled = false;
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     });
+});
 }
 // ตัวแปรสำหรับล็อกเวลาป้องกันการส่งซ้ำ (Time Lock)
 let lastSpotSubmitTime = 0;
