@@ -1197,7 +1197,20 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
             e.preventDefault();
             const lineVal = document.getElementById('qc_production_line').value;
             const partVal = document.getElementById('qc_part_no').value;
-            
+            // 📌 [นำโค้ดนี้มาวางแทรก]
+        if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
+            globalQCData.forEach(row => {
+                const rLine = String(row[2] || '').trim();
+                const rPart = String(row[4] || '').trim();
+                if (rLine === lineVal && rPart === partVal) {
+                    row[14] = 'QC Pass'; // เปลี่ยนสถานะในข้อมูลดิบเป็น QC Pass
+                }
+            });
+        }
+        if (typeof populatePartDropdown === 'function') {
+            populatePartDropdown(); // สั่งรีเฟรช Dropdown ทันที
+        }
+        // -----------------
             // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
             const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
             const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
