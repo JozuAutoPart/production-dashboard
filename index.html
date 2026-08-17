@@ -1190,26 +1190,19 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         }
     }
 
-    // บันทึก QC Check (หน้า 3)
-    const qcFormElem = document.getElementById('qcForm');
-    if (qcFormElem) {
-        qcFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const lineVal = document.getElementById('qc_production_line').value;
-            const partVal = document.getElementById('qc_part_no').value;
-            // 📌 [นำโค้ดนี้มาวางแทรก]
-        if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
-            globalQCData.forEach(row => {
-                const rLine = String(row[2] || '').trim();
-                const rPart = String(row[4] || '').trim();
-                if (rLine === lineVal && rPart === partVal) {
-                    row[14] = 'QC Pass'; // เปลี่ยนสถานะในข้อมูลดิบเป็น QC Pass
-                }
-            });
-        }
-        if (typeof populatePartDropdown === 'function') {
-            populatePartDropdown(); // สั่งรีเฟรช Dropdown ทันที
-        }
+   // อัปเดตสถานะในข้อมูลดิบและรีเฟรช Dropdown ทันที
+            if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
+                globalQCData.forEach(row => {
+                    const rLine = String(row[2] || '').trim();
+                    const rPart = String(row[4] || '').trim();
+                    if (rLine === lineVal && rPart === partVal) {
+                        row[14] = 'QC Pass'; // เปลี่ยนสถานะในข้อมูลดิบเป็น QC Pass
+                    }
+                });
+            }
+            if (typeof populatePartDropdown === 'function') {
+                populatePartDropdown(); // สั่งรีเฟรช Dropdown ทันที
+            }
         // -----------------
             // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
             const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
@@ -1247,11 +1240,25 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
             if(qcLoading) qcLoading.style.display = 'block';
             if(btnQcSubmit) btnQcSubmit.disabled = true;
 
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
+           fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
             .then(() => {
                 if(qcLoading) qcLoading.style.display = 'none';
                 if(btnQcSubmit) btnQcSubmit.disabled = false;
                 
+                // อัปเดตสถานะในข้อมูลดิบและรีเฟรช Dropdown ทันทีเพื่อให้รายการหายไป
+                if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
+                    globalQCData.forEach(row => {
+                        const rLine = String(row[2] || '').trim();
+                        const rPart = String(row[4] || '').trim();
+                        if (rLine === lineVal && rPart === partVal) {
+                            row[14] = 'QC Pass'; // เปลี่ยนสถานะในข้อมูลดิบเป็น QC Pass
+                        }
+                    });
+                }
+                if (typeof populatePartDropdown === 'function') {
+                    populatePartDropdown(); // สั่งรีเฟรช Dropdown ทันที
+                }
+
                 // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
                 if (qcLineAlerts[lineVal]) {
                     qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
