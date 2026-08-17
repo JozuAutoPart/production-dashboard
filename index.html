@@ -1605,8 +1605,9 @@ function populatePartDropdown() {
         const partVal = String(row[4] || '').trim();    
         const statusVal = String(row[14] || '').trim(); 
 
-        // เช็คว่าเป็น Setup, ยังไม่ตรวจ, และ Line ตรงกับที่ผู้ใช้เลือก
-        if (type === 'Setup' && (statusVal === '' || statusVal === 'Waiting QC' || statusVal.toLowerCase().includes('wait'))) {
+// เช็คว่าเป็น Setup, ยังไม่ตรวจ, และ Line ตรงกับที่ผู้ใช้เลือก
+        // [เพิ่มเงื่อนไข && statusVal !== 'QC Pass' เพื่อป้องกันไม่ให้ดึงรายการที่ตรวจผ่านแล้วกลับมาแสดง]
+        if (type === 'Setup' && statusVal !== 'QC Pass' && (statusVal === '' || statusVal === 'Waiting QC' || statusVal.toLowerCase().includes('wait'))) {
             if (lineVal === selectedLine) {
                 const option = document.createElement('option');
                 option.value = partVal;
