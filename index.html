@@ -1233,27 +1233,35 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
 // บันทึก Spot Welding (หน้า 4)
 const spotFormElem = document.getElementById('spotWeldingForm');
 if (spotFormElem) {
-    spotFormElem.addEventListener('submit', function(e) {
+    // ป้องกันการแอด Event ซ้ำซ้อนโดยใช้ตัวแปรเช็คสถานะหรือล้างตัวเก่า (ถ้ามี)
+    spotFormElem.replaceWith(spotFormElem.cloneNode(true));
+    const newSpotFormElem = document.getElementById('spotWeldingForm');
+
+    newSpotFormElem.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        const btnSpotSubmit = document.getElementById('btnSpotSubmit');
+        
+        // ถ้าปุ่มถูก disable อยู่แล้ว (กำลังส่งข้อมูล) ให้ return ออกทันทีเพื่อกันกดเบิ้ล
+        if (btnSpotSubmit && btnSpotSubmit.disabled) return;
+
         const spotData = {
-    type: "SpotWelding",
-    datetime: document.getElementById('sw_datetime').value,
-    part: document.getElementById('sw_part').value,
-    job: document.getElementById('sw_jobno').value,
-    wel_curr: document.getElementById('sw_welcurr').value,
-    pressure: document.getElementById('sw_pressure').value,
-    tip_balance: document.getElementById('sw_tipbalance').value,
-    water: document.getElementById('sw_water').value,
-    inspector: document.getElementById('sw_inspector').value,
-    tip_code: document.getElementById('sw_tipcode').value, // คอลัมน์ J: Tip Code
-    stroke: document.getElementById('sw_stroke').value         // คอลัมน์ K: Tip Stroke
-};
+            type: "SpotWelding",
+            datetime: document.getElementById('sw_datetime').value,
+            part: document.getElementById('sw_part').value,
+            job: document.getElementById('sw_jobno').value,
+            wel_curr: document.getElementById('sw_welcurr').value,
+            pressure: document.getElementById('sw_pressure').value,
+            tip_balance: document.getElementById('sw_tipbalance').value,
+            water: document.getElementById('sw_water').value,
+            inspector: document.getElementById('sw_inspector').value,
+            tip_code: document.getElementById('sw_tipcode').value,
+            stroke: document.getElementById('sw_stroke').value
+        };
 
         const spotLoading = document.getElementById('spot-loading');
-        const btnSpotSubmit = document.getElementById('btnSpotSubmit');
         if(spotLoading) spotLoading.style.display = 'block';
-        if(btnSpotSubmit) btnSpotSubmit.disabled = true;
+        if(btnSpotSubmit) btnSpotSubmit.disabled = true; // ล็อคปุ่มทันทีที่กด
 
         fetch(SCRIPT_URL, { 
             method: 'POST', 
@@ -1263,16 +1271,16 @@ if (spotFormElem) {
         })
         .then(() => {
             if(spotLoading) spotLoading.style.display = 'none';
-            if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false; // ปลดล็อคปุ่มหลังส่งเสร็จ
             alert('บันทึก Set-Up Spot Welding สำเร็จ!');
-            spotFormElem.reset();
-            document.getElementById('tip_alarm_box').style.display = 'none'; // ซ่อนกล่องแจ้งเตือน Alarm (ถ้ามี)
-            loadSpotHistory(); // เรียกฟังก์ชันโหลดข้อมูลเฉพาะหน้า Spot
+            newSpotFormElem.reset();
+            document.getElementById('tip_alarm_box').style.display = 'none';
+            loadSpotHistory();
         })
         .catch(error => {
             console.error('Error:', error);
             if(spotLoading) spotLoading.style.display = 'none';
-            if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false; // ปลดล็อคปุ่มกรณีเกิด Error
             alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         });
     });
