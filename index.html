@@ -1545,23 +1545,29 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // อัปเดตข้อมูลจาก Google Sheets ทุกๆ 15 วินาที
     setInterval(loadPendingQCDataFromSheet, 15000);
-});
-       // ฟังก์ชันสลับแท็บหน้าเว็บ
+});// ฟังก์ชันสลับกันหน้าเว็บ
 function openTab(evt, tabName) {
+    const tabTarget = document.getElementById(tabName);
+    if (!tabTarget) {
+        console.warn("ไม่พบ Element ID: " + tabName);
+        return; // ป้องกันไม่ให้โค้ดพังต่อ
+    }
+
     const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
         tabContents[i].style.display = "none";
     }
+    
     const tabButtons = document.getElementsByClassName("tab-button");
     for (let i = 0; i < tabButtons.length; i++) {
         tabButtons[i].className = tabButtons[i].className.replace(" active", "");
     }
-    document.getElementById(tabName).style.display = "block";
+    
+    tabTarget.style.display = "block";
     if (evt && evt.currentTarget) {
         evt.currentTarget.className += " active";
     }
 }
-
 // ฟังก์ชันตรวจสอบและแจ้งเตือน Grinding สำหรับชุดหัวเชื่อม
 function checkTipAlarm() {
     const strokeVal = parseInt(document.getElementById('sw_stroke').value) || 0;
