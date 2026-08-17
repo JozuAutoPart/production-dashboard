@@ -1233,22 +1233,17 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
 // บันทึก Spot Welding (หน้า 4)
 const spotFormElem = document.getElementById('spotWeldingForm');
 if (spotFormElem) {
-    // ป้องกันการผูก Event ซ้ำซ้อน (ล้าง Event เก่าทิ้งก่อน)
-    const newSpotFormElem = spotFormElem.cloneNode(true);
-    spotFormElem.parentNode.replaceWith(newSpotFormElem);
+    // ป้องกันการแอด Event ซ้ำซ้อนโดยใช้ตัวแปรเช็คสถานะหรือล้างตัวเก่า (ถ้ามี)
+    spotFormElem.replaceWith(spotFormElem.cloneNode(true));
+    const newSpotFormElem = document.getElementById('spotWeldingForm');
 
     newSpotFormElem.addEventListener('submit', function(e) {
         e.preventDefault();
         
         const btnSpotSubmit = document.getElementById('btnSpotSubmit');
-        const spotLoading = document.getElementById('spot-loading');
-
-        // ป้องกันการกดซ้ำทันที (ถ้าปุ่มถูกปิดอยู่แล้ว ให้หยุดการทำงานทันที)
+        
+        // ถ้าปุ่มถูก disable อยู่แล้ว (กำลังส่งข้อมูล) ให้ return ออกทันทีเพื่อกันกดเบิ้ล
         if (btnSpotSubmit && btnSpotSubmit.disabled) return;
-
-        // ล็อคปุ่มและแสดงข้อความกำลังส่งทันทีที่กด
-        if (btnSpotSubmit) btnSpotSubmit.disabled = true;
-        if (spotLoading) spotLoading.style.display = 'block';
 
         const spotData = {
             type: "SpotWelding",
@@ -1264,6 +1259,10 @@ if (spotFormElem) {
             stroke: document.getElementById('sw_stroke').value
         };
 
+        const spotLoading = document.getElementById('spot-loading');
+        if(spotLoading) spotLoading.style.display = 'block';
+        if(btnSpotSubmit) btnSpotSubmit.disabled = true; // ล็อคปุ่มทันทีที่กด
+
         fetch(SCRIPT_URL, { 
             method: 'POST', 
             mode: 'no-cors', 
@@ -1271,25 +1270,17 @@ if (spotFormElem) {
             body: JSON.stringify(spotData) 
         })
         .then(() => {
-            // ซ่อนข้อความโหลดก่อน
             if(spotLoading) spotLoading.style.display = 'none';
-            
-            // รีเซ็ตฟอร์มและอัปเดตตารางประวัติ
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false; // ปลดล็อคปุ่มหลังส่งเสร็จ
+            alert('บันทึก Set-Up Spot Welding สำเร็จ!');
             newSpotFormElem.reset();
-            const alarmBox = document.getElementById('tip_alarm_box');
-            if(alarmBox) alarmBox.style.display = 'none';
+            document.getElementById('tip_alarm_box').style.display = 'none';
             loadSpotHistory();
-
-            // หน่วงเวลาเล็กน้อย (100 มิลลิวินาที) ให้หน้าจอเคลียร์ข้อความโหลดเสร็จ แล้วค่อยเด้ง Alert
-            setTimeout(() => {
-                alert('บันทึก Set-Up Spot Welding สำเร็จ!');
-                if(btnSpotSubmit) btnSpotSubmit.disabled = false; // ปลดล็อคปุ่มหลังกด OK ที่ Alert
-            }, 100);
         })
         .catch(error => {
             console.error('Error:', error);
             if(spotLoading) spotLoading.style.display = 'none';
-            if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+            if(btnSpotSubmit) btnSpotSubmit.disabled = false; // ปลดล็อคปุ่มกรณีเกิด Error
             alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         });
     });
