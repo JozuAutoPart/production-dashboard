@@ -688,6 +688,63 @@
                 </table>
             </div>
         </div>
+          <!-- หน้าที่ 5: QC Check Destructive testing -->
+        <div id="tab5" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <h2>🔍 หน้าที่ 5: QC Check (Destructive Testing)</h2>
+                <button class="btn-export" onclick="exportTableToExcel('destructiveTable', 'Destructive_Testing_Report.xls', 5)">📥 Export Excel</button>
+            </div>
+            <p style="color: #7f8c8d; font-size: 14px; margin-top: 0; margin-bottom: 25px;">บันทึกผลการตรวจสอบแบบทำลายสภาพชิ้นงาน (Destructive Testing)</p>
+            
+            <form id="destructiveForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>1. Part No.:</label>
+                        <input type="text" id="dt_part" placeholder="เช่น SW-PART-001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>2. วันที่ - เวลา:</label>
+                        <input type="datetime-local" id="dt_datetime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>3. Result First (ลงค่าชิ้นแรก):</label>
+                        <input type="text" id="dt_result_first" placeholder="เช่น 4.2 mm / Pass" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Result Finish (ลงค่าชิ้นสุดท้าย/สรุป):</label>
+                        <input type="text" id="dt_result_finish" placeholder="เช่น 4.5 mm / Pass" required>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>4. ผู้ตรวจสอบ (QC Inspector):</label>
+                        <input type="text" id="dt_inspector" placeholder="ชื่อ-นามสกุล ผู้ตรวจสอบ QC" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit" id="btnDtSubmit" style="background-color: #27ae60;">บันทึกผล Destructive Testing</button>
+                <div id="dt-loading" class="loading">กำลังส่งผล Destructive Testing ไปยัง Google Sheets...</div>
+            </form>
+
+            <h3 style="margin-top: 35px;">📋 ประวัติการตรวจสอบ Destructive Testing</h3>
+            <div class="table-container">
+                <table class="history-table" id="destructiveTable">
+                    <thead>
+                        <tr>
+                            <th>Part No.</th>
+                            <th>วันที่-เวลา</th>
+                            <th>Result First</th>
+                            <th>Result Finish</th>
+                            <th>ผู้ตรวจสอบ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
     <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
 
