@@ -1237,18 +1237,18 @@ if (spotFormElem) {
         e.preventDefault();
         
         const spotData = {
-            type: "SpotWelding",
-            datetime: document.getElementById('sw_datetime').value,
-            part: document.getElementById('sw_part').value,
-            job: document.getElementById('sw_jobno').value,            // แก้จาก process เป็น job
-            wel_curr: document.getElementById('sw_welcurr').value,     // แก้จาก air เป็น wel_curr
-            pressure: document.getElementById('sw_pressure').value,    // แก้จาก cushion เป็น pressure
-            tip_balance: document.getElementById('sw_tipbalance').value, // แก้จาก spm เป็น tip_balance
-            water: document.getElementById('sw_water').value,          // แก้จาก material เป็น water
-            inspector: document.getElementById('sw_inspector').value,
-            stroke: document.getElementById('sw_stroke').value,        // เพิ่มจำนวนครั้ง Stroke สะสม
-            tip_code: document.getElementById('sw_tipcode').value      // เพิ่มรหัสหัวทิป (เช่น TP-01)
-        };
+    type: "SpotWelding",
+    datetime: document.getElementById('sw_datetime').value,
+    part: document.getElementById('sw_part').value,
+    job: document.getElementById('sw_jobno').value,
+    wel_curr: document.getElementById('sw_welcurr').value,
+    pressure: document.getElementById('sw_pressure').value,
+    tip_balance: document.getElementById('sw_tipbalance').value,
+    water: document.getElementById('sw_water').value,
+    inspector: document.getElementById('sw_inspector').value,
+    tip_code: document.getElementById('sw_tipcode').value, // คอลัมน์ J: Tip Code
+    stroke: document.getElementById('sw_stroke').value         // คอลัมน์ K: Tip Stroke
+};
 
         const spotLoading = document.getElementById('spot-loading');
         const btnSpotSubmit = document.getElementById('btnSpotSubmit');
