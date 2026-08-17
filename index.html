@@ -1503,7 +1503,7 @@ function loadPendingQCDataFromSheet() {
         .catch(error => console.error('Error fetching sheet data:', error));
 }
 
-// ฟังก์ชันกรอง Part No. ตาม Line ที่เลือกในหน้า QC
+// ฟังก์ชันกรอง Part No. ตาม Line ที่เลือกในหน้า QC (ฉบับแก้ปัญหาข้อมูลสลับคอลัมน์)
 function populatePartDropdown() {
     const partSelect = document.getElementById('qc_part_no');
     const lineSelect = document.getElementById('qc_production_line');
@@ -1514,7 +1514,6 @@ function populatePartDropdown() {
 
     partSelect.innerHTML = '<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
 
-    // ถ้ายังไม่ได้เลือก Line ให้ขึ้นเตือนก่อน
     if (!selectedLine) {
         partSelect.innerHTML = '<option value="" disabled selected>-- กรุณาเลือก Line การผลิตด้านบนก่อน --</option>';
         return;
@@ -1522,28 +1521,30 @@ function populatePartDropdown() {
 
     let found = false;
 
-    globalQCData.forEach((row, index) => {
-        if (index === 0) return; // ข้ามหัวตาราง
+    if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
+        globalQCData.forEach((row, index) => {
+            if (index === 0) return; // ข้ามหัวตาราง
 
-        const type = String(row[1] || '').trim();
-        const lineVal = String(row[2] || '').trim();
-        const lotVal = String(row[3] || '').trim();
-        const partVal = String(row[4] || '').trim();
-        const statusVal = String(row[14] || '').trim();
+            const type = String(row[1] || '').trim();
+            const col2 = String(row[2] || '').trim(); // อาจจะเป็น Line หรือ Lot
+            const col3 = String(row[3] || '').trim(); // อาจจะเป็น Lot หรือ Line
+            const partVal = String(row[4] || '').trim();
+            const statusVal = String(row[14] || '').trim();
 
-        // 📌 เงื่อนไขใหม่: เป็น Setup ของ Line ที่เลือก และสถานะต้องไม่ใช่ "QC Pass" (ตรวจแล้วจะหายไปทันที)
-        if (type === 'Setup' && statusVal !== 'QC Pass') {
-            if (lineVal === selectedLine) {
+            // เช็คว่า Line ที่ผู้ใช้เลือก ตรงกับช่องไหนใน row (ไม่ว่าจะสลับช่อง C หรือ D)
+            const isLineMatch = (col2 === selectedLine || col3 === selectedLine);
+
+            // เงื่อนไข: เป็น Setup, สถานะยังไม่เป็น QC Pass, และ Line ตรงกับที่เลือก
+            if (type === 'Setup' && statusVal !== 'QC Pass' && isLineMatch) {
                 const option = document.createElement('option');
                 option.value = partVal;
-                option.setAttribute('data-line', lineVal);
-                option.setAttribute('data-lot', lotVal);
-                option.textContent = `Part: ${partVal} (Line: ${lineVal}, Lot: ${lotVal})`;
+                option.setAttribute('data-line', selectedLine);
+                option.textContent = `Part: ${partVal} (Line: ${selectedLine}, Status: ${statusVal || 'Waiting QC'})`;
                 partSelect.appendChild(option);
                 found = true;
             }
-        }
-    });
+        });
+    }
 
     if (currentSelected) {
         partSelect.value = currentSelected;
