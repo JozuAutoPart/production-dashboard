@@ -870,26 +870,39 @@
         .catch(error => console.error('Error loading data:', error));
 }
     function populateQcPartDropdown() {
-        const qcPartSelect = document.getElementById('qc_part_no');
-        if (!qcPartSelect) return;
-        
-        const currentSelected = qcPartSelect.value;
-        qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
-        
+    const qcPartSelect = document.getElementById('qc_part_no');
+    const lineSelect = document.getElementById('qc_production_line');
+    if (!qcPartSelect) return;
+
+    const currentSelected = qcPartSelect.value;
+    const selectedLine = lineSelect ? lineSelect.value : '';
+
+    qcPartSelect.innerHTML = '<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
+
+    if (typeof setupHistoryData !== 'undefined' && Array.isArray(setupHistoryData)) {
         setupHistoryData.forEach(item => {
+            // เช็คว่าสถานะไม่ใช่ QC Pass (ถ้าตรวจแล้วจะถูกกรองออกไปทันที)
+            const statusVal = String(item.qc_result || '').trim();
+            if (statusVal === 'QC Pass') return; 
+
+            // ถ้ามีการเลือก Line ไว้ ให้กรองเฉพาะ Line นั้น
+            if (selectedLine && item.line && item.line !== selectedLine) {
+                return;
+            }
+
             let opt = document.createElement('option');
             opt.value = item.part;
             opt.setAttribute('data-line', item.line);
             opt.setAttribute('data-lot', item.lot);
-            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+            opt.text = `Part: ${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
             qcPartSelect.appendChild(opt);
         });
-
-        if(currentSelected) {
-            qcPartSelect.value = currentSelected;
-        }
     }
 
+    if (currentSelected) {
+        qcPartSelect.value = currentSelected;
+    }
+}
     function onSelectQcPart(selectElem) {
         const selectedOption = selectElem.options[selectElem.selectedIndex];
         const lineValue = selectedOption.getAttribute('data-line');
