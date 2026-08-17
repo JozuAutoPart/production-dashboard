@@ -1312,9 +1312,9 @@ if (qcFormElem) {
             // 4. ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up
             if (typeof triggerSetupReturnAlert === 'function') {
                 triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
-            }
+          }
 
-         alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
+        alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
         qcFormElem.reset();
     })
     .catch(error => {
@@ -1323,7 +1323,10 @@ if (qcFormElem) {
         console.error('Error:', error);
         alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     });
-});
+}); // ปิดของ addEventListener และ if (qcFormElem) ครบถ้วนตรงนี้
+
+// ตัวแปรสำหรับล๊อกเวลาป้องกันการส่งซ้ำ (Time Lock)
+let lastSpotSubmitTime = 0;
 // ตัวแปรสำหรับล็อกเวลาป้องกันการส่งซ้ำ (Time Lock)
 let lastSpotSubmitTime = 0;
 
