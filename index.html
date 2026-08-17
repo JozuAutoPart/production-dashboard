@@ -274,14 +274,8 @@
         <!-- หน้าที่ 1: Dashboard -->
         <div id="tab1" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <h2><img src="Jozu.png" alt="Logo" style="height: 35px; vertical-align: middle; margin-right: 10px;">Dashboard ภาพรวมระบบ Set-Up & QC</h2>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <!-- ปุ่ม Refresh ที่เพิ่มเข้ามา -->
-                    <button onclick="refreshDashboard()" style="background-color: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
-                        🔄 Refresh
-                    </button>
-                    <button class="btn-export" onclick="exportDashboardToExcel()">📥 Export Excel</button>
-                </div>
+                <h2>📊 Dashboard ภาพรวมระบบ Set-Up & QC</h2>
+                <button class="btn-export" onclick="exportDashboardToExcel()">📥 Export Excel</button>
             </div>
             <p style="color: #7f8c8d; font-size: 14px; margin-top: 0; margin-bottom: 25px;">สรุปสถิติการทำงานภายในโรงงานแบบเรียลไทม์ แยกตามรายการปฏิบัติงาน</p>
             
@@ -337,7 +331,7 @@
         </div>
 
         <!-- หน้าที่ 2: Set-Up Die & Condition Machine (Redesigned for Multi-Process Complete Submission) -->
-        <div id="tab2" class="tab-content">
+        <div id="tab2" class="tab-content active">
             <h2>
                 <span>⚙️ หน้าที่ 2: บันทึกการ Set-Up แม่พิมพ์ & Condition (Multi-Process)</span>
                 <button class="btn-export" onclick="exportTableToExcel()">📥 Export Excel</button>
@@ -394,7 +388,7 @@
                             <!-- แถวเริ่มต้นอย่างน้อย 1 Process -->
                             <tr>
                                 <td class="row-num">1</td>
-                                <td><input type="text" class="p-name" placeholder="Process 1: Bending" required></td>
+                                <td><input type="text" class="p-name" value="Process 1: Bending" required></td>
                                 <td><input type="text" class="p-mc" placeholder="MC-01" required></td>
                                 <td><input type="text" class="p-air" placeholder="5.5 bar" required></td>
                                 <td><input type="text" class="p-cushion" placeholder="30 ton" required></td>
@@ -442,9 +436,9 @@
                             <th>Line</th>
                             <th>Lot No.</th>
                             <th>Part No.</th>
+                            <th>จำนวน Process</th>
                             <th>พนักงาน Set-Up</th>
                             <th>ช่วงเวลาติดตั้ง</th>
-                            <th>Condition</th>
                             <th>สถานะ QC</th>
                         </tr>
                     </thead>
@@ -582,7 +576,8 @@
                 </table>
             </div>
         </div>
-<!-- หน้าที่ 4: Set-UP Spot Welding -->
+
+        <!-- หน้าที่ 4: Set-UP Spot Welding -->
         <div id="tab4" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <h2>⚡ หน้าที่ 4: Set-UP Spot Welding</h2>
@@ -642,29 +637,8 @@
                     </div>
                 </div>
 
-                <!-- Tip Stroke Control (นับแบบรวมเป็นชุด Target: 5,000 Strokes) -->
-                <div style="background: #eef9fd; border: 1px solid #bce8f1; border-radius: 8px; padding: 20px; margin-top: 15px; margin-bottom: 20px;">
-                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: #2c3e50; border-left: 4px solid #e67e22; padding-left: 8px;">
-                        ⚙️ Tip Stroke Control (Target: 5,000 Strokes)
-                    </h3>
-                    <div class="form-grid">
-                        <!-- เพิ่มช่อง Tip Code ตรงนี้ -->
-                        <div class="form-group">
-                            <label><b>Tip Code (รหัสหัวทิป):</b></label>
-                            <input type="text" id="sw_tipcode" placeholder="เช่น TP-01" required style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
-                        </div>
-                        <div class="form-group">
-                            <label>Tip Current Stroke (จำนวนครั้งสะสม):</label>
-                            <input type="number" id="sw_stroke" placeholder="เช่น 4800" value="0" required oninput="checkTipAlarm()">
-                        </div>
-                    </div>
-                    <!-- กล่องแสดงสถานะ Alarm / แจ้งเตือน Grinding -->
-                    <div id="tip_alarm_box" style="margin-top: 15px; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; display: none;">
-                    </div>
-                </div>
-
                 <button type="submit" class="btn-submit" id="btnSpotSubmit" style="background-color: #2980b9;">บันทึกข้อมูล Set-Up Spot Welding</button>
-                <div id="spot-loading" class="loading" style="display:none;">กำลังส่งข้อมูล Spot Welding ไปยัง Google Sheets...</div>
+                <div id="spot-loading" class="loading">กำลังส่งข้อมูล Spot Welding ไปยัง Google Sheets...</div>
             </form>
 
             <h3 style="margin-top: 35px;">📋 ประวัติการ Set-Up Spot Welding</h3>
@@ -673,7 +647,6 @@
                     <thead>
                         <tr>
                             <th>วันที่-เวลา</th>
-                            <th>Tip Code</th> <!-- เพิ่มคอลัมน์ในตาราง -->
                             <th>Part No.</th>
                             <th>Job No.</th>
                             <th>Wel Curr / Pressure</th>
@@ -683,12 +656,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="8" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
+                        <tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
-          <!-- หน้าที่ 5: QC Check Destructive testing -->
+
+        <!-- หน้าที่ 5: QC Check Destructive testing -->
         <div id="tab5" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <h2>🔍 หน้าที่ 5: QC Check (Destructive Testing)</h2>
@@ -745,6 +719,7 @@
         </div>
 
     </div>
+
     <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe7ROJEhzbIyUJv8g4pysPkBUuk3gd9X8DhrOTjRL7WAhyR0BcqYAr5gCgvGDu7TIi/exec";
 
@@ -784,48 +759,23 @@
         loadDataFromGoogleSheet();
     });
 
-  function loadDataFromGoogleSheet() {
-    fetch(SCRIPT_URL)
+    function loadDataFromGoogleSheet() {
+        fetch(SCRIPT_URL)
         .then(response => response.json())
         .then(data => {
             setupHistoryData = [];
             qcHistoryData = [];
             spotHistoryData = [];
             dtHistoryData = [];
-
+            
             let setupCount = 0;
             let passCount = 0;
             let failCount = 0;
 
-            const qcMap = {};
-            data.forEach((r, idx) => {
-                if (idx === 0) return;
-                const typeName = String(r[1] || '').trim();
-                const lineKey = String(r[2] || '').trim();
-                const partKey = String(r[4] || '').trim();
-                const qcResultVal = r[14];
-
-                if ((typeName.includes('QC') || String(r[5] || '').includes('QC')) && qcResultVal) {
-                    qcMap[`${lineKey}_${partKey}`] = qcResultVal;
-                    // นับจำนวน Pass / Fail
-                    if (String(qcResultVal).includes('Pass')) passCount++;
-                    if (String(qcResultVal).includes('Not Pass') || String(qcResultVal).includes('Fail')) failCount++;
-                }
-            });
-
             data.forEach((row, index) => {
-                if (index === 0) return;
+                if(index === 0) return;
 
                 const type = row[1];
-                const lineVal = String(row[2] || '').trim();
-                const partVal = String(row[4] || '').trim();
-                
-                let currentStatus = row[14];
-                const mapKey = `${lineVal}_${partVal}`;
-                if (qcMap[mapKey]) {
-                    currentStatus = qcMap[mapKey];
-                }
-
                 const record = {
                     id: index,
                     line: row[2] || '-',
@@ -841,7 +791,7 @@
                     dh: row[11] || '-',
                     start: row[12] || '-',
                     end: row[13] || '-',
-                    status: currentStatus || 'Waiting QC',
+                    status: row[14] || '-',
                     actual: row[5] ? row[5].replace('QC Check (', '').replace(')', '') : '-',
                     remark: row[13] || '-',
                     datetime: row[12] || '-',
@@ -851,49 +801,55 @@
                 if (type === 'Setup') {
                     setupHistoryData.push(record);
                     setupCount++;
+                } else if (type === 'QC Pass') {
+                    qcHistoryData.push(record);
+                    passCount++;
+                } else if (type === 'QC Not Pass') {
+                    qcHistoryData.push(record);
+                    failCount++;
+                } else if (type === 'SpotWelding') {
+                    spotHistoryData.push({
+                        id: index,
+                        datetime: row[1] || '-',
+                        part: row[4] || '-',
+                        jobno: row[5] || '-',
+                        welcurr: row[7] || '-',
+                        pressure: row[8] || '-',
+                        tipbalance: row[9] || '-',
+                        water: row[10] || '-',
+                        inspector: row[15] || '-'
+                    });
+                } else if (type === 'DestructiveTest') {
+                    dtHistoryData.push({
+                        id: index,
+                        part: row[4] || '-',
+                        datetime: row[12] || '-',
+                        resultFirst: row[13] || '-',
+                        resultFinish: row[14] || '-',
+                        inspector: row[15] || '-'
+                    });
                 }
             });
 
-            // 1. อัปเดตตารางสรุปด้านล่าง
-            const tableRows = document.querySelectorAll('tr');
-            tableRows.forEach(row => {
-                const text = row.innerText;
-                const valueCell = row.querySelector('td:last-child');
-                if (!valueCell) return;
+            if(document.getElementById('stat-setup')) document.getElementById('stat-setup').innerText = setupCount;
+            if(document.getElementById('stat-pass')) document.getElementById('stat-pass').innerText = passCount;
+            if(document.getElementById('stat-fail')) document.getElementById('stat-fail').innerText = failCount;
+            if(document.getElementById('sum-setup')) document.getElementById('sum-setup').innerText = setupCount;
+            if(document.getElementById('sum-pass')) document.getElementById('sum-pass').innerText = passCount;
+            if(document.getElementById('sum-fail')) document.getElementById('sum-fail').innerText = failCount;
+            if(document.getElementById('sum-qc-items')) document.getElementById('sum-qc-items').innerText = qcHistoryData.length * 3;
 
-                if (text.includes('จำนวน Set-Up แม่พิมพ์ทั้งหมด')) {
-                    valueCell.innerText = setupCount;
-                } else if (text.includes('ผลตรวจสอบ QC Pass')) {
-                    valueCell.innerText = passCount;
-                } else if (text.includes('ผลตรวจสอบ QC Not Pass')) {
-                    valueCell.innerText = failCount;
-                }
-            });
-
-            // 2. อัปเดตตัวเลขในการ์ดสถิติด้านบนแบบเจาะจงกล่อง (ป้องกันเลขเกิน)
-            const cardBoxes = document.querySelectorAll('div');
-            cardBoxes.forEach(card => {
-                const text = card.innerText || '';
-                if (card.children.length >= 1 && card.children.length <= 4) {
-                    const targetNumEl = card.querySelector('h2, h3, h1, span');
-                    if (targetNumEl && !text.includes('ตารางสรุป') && !text.includes('Dashboard')) {
-                        if (text.includes('จำนวน Set-Up ทั้งหมด') && text.length < 50) {
-                            targetNumEl.innerText = setupCount;
-                        } else if (text.includes('QC Pass (พร้อมผลิต)') && text.length < 50) {
-                            targetNumEl.innerText = passCount;
-                        } else if (text.includes('QC Not Pass (รอแก้ไข)') && text.length < 50) {
-                            targetNumEl.innerText = failCount;
-                        }
-                    }
-                }
-            });
-
-            if (typeof renderSetupHistory === 'function') {
-                renderSetupHistory();
-            }
+            renderSetupHistory();
+            renderQcHistory();
+            renderSpotHistory();
+            renderDtHistory();
+            populateQcPartDropdown();
         })
-        .catch(error => console.error('Error loading data:', error));
-}
+        .catch(error => {
+            console.log('โหลดข้อมูลไม่สำเร็จ: ', error);
+        });
+    }
+
     function populateQcPartDropdown() {
         const qcPartSelect = document.getElementById('qc_part_no');
         if (!qcPartSelect) return;
@@ -981,36 +937,14 @@
         renderQcAlertsUI();
     }
 
-   // ปรับให้รับค่า index เพิ่มเข้ามาด้วย
-function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
-    if (!setupLineAlerts[lineName]) {
-        setupLineAlerts[lineName] = [];
-    }
-    setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
-    renderSetupAlertsUI();
-
-    // แปลงสถานะให้ตรงกับเงื่อนไขใน renderSetupHistory เป๊ะๆ
-    let finalStatus = "QC Pass";
-    const statusLower = String(qcStatus).toLowerCase();
-    if (statusLower.includes("not pass") || statusLower.includes("fail") || statusLower.includes("ไม่ผ่าน")) {
-        finalStatus = "QC Not Pass";
-    }
-
-    // อัปเดตสถานะในประวัติ Set-Up ทุกรายการที่ Line และ Part ตรงกัน
-    if (Array.isArray(setupHistoryData)) {
-        setupHistoryData.forEach(item => {
-            if (String(item.line).trim() === String(lineName).trim() && 
-                String(item.part).trim() === String(partNo).trim()) {
-                item.status = finalStatus;
-            }
-        });
-        
-        // สั่งวาดตารางหน้า Set-Up ใหม่ทันที
-        if (typeof renderSetupHistory === 'function') {
-            renderSetupHistory();
+    function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
+        if (!setupLineAlerts[lineName]) {
+            setupLineAlerts[lineName] = [];
         }
+        setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
+        renderSetupAlertsUI();
     }
-}
+
     function renderSetupAlertsUI() {
         const container = document.getElementById('setupAlertContainer');
         if (!container) return;
@@ -1069,7 +1003,26 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
         renderSetupAlertsUI();
     }
 
-   
+    // เพิ่มแถว Process ใหม่ในหน้า Set-Up
+    function addProcessRow() {
+        const tbody = document.getElementById('processTableBody');
+        if (!tbody) return;
+        const rowCount = tbody.rows.length + 1;
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td class="row-num">${rowCount}</td>
+            <td><input type="text" class="p-name" value="Process ${rowCount}" required></td>
+            <td><input type="text" class="p-mc" placeholder="MC No." required></td>
+            <td><input type="text" class="p-air" placeholder="Air Press" required></td>
+            <td><input type="text" class="p-cushion" placeholder="Cushion" required></td>
+            <td><input type="text" class="p-spm" placeholder="SPM" required></td>
+            <td><input type="text" class="p-dh" placeholder="DH" required></td>
+            <td><button type="button" class="btn-delete" onclick="removeProcessRow(this)">X</button></td>
+        `;
+        tbody.appendChild(newRow);
+        updateRowNumbers();
+    }
+
     function removeProcessRow(btn) {
         const row = btn.closest('tr');
         const tbody = document.getElementById('processTableBody');
@@ -1094,12 +1047,7 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
     if (setupFormElem) {
         setupFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
-const submitBtn = e.target.querySelector('button[type="submit"]') || document.querySelector('#setupForm button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.style.opacity = '0.5';
-            submitBtn.innerText = 'กำลังบันทึกข้อมูล...';
-        }
+
             const line = document.getElementById('production_line').value;
             const lot = document.getElementById('lot_no').value;
             const part = document.getElementById('part_no').value;
@@ -1164,46 +1112,41 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
                 alertBox.innerHTML = `⏳ กำลังบันทึกข้อมูล Set-Up และส่งไปยังระบบ...`;
             }
 
-            // 1. สั่งล็อคปุ่มก่อนเริ่ม fetch (ที่เราเคยใส่ไว้ด้านบน)
-    
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(setupPayload)
-    }).then(() => {
-        if (alertBox) {
-            alertBox.className = "alert-box alert-success";
-            alertBox.style.display = "block";
-            alertBox.innerHTML = `✔️ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ! <button type="button" onclick="goToQcPageFromSetup('${line}', '${part}', '${lot}')">ไปยังหน้า QC</button>`;
-        }
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(setupPayload)
+            }).then(() => {
+                if (alertBox) {
+                    alertBox.innerHTML = `✅ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ! <button type="button" onclick="goToQcPageFromSetup('${line}', '${part}', '${lot}')" style="margin-left: 10px; background: #2980b9; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight:bold;">👉 ไปหน้า QC Check</button>`;
+                }
 
-        triggerQcAlert(line, part, lot);
+                // สั่งแจ้งเตือนไปที่หน้า QC ของ Line นั้นๆ
+                triggerQcAlert(line, part, lot);
 
-        setupHistoryData.unshift({
-            id: Date.now(),
-            line: line, lot: lot, part: part, machine: processesData[0]?.machine || '-',
-            inspector: operator, process: `${processesData.length} Process`,
-            air: processesData[0]?.air || '-', cushion: processesData[0]?.cushion || '-', spm: processesData[0]?.spm || '-',
-            material: material, dh: processesData[0]?.dh || '-',
-            start: start.replace('T', ' '), end: end.replace('T', ' '), status: 'Waiting QC'
-        });
-        renderSetupHistory();
-        populateQcPartDropdown();
-    }).catch(error => {
-        console.error("Error:", error);
-    }).finally(() => {
-        // 2. [เพิ่มตรงนี้] คืนค่าเปิดปุ่มให้ใช้งานได้เหมือนเดิมเมื่อทำงานเสร็จ (ไม่ว่าจะสำเร็จหรือพัง)
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = '1';
-            submitBtn.innerText = 'บันทึกข้อมูล Set-Up ทั้งหมดของ Part No. นี้ และส่งตรวจสอบ QC';
-        }
-    });
+                // บันทึกลง Local array ชั่วคราวเพื่ออัปเดตหน้าจอทันที
+                setupHistoryData.unshift({
+                    id: Date.now(),
+                    line: line, lot: lot, part: part, machine: processesData[0]?.machine || '-',
+                    inspector: operator, process: `${processesData.length} Process`,
+                    air: processesData[0]?.air || '-', cushion: processesData[0]?.cushion || '-', spm: processesData[0]?.spm || '-',
+                    material: material, dh: processesData[0]?.dh || '-',
+                    start: start.replace('T', ' '), end: end.replace('T', ' '), status: 'Waiting QC'
+                });
+                renderSetupHistory();
+                populateQcPartDropdown();
+            }).catch(error => {
+                console.error("Error:", error);
+                if (alertBox) {
+                    alertBox.className = "alert-box alert-error";
+                    alertBox.innerText = "❌ เกิดข้อผิดพลาดในการบันทึกข้อมูลไปยัง Google Sheets";
+                }
+            });
         });
     }
 
- // ฟังก์ชันกดสลับไปหน้า QC อัตโนมัติจากหน้า Set-Up พร้อมส่งค่าพารามิเตอร์ไป
+    // ฟังก์ชันกดสลับไปหน้า QC อัตโนมัติจากหน้า Set-Up พร้อมส่งค่าพารามิเตอร์ไป
     function goToQcPageFromSetup(line, part, lot) {
         const tabBtns = document.querySelectorAll('.navbar button');
         if(tabBtns[2]) tabBtns[2].click(); // ไปแท็บที่ 3 (QC Check)
@@ -1215,187 +1158,114 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         }
     }
 
-   // 2. จัดการการส่งข้อมูลฟอร์ม QC Check และลบ Part ออกจาก Dropdown ทันที
-const qcFormElem = document.getElementById('qcForm');
-if (qcFormElem) {
-    qcFormElem.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const lineVal = document.getElementById('qc_production_line').value;
-        const partVal = document.getElementById('qc_part_no').value;
-        
-        const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
-        const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
-        const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
-        
-        const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
-        const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
-        const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
-        
-        const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
-        const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
-        const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
-        const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
-        const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
-
-        const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
-        
-        const qcFormData = {
-            type: qcStatus,
-            line: lineVal,
-            lot: "-",
-            part: partVal,
-            process: "QC Check (" + actualData + ") " + checklistSummary,
-            machine: "-",
-            air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
-            start: datetimeVal,
-            end: remarkVal,
-            qc_result: qcStatus,
-            inspector: inspectorName
-        };
-
-        const qcLoading = document.getElementById('qc-loading');
-        const btnQcSubmit = document.getElementById('btnQcSubmit');
-        if(qcLoading) qcLoading.style.display = 'block';
-        if(btnQcSubmit) btnQcSubmit.disabled = true;
-
-      if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
-                globalQCData.forEach(row => {
-                    const rLine = String(row[2] || '').trim();
-                    const rPart = String(row[4] || '').trim();
-                    if (rLine === lineVal && rPart === partVal) {
-                        row[14] = 'QC Pass';
-                    }
-                });
-            }
-            if (typeof populatePartDropdown === 'function') {
-                populatePartDropdown();
-            }
-            // -----------------
+    // บันทึก QC Check (หน้า 3)
+    const qcFormElem = document.getElementById('qcForm');
+    if (qcFormElem) {
+        qcFormElem.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const lineVal = document.getElementById('qc_production_line').value;
+            const partVal = document.getElementById('qc_part_no').value;
             
-            // 1. เพิ่มข้อมูลลงในประวัติหน้าจอ (qcHistoryData) และเรนเดอร์ใหม่
-            const newHistoryItem = {
-                id: Date.now(),
+            // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
+            const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
+            const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
+            const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
+            
+            const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
+            const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
+            const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
+            
+            const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
+            const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
+            const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
+            const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
+            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
+
+            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
+            
+            const qcFormData = {
+                type: qcStatus,
                 line: lineVal,
+                lot: "-",
                 part: partVal,
-                actual: actualData,
-                status: qcStatus,
-                remark: remarkVal,
-                datetime: datetimeVal,
+                process: "QC Check (" + actualData + ") " + checklistSummary,
+                machine: "-",
+                air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
+                start: datetimeVal,
+                end: remarkVal,
+                qc_result: qcStatus,
                 inspector: inspectorName
             };
-            if (typeof qcHistoryData !== 'undefined') {
-                qcHistoryData.unshift(newHistoryItem);
-                renderQcHistory();
-            }
 
-            // 2. ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
-            if (typeof qcLineAlerts !== 'undefined' && qcLineAlerts[lineVal]) {
-                qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
-                if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
-            }
-            if (typeof renderQcAlertsUI === 'function') {
-                renderQcAlertsUI();
-            }
-            
-            // 3. [จุดสำคัญ] ลบ Part ที่เพิ่งตรวจสอบเสร็จออกจาก Dropdown ทันที
-            const qcPartSelect = document.getElementById('qc_part_no');
-            if (qcPartSelect) {
-                for (let i = 0; i < qcPartSelect.options.length; i++) {
-                    if (qcPartSelect.options[i].value === partVal) {
-                        qcPartSelect.remove(i);
-                        break;
-                    }
-                }
-                qcPartSelect.value = ""; 
-            }
-            
-            // 4. ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up
-            if (typeof triggerSetupReturnAlert === 'function') {
-                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
-            }
-            
-            alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ!`);
-            qcFormElem.reset();
-        })
-        .catch(error => {
-            if(qcLoading) qcLoading.style.display = 'none';
-            if(btnQcSubmit) btnQcSubmit.disabled = false;
-            console.error('Error:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-        });
-    });
-}
+            const qcLoading = document.getElementById('qc-loading');
+            const btnQcSubmit = document.getElementById('btnQcSubmit');
+            if(qcLoading) qcLoading.style.display = 'block';
+            if(btnQcSubmit) btnQcSubmit.disabled = true;
 
-// ตัวแปรสำหรับล็อกเวลาป้องกันการส่งซ้ำ (Time Lock)
-let lastSpotSubmitTime = 0;
-
-document.addEventListener('DOMContentLoaded', function() {
-    const spotFormElem = document.getElementById('spotWeldingForm');
-    
-    if (spotFormElem) {
-        spotFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // ป้องกันการส่งซ้ำหากกดห่างกันไม่ถึง 2 วินาที (แก้ปัญหาโค้ดรันเบิ้ล 2 รอบ)
-            const currentTime = Date.now();
-            if (currentTime - lastSpotSubmitTime < 2000) {
-                console.warn("Blocked duplicate form submission.");
-                return;
-            }
-            lastSpotSubmitTime = currentTime;
-
-            const btnSpotSubmit = document.getElementById('btnSpotSubmit');
-            const spotLoading = document.getElementById('spot-loading');
-
-            if (btnSpotSubmit && btnSpotSubmit.disabled) return;
-            if (btnSpotSubmit) btnSpotSubmit.disabled = true;
-            if (spotLoading) spotLoading.style.display = 'block';
-
-            const spotData = {
-                type: "SpotWelding",
-                datetime: document.getElementById('sw_datetime').value,
-                part: document.getElementById('sw_part').value,
-                job: document.getElementById('sw_jobno').value,
-                wel_curr: document.getElementById('sw_welcurr').value,
-                pressure: document.getElementById('sw_pressure').value,
-                tip_balance: document.getElementById('sw_tipbalance').value,
-                water: document.getElementById('sw_water').value,
-                inspector: document.getElementById('sw_inspector').value,
-                tip_code: document.getElementById('sw_tipcode').value,
-                stroke: document.getElementById('sw_stroke').value
-            };
-
-            fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify(spotData) 
-            })
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
             .then(() => {
-                if (spotLoading) spotLoading.style.display = 'none';
+                if(qcLoading) qcLoading.style.display = 'none';
+                if(btnQcSubmit) btnQcSubmit.disabled = false;
                 
-                spotFormElem.reset();
-                const alarmBox = document.getElementById('tip_alarm_box');
-                if (alarmBox) alarmBox.style.display = 'none';
-                
-                if (typeof loadSpotHistory === 'function') {
-                    loadSpotHistory();
+                // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
+                if (qcLineAlerts[lineVal]) {
+                    qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
+                    if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
                 }
+                renderQcAlertsUI();
+                
+                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
+                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
 
-                setTimeout(() => {
-                    alert('บันทึก Set-Up Spot Welding สำเร็จ!');
-                    if (btnSpotSubmit) btnSpotSubmit.disabled = false;
-                }, 100);
+                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
+                qcFormElem.reset();
+                loadDataFromGoogleSheet();
             })
             .catch(error => {
+                if(qcLoading) qcLoading.style.display = 'none';
+                if(btnQcSubmit) btnQcSubmit.disabled = false;
                 console.error('Error:', error);
-                if (spotLoading) spotLoading.style.display = 'none';
-                if (btnSpotSubmit) btnSpotSubmit.disabled = false;
                 alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             });
         });
     }
-});
+
+    // บันทึก Spot Welding (หน้า 4)
+    const spotFormElem = document.getElementById('spotWeldingForm');
+    if (spotFormElem) {
+        spotFormElem.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const spotData = {
+                type: "SpotWelding",
+                line: document.getElementById('sw_datetime').value.replace('T', ' '),
+                lot: "-",
+                part: document.getElementById('sw_part').value,
+                process: document.getElementById('sw_jobno').value,
+                machine: "-",
+                air: document.getElementById('sw_welcurr').value,
+                cushion: document.getElementById('sw_pressure').value,
+                spm: document.getElementById('sw_tipbalance').value,
+                material: document.getElementById('sw_water').value,
+                dh: "-", start: "-", end: "-", qc_result: "-",
+                inspector: document.getElementById('sw_inspector').value
+            };
+
+            const spotLoading = document.getElementById('spot-loading');
+            const btnSpotSubmit = document.getElementById('btnSpotSubmit');
+            if(spotLoading) spotLoading.style.display = 'block';
+            if(btnSpotSubmit) btnSpotSubmit.disabled = true;
+
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spotData) })
+            .then(() => {
+                if(spotLoading) spotLoading.style.display = 'none';
+                if(btnSpotSubmit) btnSpotSubmit.disabled = false;
+                alert('บันทึก Set-Up Spot Welding สำเร็จ!');
+                spotFormElem.reset();
+                loadDataFromGoogleSheet();
+            });
+        });
+    }
+
     // บันทึก Destructive Testing (หน้า 5)
     const dtFormElem = document.getElementById('destructiveForm');
     if (dtFormElem) {
@@ -1428,81 +1298,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-   function renderSetupHistory() {
-    const filterElem = document.getElementById('filter_line');
-    const selectedFilterLine = filterElem ? filterElem.value : "ALL";
-    const tbody = document.querySelector('#setupHistoryTable tbody');
-    if (!tbody) return;
-    
-    let alertBannerContainer = document.getElementById('setup-qc-notification-banner');
-    if (!alertBannerContainer) {
-        alertBannerContainer = document.createElement('div');
-        alertBannerContainer.id = 'setup-qc-notification-banner';
-        const tableElement = document.getElementById('setupHistoryTable');
-        if (tableElement && tableElement.parentNode) {
-            tableElement.parentNode.insertBefore(alertBannerContainer, tableElement);
-        }
-    }
-
-   const savedAlert = localStorage.getItem('latest_qc_alert');
-    if (savedAlert) {
-        try {
-            const alertData = JSON.parse(savedAlert);
-            const isFail = alertData.status.includes('Not Pass') || alertData.status.includes('Fail');
-            
-            if (isFail) {
-                alertBannerContainer.innerHTML = `
-                    <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative;">
-                        <button onclick="localStorage.removeItem('latest_qc_alert'); document.getElementById('setup-qc-notification-banner').innerHTML='';" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; color: #721c24; font-weight: bold;" title="ปิดการแจ้งเตือน">✕</button>
-                        ⚠️ แจ้งเตือนด่วนจาก QC! (Line: ${alertData.line})<br>
-                        Part No: ${alertData.part} | ผลการตรวจสอบ: <span style="color: #dc3545; font-size: 1.1em;">${alertData.status}</span><br>
-                        หมายเหตุ / จุดที่พบปัญหา: ${alertData.remark} 
-                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal; margin-right: 20px;">เวลาบันทึก: ${alertData.time}</span>
-                    </div>`;
-            } else {
-                alertBannerContainer.innerHTML = `
-                    <div style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; position: relative;">
-                        <button onclick="localStorage.removeItem('latest_qc_alert'); document.getElementById('setup-qc-notification-banner').innerHTML='';" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; color: #155724; font-weight: bold;" title="ปิดการแจ้งเตือน">✕</button>
-                        ✅ ผลการตรวจสอบ QC ล่าสุด (Line: ${alertData.line}): Part No: ${alertData.part} - <span style="color: #28a745;">${alertData.status}</span>
-                        <span style="font-size: 12px; float: right; color: #6c757d; font-weight: normal; margin-right: 20px;">เวลาบันทึก: ${alertData.time}</span>
-                    </div>`;
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    }
-    let filteredData = setupHistoryData;
-    if (selectedFilterLine !== "ALL") {
-        filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
-    }
-
-    tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="8" style="color: #7f8c8d; padding: 20px; text-align: center;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
-    
-    filteredData.forEach((item) => {
-        const statStr = String(item.status || '').trim();
-        let trStyle = '';
-        let statusBadge = '<span style="color: #f39c12; font-weight: bold;">⏳ Waiting QC</span>';
-
-        if (statStr.includes('Pass')) {
-            trStyle = 'style="background-color: #d4edda !important;"';
-            statusBadge = '<span style="color: #155724; font-weight: bold;">✔ QC Pass</span>';
-        } else if (statStr.includes('Not Pass') || statStr.includes('Fail')) {
-            trStyle = 'style="background-color: #f8d7da !important;"';
-            statusBadge = '<span style="color: #721c24; font-weight: bold;">❌ QC Fail</span>';
+    function renderSetupHistory() {
+        const filterElem = document.getElementById('filter_line');
+        const selectedFilterLine = filterElem ? filterElem.value : "ALL";
+        const tbody = document.querySelector('#setupHistoryTable tbody');
+        if (!tbody) return;
+        
+        let filteredData = setupHistoryData;
+        if (selectedFilterLine !== "ALL") {
+            filteredData = setupHistoryData.filter(item => item.line === selectedFilterLine);
         }
 
-        tbody.innerHTML += `<tr ${trStyle}>
-            <td><b>${item.line}</b></td>
-            <td>${item.lot}</td>
-            <td><b>${item.part}</b></td>
-            <td>👤 ${item.inspector || '-'}</td>
-            <td>${item.start}<br>ถึง<br>${item.end}</td>
-            <td>Air: ${item.air} | Cush: ${item.cushion}<br>SPM: ${item.spm} | Mat: ${item.material} | DH: ${item.dh}</td>
-            <td>${statusBadge}</td>
-            <td><button class="btn-delete" onclick="deleteLocal(${item.id})" style="background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">ลบ</button></td>
-        </tr>`;
-    });
-}
+        tbody.innerHTML = filteredData.length === 0 ? `<tr><td colspan="10" style="color: #7f8c8d; padding: 20px;">ไม่พบประวัติการ Set-Up ใน Line นี้</td></tr>` : '';
+        
+        filteredData.forEach((item) => {
+            tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.lot}</td><td>${item.part}</td><td><b>${item.machine}</b></td><td><span style="color: #2980b9; font-weight: bold;">👤 ${item.inspector}</span></td><td>${item.process}</td><td>Air: ${item.air}<br>Cushion: ${item.cushion}<br>SPM: ${item.spm}</td><td>Mat: ${item.material}<br>DH: ${item.dh}</td><td>${item.start}<br>ถึง<br>${item.end}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
+
     function renderQcHistory() {
         const tbody = document.querySelector('#qcHistoryTable tbody');
         if (!tbody) return;
@@ -1513,15 +1326,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-   function renderQcHistory() {
-    const tbody = document.querySelector('#qcHistoryTable tbody');
-    if (!tbody) return;
-    tbody.innerHTML = qcHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติ QC</td></tr>` : '';
-    qcHistoryData.forEach((item) => {
-        const color = item.status === 'QC Pass' ? 'color: var(--success-color); font-weight: bold;' : 'color: var(--danger-color); font-weight: bold;';
-        tbody.innerHTML += `<tr><td><b>${item.line}</b></td><td>${item.part}</td><td>${item.actual}</td><td style="${color}">${item.status}</td><td>หมายเหตุ: ${item.remark}<br><small>${item.datetime}</small></td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
-    });
-}
+    function renderSpotHistory() {
+        const tbody = document.querySelector('#spotWeldingTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = spotHistoryData.length === 0 ? `<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีข้อมูล Spot Welding</td></tr>` : '';
+        spotHistoryData.forEach((item) => {
+            tbody.innerHTML += `<tr><td>${item.datetime}</td><td><b>${item.part}</b></td><td>${item.jobno}</td><td>Wel Curr: ${item.welcurr}<br>Pressure: ${item.pressure}</td><td>Tip Balance: ${item.tipbalance}<br>Water: ${item.water}</td><td>${item.inspector}</td><td><button class="btn-delete" onclick="deleteLocal(${item.id})">ลบ</button></td></tr>`;
+        });
+    }
+
     function renderDtHistory() {
         const tbody = document.querySelector('#destructiveTable tbody');
         if (!tbody) return;
@@ -1566,234 +1379,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function exportDashboardToExcel() {
         exportTableToExcel('dashboardSummaryTable', 'Dashboard_Summary.xls', -1);
     }
-        // ตั้งเวลาดึงข้อมูลใหม่และอัปเดตหน้าจออัตโนมัติทุกๆ 10 วินาที
-setInterval(() => {
-    if (typeof loadDataFromGoogleSheet === 'function') {
-        loadDataFromGoogleSheet();
-    }
-}, 10000);
-     // ตัวแปรเก็บข้อมูลดิบจาก Google Sheets ไว้กรอง
-let globalQcData = [];
-
-function loadPendingQCDataFromSheet() {
-    if (typeof SCRIPT_URL === 'undefined' || !SCRIPT_URL) return;
-
-    fetch(SCRIPT_URL)
-        .then(response => response.json())
-        .then(data => {
-            globalQcData = data; 
-            populatePartDropdown(); 
-        })
-        .catch(error => console.error('Error fetching sheet data:', error));
-}
-
-// ฟังก์ชันกรอง Part No. ตาม Line ที่เลือกในหน้า QC
-function populatePartDropdown() {
-    const partSelect = document.getElementById('qc_part_no');
-    const lineSelect = document.getElementById('qc_production_line');
-    if (!partSelect || !lineSelect) return;
-
-    const selectedLine = lineSelect.value; 
-    const currentSelectedPart = partSelect.value;
-
-    partSelect.innerHTML = '<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>';
-
-    // ถ้ายังไม่ได้เลือก Line ให้ขึ้นเตือนก่อน
-    if (!selectedLine) {
-        partSelect.innerHTML = '<option value="" disabled selected>-- กรุณาเลือก Line การผลิตด้านบนก่อน --</option>';
-        return;
-    }
-
-    let found = false;
-
-    globalQcData.forEach((row, index) => {
-        if (index === 0) return; // ข้ามหัวตาราง
-        
-        const type = String(row[1] || '').trim();       
-        const lineVal = String(row[2] || '').trim();    
-        const lotVal = String(row[3] || '').trim();     
-        const partVal = String(row[4] || '').trim();    
-        const statusVal = String(row[14] || '').trim(); 
-
-// เช็คว่าเป็น Setup, ยังไม่ตรวจ, และ Line ตรงกับที่ผู้ใช้เลือก
-        // [เพิ่มเงื่อนไข && statusVal !== 'QC Pass' เพื่อป้องกันไม่ให้ดึงรายการที่ตรวจผ่านแล้วกลับมาแสดง]
-        if (type === 'Setup' && statusVal !== 'QC Pass' && (statusVal === '' || statusVal === 'Waiting QC' || statusVal.toLowerCase().includes('wait'))) {
-            if (lineVal === selectedLine) {
-                const option = document.createElement('option');
-                option.value = partVal;
-                option.setAttribute('data-line', lineVal);
-                option.textContent = `Part: ${partVal} (Line: ${lineVal}, Lot: ${lotVal})`;
-                partSelect.appendChild(option);
-                found = true;
-            }
-        }
-    });
-
-    if (!found) {
-        partSelect.innerHTML = '<option value="" disabled selected>-- ไม่พบรายการรอตรวจสอบของ Line นี้ --</option>';
-    } else if (currentSelectedPart) {
-        partSelect.value = currentSelectedPart;
-    }
-}
-
-// ผูก Event และตั้งค่าการทำงานเมื่อเปิดหน้าเว็บ
-window.addEventListener('DOMContentLoaded', () => {
-    loadPendingQCDataFromSheet();
-
-    // เมื่อเปลี่ยน Line ให้กรอง Part ทันทีโดยอัตโนมัติ
-    const lineSelect = document.getElementById('qc_production_line');
-    if (lineSelect) {
-        lineSelect.addEventListener('change', populatePartDropdown);
-    }
-
-    // อัปเดตข้อมูลจาก Google Sheets ทุกๆ 15 วินาที
-    setInterval(loadPendingQCDataFromSheet, 15000);
-});// ฟังก์ชันสลับกันหน้าเว็บ
-function openTab(evt, tabName) {
-    const tabTarget = document.getElementById(tabName);
-    if (!tabTarget) {
-        console.warn("ไม่พบ Element ID: " + tabName);
-        return; // ป้องกันไม่ให้โค้ดพังต่อ
-    }
-
-    const tabContents = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < tabContents.length; i++) {
-        tabContents[i].style.display = "none";
-    }
-    
-    const tabButtons = document.getElementsByClassName("tab-button");
-    for (let i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-    }
-    
-    tabTarget.style.display = "block";
-    if (evt && evt.currentTarget) {
-        evt.currentTarget.className += " active";
-    }
-}
-// ฟังก์ชันตรวจสอบและแจ้งเตือน Grinding สำหรับชุดหัวเชื่อม
-function checkTipAlarm() {
-    const strokeVal = parseInt(document.getElementById('sw_stroke').value) || 0;
-    const alarmBox = document.getElementById('tip_alarm_box');
-    
-    if (strokeVal >= 5000) {
-        alarmBox.style.display = 'block';
-        alarmBox.style.backgroundColor = '#f8d7da';
-        alarmBox.style.color = '#721c24';
-        alarmBox.style.border = '1px solid #f5c6cb';
-        alarmBox.innerHTML = "🚨 <b>Tip (ชุดหัวเชื่อม)</b> ครบ/เกินกำหนด 5,000 Strokes! กรุณาถอดเจียรแต่ง (Grinding)";
-    } else if (strokeVal >= 4500) {
-        alarmBox.style.display = 'block';
-        alarmBox.style.backgroundColor = '#fff3cd';
-        alarmBox.style.color = '#856404';
-        alarmBox.style.border = '1px solid #ffeeba';
-        alarmBox.innerHTML = "⚠️ <b>Tip (ชุดหัวเชื่อม)</b> ใกล้ถึงกำหนด 5,000 Strokes แล้ว (เหลืออีก " + (5000 - strokeVal) + " Strokes)";
-    } else {
-        alarmBox.style.display = 'none';
-    }
-}
-
-// จัดการการส่งข้อมูลฟอร์ม Spot Welding (หน้า 4)
-document.addEventListener('DOMContentLoaded', () => {
-    loadSpotHistory();
-
-    const spotFormElem = document.getElementById('spotWeldingForm');
-    if (spotFormElem) {
-        spotFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const spotData = {
-                type: "SpotWelding",
-                datetime: document.getElementById('sw_datetime').value,
-                part: document.getElementById('sw_part').value,
-                job: document.getElementById('sw_jobno').value,
-                wel_curr: document.getElementById('sw_welcurr').value,
-                pressure: document.getElementById('sw_pressure').value,
-                tip_balance: document.getElementById('sw_tipbalance').value,
-                water: document.getElementById('sw_water').value,
-                stroke: document.getElementById('sw_stroke').value,
-                inspector: document.getElementById('sw_inspector').value
-            };
-
-            const spotLoading = document.getElementById('spot-loading');
-            const btnSpotSubmit = document.getElementById('btnSpotSubmit');
-            if(spotLoading) spotLoading.style.display = 'block';
-            if(btnSpotSubmit) btnSpotSubmit.disabled = true;
-
-            fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify(spotData) 
-            })
-            .then(() => {
-                if(spotLoading) spotLoading.style.display = 'none';
-                if(btnSpotSubmit) btnSpotSubmit.disabled = false;
-                alert('บันทึก Set-Up Spot Welding สำเร็จ!');
-                spotFormElem.reset();
-                document.getElementById('tip_alarm_box').style.display = 'none';
-                loadSpotHistory();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                if(spotLoading) spotLoading.style.display = 'none';
-                if(btnSpotSubmit) btnSpotSubmit.disabled = false;
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-            });
-        });
-    }
-});
-
-// ฟังก์ชันโหลดประวัติ Spot Welding
-function loadSpotHistory() {
-    if (typeof SCRIPT_URL === 'undefined' || !SCRIPT_URL) return;
-
-    fetch(SCRIPT_URL + '?action=spot')
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.querySelector('#spotWeldingTable tbody');
-            if (!tbody) return;
-
-            tbody.innerHTML = '';
-
-            if (!data || data.length <= 1) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการบันทึก Spot Welding</td></tr>';
-                return;
-            }
-
-            for (let i = data.length - 1; i >= 1; i--) {
-                const row = data[i];
-                const timestamp = row[0] ? new Date(row[0]).toLocaleString() : '-';
-                const part = row[2] || '-';
-                const job = row[3] || '-';
-                const welCurr = row[4] || '-';
-                const pressure = row[5] || '-';
-                const tipBalance = row[6] || '-';
-                const water = row[7] || '-';
-                const inspector = row[8] || '-';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${timestamp}</td>
-                    <td><b>${part}</b></td>
-                    <td>${job}</td>
-                    <td>${welCurr} / ${pressure}</td>
-                    <td>${tipBalance} / ${water}</td>
-                    <td>${inspector}</td>
-                    <td><span style="color: #27ae60; font-weight: bold;">Saved</span></td>
-                `;
-                tbody.appendChild(tr);
-            }
-        })
-        .catch(error => console.error('Error loading spot history:', error));
-}
-        function refreshDashboard() {
-    if (typeof loadPendingQCDataFromSheet === 'function') {
-        loadPendingQCDataFromSheet();
-    } else {
-        location.reload(); // หากไม่มีฟังก์ชันเฉพาะ ให้รีเฟรชหน้าเว็บใหม่เพื่อดึงข้อมูลล่าสุด
-    }
-}
 </script>
 </body>
 </html>
