@@ -1258,8 +1258,7 @@ if (qcFormElem) {
         if(qcLoading) qcLoading.style.display = 'block';
         if(btnQcSubmit) btnQcSubmit.disabled = true;
 
-       // 📌 [วางโค้ดตรงนี้]
-            if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
+      if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
                 globalQCData.forEach(row => {
                     const rLine = String(row[2] || '').trim();
                     const rPart = String(row[4] || '').trim();
