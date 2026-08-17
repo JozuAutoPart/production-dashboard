@@ -1190,37 +1190,37 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         }
     }
 
-    // บันทึก QC Check (หน้า 3)
+  // บันทึก QC Check (หน้า 3)
     const qcFormElem = document.getElementById('qcForm');
     if (qcFormElem) {
         qcFormElem.addEventListener('submit', function(e) {
             e.preventDefault();
             const lineVal = document.getElementById('qc_production_line').value;
             const partVal = document.getElementById('qc_part_no').value;
-            
-            // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
+
+            // ตรวจสอบความสมบูรณ์ฟิลด์ (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
             const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
             const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
             const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
-            
+
             const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
             const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
             const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
-            
+
             const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
-            const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
+            const remarkVal = document.getElementById('qc_ng_remark') ? document.getElementById('qc_ng_remark').value : '-';
             const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
             const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
-            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
+            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ').replace('.000', '').replace('Z', '') : '-';
 
-            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
-            
+            const checklistsSummary = `Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}`;
+
             const qcFormData = {
                 type: qcStatus,
                 line: lineVal,
                 lot: "-",
                 part: partVal,
-                process: "QC Check (" + actualData + ") " + checklistSummary,
+                process: "QC Check (" + actualData + ") " + checklistsSummary,
                 machine: "-",
                 air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
                 start: datetimeVal,
@@ -1239,6 +1239,20 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
                 if(qcLoading) qcLoading.style.display = 'none';
                 if(btnQcSubmit) btnQcSubmit.disabled = false;
                 
+                // อัปเดตสถานะในข้อมูลดิบและรีเฟรช Dropdown ทันทีเพื่อให้รายการหายไป
+                if (typeof globalQCData !== 'undefined' && Array.isArray(globalQCData)) {
+                    globalQCData.forEach(row => {
+                        const rLine = String(row[2] || '').trim();
+                        const rPart = String(row[4] || '').trim();
+                        if (rLine === lineVal && rPart === partVal) {
+                            row[14] = 'QC Pass'; 
+                        }
+                    });
+                }
+                if (typeof populatePartDropdown === 'function') {
+                    populatePartDropdown(); 
+                }
+
                 // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
                 if (qcLineAlerts[lineVal]) {
                     qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
@@ -1246,10 +1260,10 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
                 }
                 renderQcAlertsUI();
                 
-                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
+                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up
                 triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
 
-                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
+                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up เรียบร้อยแล้ว!`);
                 qcFormElem.reset();
                 loadDataFromGoogleSheet();
             })
