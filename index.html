@@ -1194,7 +1194,7 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
         }
     }
 
-    // บันทึก QC Check (หน้า 3)
+  // บันทึก QC Check (หน้า 3)
     const qcFormElem = document.getElementById('qcForm');
     if (qcFormElem) {
         qcFormElem.addEventListener('submit', function(e) {
@@ -1255,7 +1255,11 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
 
                 alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
                 qcFormElem.reset();
-                loadDataFromGoogleSheet();
+                
+                // 📌 หน่วงเวลา 4 วินาที เพื่อรอให้ Google Sheets บันทึกข้อมูลเสร็จก่อน ค่อยดึงข้อมูลใหม่
+                setTimeout(() => {
+                    loadDataFromGoogleSheet();
+                }, 4000);
             })
             .catch(error => {
                 if(qcLoading) qcLoading.style.display = 'none';
@@ -1265,7 +1269,6 @@ const submitBtn = e.target.querySelector('button[type="submit"]') || document.qu
             });
         });
     }
-
     // บันทึก Spot Welding (หน้า 4)
     const spotFormElem = document.getElementById('spotWeldingForm');
     if (spotFormElem) {
