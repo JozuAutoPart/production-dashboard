@@ -874,94 +874,131 @@ function loadDataFromGoogleSheet() {
         })
         .catch(error => console.error('Error loading data:', error));
 }
-    function populateQcPartDropdown() {
-        const qcPartSelect = document.getElementById('qc_part_no');
-        if (!qcPartSelect) return;
-        
-        const currentSelected = qcPartSelect.value;
-        qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
-        
-        setupHistoryData.forEach(item => {
-            let opt = document.createElement('option');
-            opt.value = item.part;
-            opt.setAttribute('data-line', item.line);
-            opt.setAttribute('data-lot', item.lot);
-            opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
-            qcPartSelect.appendChild(opt);
-        });
 
-        if(currentSelected) {
-            qcPartSelect.value = currentSelected;
-        }
+// 📌 เพิ่มฟังก์ชัน renderSetupHistory ที่ถูกต้องเข้าไปด้วย เพื่อป้องกันไม่ให้บั๊กแสดงผลสีเขียวทับ QC Not Pass
+function renderSetupHistory() {
+    const tbody = document.getElementById('setupHistoryBody');
+    if (!tbody) return;
+
+    if (!setupHistoryData || setupHistoryData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color: #7f8c8d; padding: 20px;">ยังไม่มีประวัติการบันทึกข้อมูล</td></tr>';
+        return;
     }
 
-    function onSelectQcPart(selectElem) {
-        const selectedOption = selectElem.options[selectElem.selectedIndex];
-        const lineValue = selectedOption.getAttribute('data-line');
-        const lotValue = selectedOption.getAttribute('data-lot');
-        
-        if(lineValue && document.getElementById('qc_production_line')) {
-            document.getElementById('qc_production_line').value = lineValue;
+    let html = '';
+    setupHistoryData.forEach((item) => {
+        const statusStr = String(item.status || 'Waiting QC').trim();
+        let badgeStyle = 'background-color: #f1c40f; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold;'; // สีเหลือง (รอดำเนินการ)
+
+        // เช็ค Not Pass / Fail ก่อนเสมอ แล้วค่อยเช็ค Pass ทีหลัง
+        if (statusStr.includes('Not Pass') || statusStr.includes('Fail') || statusStr.includes('ไม่ผ่าน')) {
+            badgeStyle = 'background-color: #e74c3c; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold;'; // สีแดง
+        } else if (statusStr.includes('Pass')) {
+            badgeStyle = 'background-color: #2ecc71; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold;'; // สีเขียว
         }
-        if(lotValue && document.getElementById('qc_lot_no')) {
-            document.getElementById('qc_lot_no').value = lotValue;
-        }
+
+        html += `
+            <tr>
+                <td>${item.line}</td>
+                <td>${item.lot}</td>
+                <td>${item.part}</td>
+                <td>${item.operator}</td>
+                <td>${item.start} ถึง ${item.end}</td>
+                <td>${item.process}</td>
+                <td><span style="${badgeStyle}">${statusStr}</span></td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+function populateQcPartDropdown() {
+    const qcPartSelect = document.getElementById('qc_part_no');
+    if (!qcPartSelect) return;
+    
+    const currentSelected = qcPartSelect.value;
+    qcPartSelect.innerHTML = `<option value="" disabled selected>-- เลือก Part No. (อ้างอิง Set-Up) --</option>`;
+    
+    setupHistoryData.forEach(item => {
+        let opt = document.createElement('option');
+        opt.value = item.part;
+        opt.setAttribute('data-line', item.line);
+        opt.setAttribute('data-lot', item.lot);
+        opt.text = `${item.part} (Line: ${item.line}, Lot: ${item.lot})`;
+        qcPartSelect.appendChild(opt);
+    });
+
+    if(currentSelected) {
+        qcPartSelect.value = currentSelected;
     }
+}
 
-    function triggerQcAlert(lineName, partNo, lotNo) {
-        if (!qcLineAlerts[lineName]) {
-            qcLineAlerts[lineName] = [];
-        }
-        qcLineAlerts[lineName].push({ part: partNo, lot: lotNo });
-        renderQcAlertsUI();
+function onSelectQcPart(selectElem) {
+    const selectedOption = selectElem.options[selectElem.selectedIndex];
+    const lineValue = selectedOption.getAttribute('data-line');
+    const lotValue = selectedOption.getAttribute('data-lot');
+    
+    if(lineValue && document.getElementById('qc_production_line')) {
+        document.getElementById('qc_production_line').value = lineValue;
     }
+    if(lotValue && document.getElementById('qc_lot_no')) {
+        document.getElementById('qc_lot_no').value = lotValue;
+    }
+}
 
-    function renderQcAlertsUI() {
-        const container = document.getElementById('qcAlertContainer');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        let totalAlerts = 0;
+function triggerQcAlert(lineName, partNo, lotNo) {
+    if (!qcLineAlerts[lineName]) {
+        qcLineAlerts[lineName] = [];
+    }
+    qcLineAlerts[lineName].push({ part: partNo, lot: lotNo });
+    renderQcAlertsUI();
+}
 
-        for (const [line, alerts] of Object.entries(qcLineAlerts)) {
-            if (alerts.length > 0) {
-                totalAlerts += alerts.length;
-                alerts.forEach((alertItem, idx) => {
-                    container.innerHTML += `
-                        <div class="alert-banner">
-                            <div>
-                                <strong style="color: #b7950b; font-size: 15px;">🔔 แจ้งเตือนด่วนถึงทีม QC [${line}]:</strong>
-                                <span style="margin-left: 8px; font-weight: 500;">มีรายการ Set-Up ใหม่ (Part No: <b>${alertItem.part}</b>, Lot: <b>${alertItem.lot}</b>) รอตรวจสอบชิ้นงาน</span>
-                            </div>
-                            <button onclick="clearQcLineAlert('${line}', ${idx})" style="background: var(--warning-color); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
+function renderQcAlertsUI() {
+    const container = document.getElementById('qcAlertContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    let totalAlerts = 0;
+
+    for (const [line, alerts] of Object.entries(qcLineAlerts)) {
+        if (alerts.length > 0) {
+            totalAlerts += alerts.length;
+            alerts.forEach((alertItem, idx) => {
+                container.innerHTML += `
+                    <div class="alert-banner">
+                        <div>
+                            <strong style="color: #b7950b; font-size: 15px;">🔔 แจ้งเตือนด่วนถึงทีม QC [${line}]:</strong>
+                            <span style="margin-left: 8px; font-weight: 500;">มีรายการ Set-Up ใหม่ (Part No: <b>${alertItem.part}</b>, Lot: <b>${alertItem.lot}</b>) รอตรวจสอบชิ้นงาน</span>
                         </div>
-                    `;
-                });
-            }
-        }
-
-        const badge = document.getElementById('qcNotificationBadge');
-        if (badge) {
-            if (totalAlerts > 0) {
-                badge.innerText = totalAlerts;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
-            }
+                        <button onclick="clearQcLineAlert('${line}', ${idx})" style="background: var(--warning-color); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
+                    </div>
+                `;
+            });
         }
     }
 
-    function clearQcLineAlert(lineName, index) {
-        if (qcLineAlerts[lineName]) {
-            qcLineAlerts[lineName].splice(index, 1);
-            if (qcLineAlerts[lineName].length === 0) {
-                delete qcLineAlerts[lineName];
-            }
+    const badge = document.getElementById('qcNotificationBadge');
+    if (badge) {
+        if (totalAlerts > 0) {
+            badge.innerText = totalAlerts;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
         }
-        renderQcAlertsUI();
     }
+}
 
-   // ปรับให้รับค่า index เพิ่มเข้ามาด้วย
+function clearQcLineAlert(lineName, index) {
+    if (qcLineAlerts[lineName]) {
+        qcLineAlerts[lineName].splice(index, 1);
+        if (qcLineAlerts[lineName].length === 0) {
+            delete qcLineAlerts[lineName];
+        }
+    }
+    renderQcAlertsUI();
+}
+
 function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
     if (!setupLineAlerts[lineName]) {
         setupLineAlerts[lineName] = [];
@@ -969,18 +1006,15 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
     setupLineAlerts[lineName].push({ part: partNo, status: qcStatus, remark: remarkText });
     renderSetupAlertsUI();
 
-    // แปลงสถานะให้ตรงกับเงื่อนไขใน renderSetupHistory เป๊ะๆ
-   // แปลงสถานะให้ถูกต้อง
-let finalStatus = "QC Pass";
-const statusLower = String(qcStatus).toLowerCase();
+    let finalStatus = "QC Pass";
+    const statusLower = String(qcStatus).toLowerCase();
 
-// 📌 แก้ไข: เช็คเฉพาะคำว่า Not Pass, Fail หรือ ไม่ผ่าน เท่านั้น (ห้ามมีคำว่า pass เด็ดขาด)
-if (statusLower.includes("not pass") || statusLower.includes("fail") || statusLower.includes("ไม่ผ่าน")) {
-    finalStatus = "QC Not Pass";
-} else {
-    finalStatus = "QC Pass";
-}
-    // อัปเดตสถานะในประวัติ Set-Up ทุกรายการที่ Line และ Part ตรงกัน
+    if (statusLower.includes("not pass") || statusLower.includes("fail") || statusLower.includes("ไม่ผ่าน")) {
+        finalStatus = "QC Not Pass";
+    } else {
+        finalStatus = "QC Pass";
+    }
+
     if (Array.isArray(setupHistoryData)) {
         setupHistoryData.forEach(item => {
             if (String(item.line).trim() === String(lineName).trim() && 
@@ -989,291 +1023,279 @@ if (statusLower.includes("not pass") || statusLower.includes("fail") || statusLo
             }
         });
         
-        // สั่งวาดตารางหน้า Set-Up ใหม่ทันที
         if (typeof renderSetupHistory === 'function') {
             renderSetupHistory();
         }
     }
 }
-    function renderSetupAlertsUI() {
-        const container = document.getElementById('setupAlertContainer');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        let totalAlerts = 0;
-        let hasPass = false;
 
-        for (const [line, alerts] of Object.entries(setupLineAlerts)) {
-            if (alerts.length > 0) {
-                totalAlerts += alerts.length;
-                alerts.forEach((alertItem, idx) => {
-                    let bannerClass = alertItem.status === 'QC Pass' ? 'alert-banner pass-banner' : 'alert-banner fail-banner';
-                    if (alertItem.status === 'QC Pass') hasPass = true;
+function renderSetupAlertsUI() {
+    const container = document.getElementById('setupAlertContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    let totalAlerts = 0;
+    let hasPass = false;
 
-                    let titleText = alertItem.status === 'QC Pass' 
-                        ? `✨ QC ตรวจสอบผ่านแล้ว [${line}]:` 
-                        : `⚠️ QC ตรวจสอบไม่ผ่าน [${line}]:`;
+    for (const [line, alerts] of Object.entries(setupLineAlerts)) {
+        if (alerts.length > 0) {
+            totalAlerts += alerts.length;
+            alerts.forEach((alertItem, idx) => {
+                let bannerClass = alertItem.status === 'QC Pass' ? 'alert-banner pass-banner' : 'alert-banner fail-banner';
+                if (alertItem.status === 'QC Pass') hasPass = true;
 
-                    let descText = alertItem.status === 'QC Pass'
-                        ? `Part No: <b>${alertItem.part}</b> ผ่านการตรวจสอบ QC แล้ว สามารถเริ่มเดินเครื่องผลิตจริงได้ทันที!`
-                        : `Part No: <b>${alertItem.part}</b> <b>ไม่ผ่าน QC!</b> จุดที่ต้องแก้ไข: ${alertItem.remark}`;
+                let titleText = alertItem.status === 'QC Pass' 
+                    ? `✨ QC ตรวจสอบผ่านแล้ว [${line}]:` 
+                    : `⚠️ QC ตรวจสอบไม่ผ่าน [${line}]:`;
 
-                    container.innerHTML += `
-                        <div class="${bannerClass}">
-                            <div>
-                                <strong style="font-size: 15px;">${titleText}</strong>
-                                <span style="margin-left: 8px; font-weight: 500;">${descText}</span>
-                            </div>
-                            <button onclick="clearSetupLineAlert('${line}', ${idx})" style="background: rgba(0,0,0,0.1); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
+                let descText = alertItem.status === 'QC Pass'
+                    ? `Part No: <b>${alertItem.part}</b> ผ่านการตรวจสอบ QC แล้ว สามารถเริ่มเดินเครื่องผลิตจริงได้ทันที!`
+                    : `Part No: <b>${alertItem.part}</b> <b>ไม่ผ่าน QC!</b> จุดที่ต้องแก้ไข: ${alertItem.remark}`;
+
+                container.innerHTML += `
+                    <div class="${bannerClass}">
+                        <div>
+                            <strong style="font-size: 15px;">${titleText}</strong>
+                            <span style="margin-left: 8px; font-weight: 500;">${descText}</span>
                         </div>
-                    `;
-                });
-            }
-        }
-
-        const badge = document.getElementById('setupNotificationBadge');
-        if (badge) {
-            if (totalAlerts > 0) {
-                badge.innerText = totalAlerts;
-                badge.style.display = 'inline-block';
-                badge.className = hasPass ? 'notification-badge success' : 'notification-badge';
-            } else {
-                badge.style.display = 'none';
-            }
+                        <button onclick="clearSetupLineAlert('${line}', ${idx})" style="background: rgba(0,0,0,0.1); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">รับทราบ</button>
+                    </div>
+                `;
+            });
         }
     }
 
-    function clearSetupLineAlert(lineName, index) {
-        if (setupLineAlerts[lineName]) {
-            setupLineAlerts[lineName].splice(index, 1);
-            if (setupLineAlerts[lineName].length === 0) {
-                delete setupLineAlerts[lineName];
-            }
-        }
-        renderSetupAlertsUI();
-    }
-
-   
-    function removeProcessRow(btn) {
-        const row = btn.closest('tr');
-        const tbody = document.getElementById('processTableBody');
-        if (tbody && tbody.rows.length > 1) {
-            row.remove();
-            updateRowNumbers();
+    const badge = document.getElementById('setupNotificationBadge');
+    if (badge) {
+        if (totalAlerts > 0) {
+            badge.innerText = totalAlerts;
+            badge.style.display = 'inline-block';
+            badge.className = hasPass ? 'notification-badge success' : 'notification-badge';
         } else {
-            alert("ต้องมีอย่างน้อย 1 Process ครับ");
+            badge.style.display = 'none';
         }
     }
+}
 
-    function updateRowNumbers() {
-        const rows = document.querySelectorAll('#processTableBody tr');
-        rows.forEach((row, index) => {
-            const numElem = row.querySelector('.row-num');
-            if (numElem) numElem.innerText = index + 1;
-        });
+function clearSetupLineAlert(lineName, index) {
+    if (setupLineAlerts[lineName]) {
+        setupLineAlerts[lineName].splice(index, 1);
+        if (setupLineAlerts[lineName].length === 0) {
+            delete setupLineAlerts[lineName];
+        }
     }
+    renderSetupAlertsUI();
+}
 
-    // บันทึก Set-Up Die (ส่งไป Google Sheets และเด้งไปหน้า QC พร้อมเปิดแจ้งเตือน)
-    const setupFormElem = document.getElementById('setupForm');
-    if (setupFormElem) {
-        setupFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-const submitBtn = e.target.querySelector('button[type="submit"]') || document.querySelector('#setupForm button[type="submit"]');
+function removeProcessRow(btn) {
+    const row = btn.closest('tr');
+    const tbody = document.getElementById('processTableBody');
+    if (tbody && tbody.rows.length > 1) {
+        row.remove();
+        updateRowNumbers();
+    } else {
+        alert("ต้องมีอย่างน้อย 1 Process ครับ");
+    }
+}
+
+function updateRowNumbers() {
+    const rows = document.querySelectorAll('#processTableBody tr');
+    rows.forEach((row, index) => {
+        const numElem = row.querySelector('.row-num');
+        if (numElem) numElem.innerText = index + 1;
+    });
+}
+
+const setupFormElem = document.getElementById('setupForm');
+if (setupFormElem) {
+    setupFormElem.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]') || document.querySelector('#setupForm button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.style.opacity = '0.5';
             submitBtn.innerText = 'กำลังบันทึกข้อมูล...';
         }
-            const line = document.getElementById('production_line').value;
-            const lot = document.getElementById('lot_no').value;
-            const part = document.getElementById('part_no').value;
-            const material = document.getElementById('material_size').value;
-            const start = document.getElementById('setup_start').value;
-            const end = document.getElementById('setup_end').value;
-            const operator = document.getElementById('setup_operator').value;
+        const line = document.getElementById('production_line').value;
+        const lot = document.getElementById('lot_no').value;
+        const part = document.getElementById('part_no').value;
+        const material = document.getElementById('material_size').value;
+        const start = document.getElementById('setup_start').value;
+        const end = document.getElementById('setup_end').value;
+        const operator = document.getElementById('setup_operator').value;
 
-            const processRows = document.querySelectorAll('#processTableBody tr');
-            let processesData = [];
-            let isValid = true;
+        const processRows = document.querySelectorAll('#processTableBody tr');
+        let processesData = [];
+        let isValid = true;
 
-            processRows.forEach((row) => {
-                const pName = row.querySelector('.p-name').value;
-                const pMc = row.querySelector('.p-mc').value;
-                const pAir = row.querySelector('.p-air').value;
-                const pCushion = row.querySelector('.p-cushion').value;
-                const pSpm = row.querySelector('.p-spm').value;
-                const pDh = row.querySelector('.p-dh').value;
+        processRows.forEach((row) => {
+            const pName = row.querySelector('.p-name').value;
+            const pMc = row.querySelector('.p-mc').value;
+            const pAir = row.querySelector('.p-air').value;
+            const pCushion = row.querySelector('.p-cushion').value;
+            const pSpm = row.querySelector('.p-spm').value;
+            const pDh = row.querySelector('.p-dh').value;
 
-                if(!pName || !pMc || !pAir || !pCushion || !pSpm || !pDh) {
-                    isValid = false;
-                }
+            if(!pName || !pMc || !pAir || !pCushion || !pSpm || !pDh) {
+                isValid = false;
+            }
 
-                processesData.push({
-                    name: pName, machine: pMc, air: pAir, cushion: pCushion, spm: pSpm, dh: pDh
-                });
+            processesData.push({
+                name: pName, machine: pMc, air: pAir, cushion: pCushion, spm: pSpm, dh: pDh
             });
+        });
 
-            const alertBox = document.getElementById('alertBox');
+        const alertBox = document.getElementById('alertBox');
 
-            if (!isValid) {
-                if (alertBox) {
-                    alertBox.className = "alert-box alert-error";
-                    alertBox.style.display = "block";
-                    alertBox.innerText = "❌ กรุณากรอกข้อมูลเงื่อนไขเครื่องจักรให้ครบทุก Process ก่อนทำการบันทึก!";
-                }
-                return;
-            }
-
-            const setupPayload = {
-                type: "Setup",
-                line: line,
-                lot: lot,
-                part: part,
-                process: JSON.stringify(processesData),
-                machine: processesData[0] ? processesData[0].machine : "-",
-                air: processesData[0] ? processesData[0].air : "-",
-                cushion: processesData[0] ? processesData[0].cushion : "-",
-                spm: processesData[0] ? processesData[0].spm : "-",
-                material: material,
-                dh: processesData[0] ? processesData[0].dh : "-",
-                start: start.replace('T', ' '),
-                end: end.replace('T', ' '),
-                qc_result: "Waiting QC",
-                inspector: operator
-            };
-
+        if (!isValid) {
             if (alertBox) {
-                alertBox.className = "alert-box alert-success";
+                alertBox.className = "alert-box alert-error";
                 alertBox.style.display = "block";
-                alertBox.innerHTML = `⏳ กำลังบันทึกข้อมูล Set-Up และส่งไปยังระบบ...`;
+                alertBox.innerText = "❌ กรุณากรอกข้อมูลเงื่อนไขเครื่องจักรให้ครบทุก Process ก่อนทำการบันทึก!";
             }
+            return;
+        }
 
-            // 1. สั่งล็อคปุ่มก่อนเริ่ม fetch (ที่เราเคยใส่ไว้ด้านบน)
-    
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(setupPayload)
-    }).then(() => {
+        const setupPayload = {
+            type: "Setup",
+            line: line,
+            lot: lot,
+            part: part,
+            process: JSON.stringify(processesData),
+            machine: processesData[0] ? processesData[0].machine : "-",
+            air: processesData[0] ? processesData[0].air : "-",
+            cushion: processesData[0] ? processesData[0].cushion : "-",
+            spm: processesData[0] ? processesData[0].spm : "-",
+            material: material,
+            dh: processesData[0] ? processesData[0].dh : "-",
+            start: start.replace('T', ' '),
+            end: end.replace('T', ' '),
+            qc_result: "Waiting QC",
+            inspector: operator
+        };
+
         if (alertBox) {
             alertBox.className = "alert-box alert-success";
             alertBox.style.display = "block";
-            alertBox.innerHTML = `✔️ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ! <button type="button" onclick="goToQcPageFromSetup('${line}', '${part}', '${lot}')">ไปยังหน้า QC</button>`;
+            alertBox.innerHTML = `⏳ กำลังบันทึกข้อมูล Set-Up และส่งไปยังระบบ...`;
         }
 
-        triggerQcAlert(line, part, lot);
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(setupPayload)
+        }).then(() => {
+            if (alertBox) {
+                alertBox.className = "alert-box alert-success";
+                alertBox.style.display = "block";
+                alertBox.innerHTML = `✔️ บันทึกข้อมูล Set-Up ของ Part No. <b>${part}</b> สำเร็จ! <button type="button" onclick="goToQcPageFromSetup('${line}', '${part}', '${lot}')">ไปยังหน้า QC</button>`;
+            }
 
-        setupHistoryData.unshift({
-            id: Date.now(),
-            line: line, lot: lot, part: part, machine: processesData[0]?.machine || '-',
-            inspector: operator, process: `${processesData.length} Process`,
-            air: processesData[0]?.air || '-', cushion: processesData[0]?.cushion || '-', spm: processesData[0]?.spm || '-',
-            material: material, dh: processesData[0]?.dh || '-',
-            start: start.replace('T', ' '), end: end.replace('T', ' '), status: 'Waiting QC'
-        });
-        renderSetupHistory();
-        populateQcPartDropdown();
-    }).catch(error => {
-        console.error("Error:", error);
-    }).finally(() => {
-        // 2. [เพิ่มตรงนี้] คืนค่าเปิดปุ่มให้ใช้งานได้เหมือนเดิมเมื่อทำงานเสร็จ (ไม่ว่าจะสำเร็จหรือพัง)
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = '1';
-            submitBtn.innerText = 'บันทึกข้อมูล Set-Up ทั้งหมดของ Part No. นี้ และส่งตรวจสอบ QC';
-        }
-    });
-        });
-    }
+            triggerQcAlert(line, part, lot);
 
-    // ฟังก์ชันกดสลับไปหน้า QC อัตโนมัติจากหน้า Set-Up พร้อมส่งค่าพารามิเตอร์ไป
-    function goToQcPageFromSetup(line, part, lot) {
-        const tabBtns = document.querySelectorAll('.navbar button');
-        if(tabBtns[2]) tabBtns[2].click(); // ไปแท็บที่ 3 (QC Check)
-        
-        if(document.getElementById('qc_production_line')) document.getElementById('qc_production_line').value = line;
-        if(document.getElementById('qc_part_no')) {
-            document.getElementById('qc_part_no').value = part;
-            // กระตุ้นให้เลือกค่า
-        }
-    }
-
-  // บันทึก QC Check (หน้า 3)
-    const qcFormElem = document.getElementById('qcForm');
-    if (qcFormElem) {
-        qcFormElem.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const lineVal = document.getElementById('qc_production_line').value;
-            const partVal = document.getElementById('qc_part_no').value;
-            
-            // ตรวจสอบว่ามีฟิลด์ครบถ้วนไหม (ป้องกัน Error กรณีฟิลด์บางตัวเปลี่ยนชื่อ)
-            const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
-            const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
-            const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
-            
-            const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
-            const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
-            const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
-            
-            const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
-            const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
-            const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
-            const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
-            const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
-
-            const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
-            
-            const qcFormData = {
-                type: qcStatus,
-                line: lineVal,
-                lot: "-",
-                part: partVal,
-                process: "QC Check (" + actualData + ") " + checklistSummary,
-                machine: "-",
-                air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
-                start: datetimeVal,
-                end: remarkVal,
-                qc_result: qcStatus,
-                inspector: inspectorName
-            };
-
-            const qcLoading = document.getElementById('qc-loading');
-            const btnQcSubmit = document.getElementById('btnQcSubmit');
-            if(qcLoading) qcLoading.style.display = 'block';
-            if(btnQcSubmit) btnQcSubmit.disabled = true;
-
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
-            .then(() => {
-                if(qcLoading) qcLoading.style.display = 'none';
-                if(btnQcSubmit) btnQcSubmit.disabled = false;
-                
-                // ล้างแจ้งเตือนเฉพาะของไลน์นี้ในฝั่ง QC
-                if (qcLineAlerts[lineVal]) {
-                    qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
-                    if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
-                }
-                renderQcAlertsUI();
-                
-                // ส่งสัญญาณแจ้งเตือนกลับไปยังหน้า Set-Up ของ Line นั้นๆ อัตโนมัติทันที
-                triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
-
-                alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
-                qcFormElem.reset();
-                
-                // 📌 หน่วงเวลา 4 วินาที เพื่อรอให้ Google Sheets บันทึกข้อมูลเสร็จก่อน ค่อยดึงข้อมูลใหม่
-                setTimeout(() => {
-                    loadDataFromGoogleSheet();
-                }, 4000);
-            })
-            .catch(error => {
-                if(qcLoading) qcLoading.style.display = 'none';
-                if(btnQcSubmit) btnQcSubmit.disabled = false;
-                console.error('Error:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            setupHistoryData.unshift({
+                id: Date.now(),
+                line: line, lot: lot, part: part, machine: processesData[0]?.machine || '-',
+                inspector: operator, process: `${processesData.length} Process`,
+                air: processesData[0]?.air || '-', cushion: processesData[0]?.cushion || '-', spm: processesData[0]?.spm || '-',
+                material: material, dh: processesData[0]?.dh || '-',
+                start: start.replace('T', ' '), end: end.replace('T', ' '), status: 'Waiting QC'
             });
+            renderSetupHistory();
+            populateQcPartDropdown();
+        }).catch(error => {
+            console.error("Error:", error);
+        }).finally(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.innerText = 'บันทึกข้อมูล Set-Up ทั้งหมดของ Part No. นี้ และส่งตรวจสอบ QC';
+            }
         });
+    });
+}
+
+function goToQcPageFromSetup(line, part, lot) {
+    const tabBtns = document.querySelectorAll('.navbar button');
+    if(tabBtns[2]) tabBtns[2].click(); 
+    
+    if(document.getElementById('qc_production_line')) document.getElementById('qc_production_line').value = line;
+    if(document.getElementById('qc_part_no')) {
+        document.getElementById('qc_part_no').value = part;
     }
+}
+
+const qcFormElem = document.getElementById('qcForm');
+if (qcFormElem) {
+    qcFormElem.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const lineVal = document.getElementById('qc_production_line').value;
+        const partVal = document.getElementById('qc_part_no').value;
+        
+        const chkDimElem = document.querySelector('input[name="chk_dim"]:checked');
+        const chkBurrElem = document.querySelector('input[name="chk_burr"]:checked');
+        const chkHoleElem = document.querySelector('input[name="chk_hole"]:checked');
+        
+        const chkDim = chkDimElem ? chkDimElem.value : 'Pass';
+        const chkBurr = chkBurrElem ? chkBurrElem.value : 'Pass';
+        const chkHole = chkHoleElem ? chkHoleElem.value : 'Pass';
+        
+        const qcStatus = document.getElementById('qc_command_status') ? document.getElementById('qc_command_status').value : 'QC Pass';
+        const remarkVal = document.getElementById('qc_ng_remark') ? (document.getElementById('qc_ng_remark').value || '-') : '-';
+        const inspectorName = document.getElementById('qc_inspector_name') ? document.getElementById('qc_inspector_name').value : 'QC Inspector';
+        const actualData = document.getElementById('qc_actual_data') ? document.getElementById('qc_actual_data').value : '-';
+        const datetimeVal = document.getElementById('qc_datetime') ? document.getElementById('qc_datetime').value.replace('T', ' ') : new Date().toISOString().slice(0,19).replace('T', ' ');
+
+        const checklistSummary = `[Dim:${chkDim}, Burr:${chkBurr}, Hole:${chkHole}]`;
+        
+        const qcFormData = {
+            type: qcStatus,
+            line: lineVal,
+            lot: "-",
+            part: partVal,
+            process: "QC Check (" + actualData + ") " + checklistSummary,
+            machine: "-",
+            air: "-", cushion: "-", spm: "-", material: "-", dh: "-",
+            start: datetimeVal,
+            end: remarkVal,
+            qc_result: qcStatus,
+            inspector: inspectorName
+        };
+
+        const qcLoading = document.getElementById('qc-loading');
+        const btnQcSubmit = document.getElementById('btnQcSubmit');
+        if(qcLoading) qcLoading.style.display = 'block';
+        if(btnQcSubmit) btnQcSubmit.disabled = true;
+
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(qcFormData) })
+        .then(() => {
+            if(qcLoading) qcLoading.style.display = 'none';
+            if(btnQcSubmit) btnQcSubmit.disabled = false;
+            
+            if (qcLineAlerts[lineVal]) {
+                qcLineAlerts[lineVal] = qcLineAlerts[lineVal].filter(item => item.part !== partVal);
+                if (qcLineAlerts[lineVal].length === 0) delete qcLineAlerts[lineVal];
+            }
+            renderQcAlertsUI();
+            
+            triggerSetupReturnAlert(lineVal, partVal, qcStatus, remarkVal);
+
+            alert(`บันทึกผล QC Check [${lineVal}] สำเร็จ และส่งผลแจ้งเตือนกลับไปยังทีม Set-Up และผลิตประจำ Line เรียบร้อยแล้ว!`);
+            qcFormElem.reset();
+            
+            setTimeout(() => {
+                loadDataFromGoogleSheet();
+            }, 4000);
+        })
+        .catch(error => {
+            if(qcLoading) qcLoading.style.display = 'none';
+            if(btnQcSubmit) btnQcSubmit.disabled = false;
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        });
+    });
+}
     // บันทึก Spot Welding (หน้า 4)
     const spotFormElem = document.getElementById('spotWeldingForm');
     if (spotFormElem) {
