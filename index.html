@@ -965,12 +965,16 @@ function triggerSetupReturnAlert(lineName, partNo, qcStatus, remarkText) {
     renderSetupAlertsUI();
 
     // แปลงสถานะให้ตรงกับเงื่อนไขใน renderSetupHistory เป๊ะๆ
-    let finalStatus = "QC Pass";
-    const statusLower = String(qcStatus).toLowerCase();
-    if (statusLower.includes("not pass") || statusLower.includes("fail") || statusLower.includes("ไม่ผ่าน")) {
-        finalStatus = "QC Not Pass";
-    }
+   // แปลงสถานะให้ถูกต้อง
+let finalStatus = "QC Pass";
+const statusLower = String(qcStatus).toLowerCase();
 
+// 📌 แก้ไข: เช็คเฉพาะคำว่า Not Pass, Fail หรือ ไม่ผ่าน เท่านั้น (ห้ามมีคำว่า pass เด็ดขาด)
+if (statusLower.includes("not pass") || statusLower.includes("fail") || statusLower.includes("ไม่ผ่าน")) {
+    finalStatus = "QC Not Pass";
+} else {
+    finalStatus = "QC Pass";
+}
     // อัปเดตสถานะในประวัติ Set-Up ทุกรายการที่ Line และ Part ตรงกัน
     if (Array.isArray(setupHistoryData)) {
         setupHistoryData.forEach(item => {
